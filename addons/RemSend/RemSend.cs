@@ -20,8 +20,10 @@ public partial class RemSend : Node {
 
     private event Action<ulong, byte[]>? OnResponse;
 
-    public override void _Ready() {
+    public override void _EnterTree() {
         Singleton = this;
+    }
+    public override void _Ready() {
         MemoryPackFormatters.RegisterCustomTypes();
     }
 
