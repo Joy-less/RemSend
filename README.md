@@ -39,3 +39,16 @@ int Number = await RemWait(1, () => GetNumber());
 - Uses reflection (may be slow, incompatible with trimming, incompatible with GDScript)
 - Optional parameters must be passed explicitly (due to a current limitation with Linq Expressions)
 - Only supports one transfer channel
+
+## Setup
+
+1. Install MemoryPack through NuGet or by editing your `csproj` file:
+```
+<ItemGroup>
+  <PackageReference Include="MemoryPack" Version="1.21.1" />
+</ItemGroup>
+```
+
+2. Add the Rem Send addon to your project.
+
+3. Create a node and attach the `RemSend.cs` script.
