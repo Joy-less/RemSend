@@ -1,6 +1,12 @@
 #pragma warning disable CS8618
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Linq;
 using System.Reflection;
+using Godot;
 using MemoryPack;
 
 using Lq = System.Linq.Expressions;
