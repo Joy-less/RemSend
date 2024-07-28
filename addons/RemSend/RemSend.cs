@@ -174,8 +174,11 @@ public partial class RemSend : Node {
             }
         };
         OnResponse += ResponseListener;
-        T ReturnValue = await TaskSource.Task.WaitAsync(CancelToken);
-        OnResponse -= ResponseListener;
-        return ReturnValue;
+        try {
+            return await TaskSource.Task.WaitAsync(CancelToken);
+        }
+        finally {
+            OnResponse -= ResponseListener;
+        }
     }
 }
