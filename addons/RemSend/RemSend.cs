@@ -115,7 +115,7 @@ public partial class RemSend : Node {
 
         // Get target from path
         Node Target = Singleton.GetNodeOrNull(Packet.TargetPath)
-            ?? throw new Exception($"Remote node not found: '{Packet.TargetPath}' (method: '{Packet.MethodName}')");
+            ?? throw new Exception($"Remote node '{Packet.TargetPath}' not found: '{Packet.MethodName}'");
         // Get method from node
         if (Target.GetType().GetMethod(Packet.MethodName) is not MethodInfo Method) {
             throw new Exception($"Remote method not found: '{Packet.MethodName}'");
