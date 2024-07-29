@@ -1,3 +1,5 @@
+#nullable enable
+
 namespace RemSend;
 
 public enum RemAccess {

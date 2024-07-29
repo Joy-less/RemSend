@@ -1,3 +1,4 @@
+#nullable enable
 #pragma warning disable CS8618
 
 using System;

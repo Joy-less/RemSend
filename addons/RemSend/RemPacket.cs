@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.Threading;
 using MemoryPack;
 
