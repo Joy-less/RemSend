@@ -12,7 +12,6 @@ using MemoryPack;
 
 using Lq = System.Linq.Expressions;
 using RpcMode = Godot.MultiplayerApi.RpcMode;
-using TransferMode = Godot.MultiplayerPeer.TransferModeEnum;
 
 namespace RemSend;
 
@@ -29,20 +28,19 @@ public partial class RemSend : Node {
     }
 
     internal ulong Rem(Lq.MethodCallExpression CallExpression) {
-        (RemPacket Packet, RemAttribute RemAttribute, StringName RpcName) = CreatePacket(CallExpression);
-
+        // Create packet
+        (RemPacket Packet, StringName RpcName, RemAttribute RemAttribute) = CreatePacket(CallExpression);
         // Call remotely
         Rpc(RpcName, MemoryPackSerializer.Serialize(Packet));
         // Also call locally
         if (RemAttribute.CallLocal) {
             RpcId(Multiplayer.GetUniqueId(), RpcName, MemoryPackSerializer.Serialize(Packet));
         }
-
         return Packet.PacketId;
     }
     internal ulong Rem(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression) {
-        (RemPacket Packet, RemAttribute RemAttribute, StringName RpcName) = CreatePacket(CallExpression);
-
+        // Create packet
+        (RemPacket Packet, StringName RpcName, RemAttribute RemAttribute) = CreatePacket(CallExpression);
         // Call remotely
         foreach (int PeerId in PeerIds) {
             RpcId(PeerId, RpcName, MemoryPackSerializer.Serialize(Packet));
@@ -54,13 +52,12 @@ public partial class RemSend : Node {
                 RpcId(LocalId, RpcName, MemoryPackSerializer.Serialize(Packet));
             }
         }
-        
         return Packet.PacketId;
     }
-    internal async Task<T> RemWait<T>(Lq.MethodCallExpression CallExpression, CancellationToken CancelToken = default) {
+    internal async Task<T> Rem<T>(Lq.MethodCallExpression CallExpression, CancellationToken CancelToken = default) {
         return await AwaitResponseAsync<T>(Rem(CallExpression), CancelToken);
     }
-    internal async Task<T> RemWait<T>(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression, CancellationToken CancelToken = default) {
+    internal async Task<T> Rem<T>(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression, CancellationToken CancelToken = default) {
         return await AwaitResponseAsync<T>(Rem(PeerIds, CallExpression), CancelToken);
     }
 
@@ -89,7 +86,7 @@ public partial class RemSend : Node {
             _ => throw new NotImplementedException($"Remote call transfer mode not implemented: {TransferMode}")
         };
     }
-    private static (RemPacket Packet, RemAttribute RemAttribute, StringName RpcName) CreatePacket(Lq.MethodCallExpression Expression) {
+    private static (RemPacket Packet, StringName RpcName, RemAttribute RemAttribute) CreatePacket(Lq.MethodCallExpression Expression) {
         // Get target node from expression
         if (Expression.Object.Evaluate() is not Node Target) {
             throw new Exception($"Remote call method target must be Node (got '{Expression.Object?.GetType().Name ?? "null"}'): '{Expression.Method.Name}'");
@@ -106,7 +103,7 @@ public partial class RemSend : Node {
         // Get RPC name
         StringName RpcName = GetRpcForTransferMode(RemAttribute.Mode);
         // Return RPC data
-        return (Packet, RemAttribute, RpcName);
+        return (Packet, RpcName, RemAttribute);
     }
     private static async void ReceivePacket(byte[] PackedRemPacket) {
         // Deserialise packet
@@ -147,26 +144,30 @@ public partial class RemSend : Node {
         // Unpack arguments
         object?[] Arguments = Packet.PackedArguments.UnpackArguments(Method.GetParameters());
         // Invoke method with arguments
+        Type ReturnType = Method.ReturnType;
         object? ReturnValue = Method.Invoke(Target, Arguments);
-
-        // Wait for return value unless void
-        if (Method.ReturnType != typeof(void) && Method.ReturnType != typeof(Task)) {
-            // Unwrap task result
-            Type ReturnType = Method.ReturnType;
-            if (ReturnValue is Task Task) {
-                // Ensure task has return value
-                if (Task.GetType().GetProperty(nameof(Task<object>.Result)) is PropertyInfo TaskResultProperty) {
-                    // Await task
-                    await Task;
-                    // Get unwrapped return type and value
-                    ReturnType = TaskResultProperty.PropertyType;
-                    ReturnValue = TaskResultProperty.GetValue(Task);
-                }
-            }
-            // Rpc return value
-            byte[] PackedReturnValue = MemoryPackSerializer.Serialize(ReturnType, ReturnValue);
-            Singleton.RpcId(RemoteId, MethodName.PacketResponseRpc, Packet.PacketId, PackedReturnValue);
+        
+        // Ensure method returns value
+        if (ReturnType == typeof(void) || ReturnType == typeof(Task)) {
+            return;
         }
+
+        // If returns task, await and get result
+        if (ReturnValue is Task Task) {
+            // Ensure task has return value
+            if (Task.GetType().GetProperty(nameof(Task<object>.Result)) is not PropertyInfo TaskResultProperty) {
+                return;
+            }
+            // Await task
+            await Task;
+            // Get unwrapped return type and value
+            ReturnType = TaskResultProperty.PropertyType;
+            ReturnValue = TaskResultProperty.GetValue(Task);
+        }
+
+        // Rpc return value
+        byte[] PackedReturnValue = MemoryPackSerializer.Serialize(ReturnType, ReturnValue);
+        Singleton.RpcId(RemoteId, MethodName.PacketResponseRpc, Packet.PacketId, PackedReturnValue);
     }
 
     private async Task<T> AwaitResponseAsync<T>(ulong PacketId, CancellationToken CancelToken = default) {
