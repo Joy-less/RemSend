@@ -18,7 +18,7 @@ namespace RemSend;
 public partial class RemSend : Node {
     public static RemSend Singleton {get; private set;}
 
-    private event Action<ulong, byte[]>? OnResponse;
+    private readonly ConcurrentDictionary<ulong, TaskCompletionSource<byte[]>> ResponseAwaiters = [];
 
     public override void _EnterTree() {
         Singleton = this;
@@ -47,11 +47,11 @@ public partial class RemSend : Node {
         }
         return Packet.PacketId;
     }
-    internal async Task<T> Rem<T>(Lq.MethodCallExpression CallExpression, CancellationToken CancelToken = default) {
-        return await AwaitResponseAsync<T>(Rem(CallExpression), CancelToken);
+    internal async Task<T> Rem<T>(Lq.MethodCallExpression CallExpression, double Timeout, CancellationToken CancelToken = default) {
+        return await AwaitResponseAsync<T>(Rem(CallExpression), Timeout, CancelToken);
     }
-    internal async Task<T> Rem<T>(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression, CancellationToken CancelToken = default) {
-        return await AwaitResponseAsync<T>(Rem(PeerIds, CallExpression), CancelToken);
+    internal async Task<T> Rem<T>(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression, double Timeout, CancellationToken CancelToken = default) {
+        return await AwaitResponseAsync<T>(Rem(PeerIds, CallExpression), Timeout, CancelToken);
     }
 
     [Rpc(RpcMode.AnyPeer, TransferMode = TransferMode.Reliable)]
@@ -68,7 +68,7 @@ public partial class RemSend : Node {
     }
     [Rpc(RpcMode.AnyPeer, TransferMode = TransferMode.Reliable)]
     public void PacketResponseRpc(ulong PacketId, byte[] PackedReturnValue) {
-        OnResponse?.Invoke(PacketId, PackedReturnValue);
+        ResponseAwaiters.GetValueOrDefault(PacketId)?.TrySetResult(PackedReturnValue);
     }
 
     private static StringName GetRpcForTransferMode(TransferMode TransferMode) {
@@ -159,23 +159,21 @@ public partial class RemSend : Node {
         }
 
         // Rpc return value
-        byte[] PackedReturnValue = MemoryPackSerializer.Serialize(ReturnType, ReturnValue);
-        Singleton.RpcId(RemoteId, MethodName.PacketResponseRpc, Packet.PacketId, PackedReturnValue);
+        Singleton.RpcId(RemoteId, MethodName.PacketResponseRpc, Packet.PacketId, MemoryPackSerializer.Serialize(ReturnType, ReturnValue));
     }
 
-    private async Task<T> AwaitResponseAsync<T>(ulong PacketId, CancellationToken CancelToken = default) {
-        TaskCompletionSource<T> TaskSource = new();
-        void ResponseListener(ulong Id, byte[] ReturnValue) {
-            if (Id == PacketId) {
-                TaskSource.TrySetResult(MemoryPackSerializer.Deserialize<T>(ReturnValue)!);
-            }
-        };
-        OnResponse += ResponseListener;
+    private async Task<T> AwaitResponseAsync<T>(ulong PacketId, double Timeout, CancellationToken CancelToken = default) {
+        // Add response awaiter
+        TaskCompletionSource<byte[]> ResponseAwaiter = ResponseAwaiters.GetOrAdd(PacketId, PacketId => new());
         try {
-            return await TaskSource.Task.WaitAsync(CancelToken);
+            // Await response
+            byte[] ReturnValue = await ResponseAwaiter.Task.WaitAsync(TimeSpan.FromSeconds(Timeout), CancelToken);
+            // Return value
+            return MemoryPackSerializer.Deserialize<T>(ReturnValue)!;
         }
         finally {
-            OnResponse -= ResponseListener;
+            // Free response awaiter
+            ResponseAwaiters.TryRemove(PacketId, out _);
         }
     }
 }
