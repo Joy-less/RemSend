@@ -68,38 +68,38 @@ public static class Api {
     }
 
     /// <summary>
-    /// Calls a remote procedure on all peers, awaits the result and and invokes a callback.
+    /// Calls a remote procedure on all peers, awaits the result and invokes a callback.
     /// </summary>
     public static async void Rem<T>(Lq.Expression<Func<T>> CallExpression, Action<T> Callback, CancellationToken CancelToken = default) {
         Callback(await Rem(CallExpression, CancelToken));
     }
     /// <summary>
-    /// Calls a remote procedure on the given peers, awaits the result and and invokes a callback.
+    /// Calls a remote procedure on the given peers, awaits the result and invokes a callback.
     /// </summary>
     public static async void Rem<T>(IEnumerable<int> PeerIds, Lq.Expression<Func<T>> CallExpression, Action<T> Callback, CancellationToken CancelToken = default) {
         Callback(await Rem(PeerIds, CallExpression, CancelToken));
     }
     /// <summary>
-    /// Calls a remote procedure on the given peer, awaits the result and and invokes a callback.
+    /// Calls a remote procedure on the given peer, awaits the result and invokes a callback.
     /// </summary>
     public static void Rem<T>(int PeerId, Lq.Expression<Func<T>> CallExpression, Action<T> Callback, CancellationToken CancelToken = default) {
         Rem([PeerId], CallExpression, Callback, CancelToken);
     }
 
     /// <summary>
-    /// Calls a remote asynchronous procedure on all peers, awaits the result and and invokes a callback.
+    /// Calls a remote asynchronous procedure on all peers, awaits the result and invokes a callback.
     /// </summary>
     public static async void Rem<T>(Lq.Expression<Func<Task<T>>> CallExpression, Action<T> Callback, CancellationToken CancelToken = default) {
         Callback(await Rem(CallExpression, CancelToken));
     }
     /// <summary>
-    /// Calls a remote asynchronous procedure on the given peers, awaits the result and and invokes a callback.
+    /// Calls a remote asynchronous procedure on the given peers, awaits the result and invokes a callback.
     /// </summary>
     public static async void Rem<T>(IEnumerable<int> PeerIds, Lq.Expression<Func<Task<T>>> CallExpression, Action<T> Callback, CancellationToken CancelToken = default) {
         Callback(await Rem(PeerIds, CallExpression, CancelToken));
     }
     /// <summary>
-    /// Calls a remote asynchronous procedure on the given peer, awaits the result and and invokes a callback.
+    /// Calls a remote asynchronous procedure on the given peer, awaits the result and invokes a callback.
     /// </summary>
     public static void Rem<T>(int PeerId, Lq.Expression<Func<Task<T>>> CallExpression, Action<T> Callback, CancellationToken CancelToken = default) {
         Rem([PeerId], CallExpression, Callback, CancelToken);
