@@ -29,11 +29,11 @@ Rem(1, () => SayWordsRem(["cat", "dog"])); // The method name and arguments are 
 
 ```cs
 [Rem(RemAccess.Peer)]
-public int GetNumber() {
+public int GetNumberRem() {
     return 5;
 }
 
-int Number = await RemWait(1, () => GetNumber());
+int Number = await Rem(1, () => GetNumberRem());
 ```
 
 ## Limitations
