@@ -5,8 +5,8 @@ using MemoryPack;
 
 namespace RemSend;
 
-internal static class MemoryPackFormatters {
-    public static void RegisterCustomTypes() {
+internal static class GodotMemoryPackFormatters {
+    public static void RegisterTypes() {
         // Register types for non-generic serialisation
         MemoryPackFormatterProvider.Register(new Vector2Formatter());
         MemoryPackFormatterProvider.Register(new Vector3Formatter());

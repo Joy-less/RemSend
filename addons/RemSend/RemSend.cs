@@ -24,7 +24,7 @@ public partial class RemSend : Node {
         Singleton = this;
     }
     public override void _Ready() {
-        MemoryPackFormatters.RegisterCustomTypes();
+        GodotMemoryPackFormatters.RegisterTypes();
     }
 
     internal ulong Rem(Lq.MethodCallExpression CallExpression) {
