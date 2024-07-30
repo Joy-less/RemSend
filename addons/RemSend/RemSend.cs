@@ -40,17 +40,10 @@ public partial class RemSend : Node {
     }
     internal ulong Rem(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression) {
         // Create packet
-        (RemPacket Packet, StringName RpcName, RemAttribute RemAttribute) = CreatePacket(CallExpression);
+        (RemPacket Packet, StringName RpcName, _) = CreatePacket(CallExpression);
         // Call remotely
         foreach (int PeerId in PeerIds) {
             RpcId(PeerId, RpcName, MemoryPackSerializer.Serialize(Packet));
-        }
-        // Also call locally
-        if (RemAttribute.CallLocal) {
-            int LocalId = Multiplayer.GetUniqueId();
-            if (!PeerIds.Contains(LocalId)) {
-                RpcId(LocalId, RpcName, MemoryPackSerializer.Serialize(Packet));
-            }
         }
         return Packet.PacketId;
     }
