@@ -16,13 +16,13 @@ public static class Api {
     /// Calls a remote procedure on all peers.
     /// </summary>
     public static void Rem(Lq.Expression<Action> CallExpression) {
-        RemSend.Singleton.Rem((Lq.MethodCallExpression)CallExpression.Body);
+        RemSend.Singleton.BroadcastRem((Lq.MethodCallExpression)CallExpression.Body);
     }
     /// <summary>
     /// Calls a remote procedure on the given peers.
     /// </summary>
     public static void Rem(IEnumerable<int> PeerIds, Lq.Expression<Action> CallExpression) {
-        RemSend.Singleton.Rem(PeerIds, (Lq.MethodCallExpression)CallExpression.Body);
+        RemSend.Singleton.SendRem(PeerIds, (Lq.MethodCallExpression)CallExpression.Body);
     }
     /// <summary>
     /// Calls a remote procedure on the given peer.
@@ -35,13 +35,13 @@ public static class Api {
     /// Calls a remote procedure on all peers and awaits the result.
     /// </summary>
     public static async Task<T> Rem<T>(Lq.Expression<Func<T>> CallExpression, double Timeout = DefaultTimeout, CancellationToken CancelToken = default) {
-        return await RemSend.Singleton.Rem<T>((Lq.MethodCallExpression)CallExpression.Body, Timeout, CancelToken);
+        return await RemSend.Singleton.BroadcastRemAwaitResponse<T>((Lq.MethodCallExpression)CallExpression.Body, Timeout, CancelToken);
     }
     /// <summary>
     /// Calls a remote procedure on the given peers and awaits the result.
     /// </summary>
     public static async Task<T> Rem<T>(IEnumerable<int> PeerIds, Lq.Expression<Func<T>> CallExpression, double Timeout = DefaultTimeout, CancellationToken CancelToken = default) {
-        return await RemSend.Singleton.Rem<T>(PeerIds, (Lq.MethodCallExpression)CallExpression.Body, Timeout, CancelToken);
+        return await RemSend.Singleton.SendRemAwaitResponse<T>(PeerIds, (Lq.MethodCallExpression)CallExpression.Body, Timeout, CancelToken);
     }
     /// <summary>
     /// Calls a remote procedure on the given peer and awaits the result.
@@ -54,13 +54,13 @@ public static class Api {
     /// Calls a remote asynchronous procedure on all peers and awaits the result.
     /// </summary>
     public static async Task<T> Rem<T>(Lq.Expression<Func<Task<T>>> CallExpression, double Timeout = DefaultTimeout, CancellationToken CancelToken = default) {
-        return await RemSend.Singleton.Rem<T>((Lq.MethodCallExpression)CallExpression.Body, Timeout, CancelToken);
+        return await RemSend.Singleton.BroadcastRemAwaitResponse<T>((Lq.MethodCallExpression)CallExpression.Body, Timeout, CancelToken);
     }
     /// <summary>
     /// Calls a remote asynchronous procedure on the given peers and awaits the result.
     /// </summary>
     public static async Task<T> Rem<T>(IEnumerable<int> PeerIds, Lq.Expression<Func<Task<T>>> CallExpression, double Timeout = DefaultTimeout, CancellationToken CancelToken = default) {
-        return await RemSend.Singleton.Rem<T>(PeerIds, (Lq.MethodCallExpression)CallExpression.Body, Timeout, CancelToken);
+        return await RemSend.Singleton.SendRemAwaitResponse<T>(PeerIds, (Lq.MethodCallExpression)CallExpression.Body, Timeout, CancelToken);
     }
     /// <summary>
     /// Calls a remote asynchronous procedure on the given peer and awaits the result.

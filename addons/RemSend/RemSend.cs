@@ -27,31 +27,29 @@ public partial class RemSend : Node {
         GodotMemoryPackFormatters.RegisterTypes();
     }
 
-    internal ulong Rem(Lq.MethodCallExpression CallExpression) {
-        // Create packet
-        (RemPacket Packet, StringName RpcName, RemAttribute RemAttribute) = CreatePacket(CallExpression);
-        // Call remotely
-        Rpc(RpcName, MemoryPackSerializer.Serialize(Packet));
-        // Also call locally
-        if (RemAttribute.CallLocal) {
-            RpcId(Multiplayer.GetUniqueId(), RpcName, MemoryPackSerializer.Serialize(Packet));
-        }
-        return Packet.PacketId;
+    internal ulong BroadcastRem(Lq.MethodCallExpression CallExpression) {
+        return SendPacket(CallExpression, (byte[] PackedPacket, StringName TransferRpcName) => {
+            // Transfer packet to all peers
+            Rpc(TransferRpcName, PackedPacket);
+            // Maybe call locally
+            return true;
+        });
     }
-    internal ulong Rem(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression) {
-        // Create packet
-        (RemPacket Packet, StringName RpcName, _) = CreatePacket(CallExpression);
-        // Call remotely
-        foreach (int PeerId in PeerIds) {
-            RpcId(PeerId, RpcName, MemoryPackSerializer.Serialize(Packet));
-        }
-        return Packet.PacketId;
+    internal ulong SendRem(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression) {
+        return SendPacket(CallExpression, (byte[] PackedPacket, StringName TransferRpcName) => {
+            // Transfer packet to given peers
+            foreach (int PeerId in PeerIds) {
+                RpcId(PeerId, TransferRpcName, PackedPacket);
+            }
+            // Never call locally
+            return false;
+        });
     }
-    internal async Task<T> Rem<T>(Lq.MethodCallExpression CallExpression, double Timeout, CancellationToken CancelToken = default) {
-        return await AwaitResponseAsync<T>(Rem(CallExpression), Timeout, CancelToken);
+    internal async Task<T> BroadcastRemAwaitResponse<T>(Lq.MethodCallExpression CallExpression, double Timeout, CancellationToken CancelToken = default) {
+        return await AwaitResponseAsync<T>(BroadcastRem(CallExpression), Timeout, CancelToken);
     }
-    internal async Task<T> Rem<T>(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression, double Timeout, CancellationToken CancelToken = default) {
-        return await AwaitResponseAsync<T>(Rem(PeerIds, CallExpression), Timeout, CancelToken);
+    internal async Task<T> SendRemAwaitResponse<T>(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression, double Timeout, CancellationToken CancelToken = default) {
+        return await AwaitResponseAsync<T>(SendRem(PeerIds, CallExpression), Timeout, CancelToken);
     }
 
     [Rpc(RpcMode.AnyPeer, TransferMode = TransferMode.Reliable)]
@@ -79,8 +77,8 @@ public partial class RemSend : Node {
             _ => throw new NotImplementedException($"Remote call transfer mode not implemented: {TransferMode}")
         };
     }
-    private static (RemPacket Packet, StringName RpcName, RemAttribute RemAttribute) CreatePacket(Lq.MethodCallExpression Expression) {
-        // Get target node from expression
+    private static ulong SendPacket(Lq.MethodCallExpression Expression, Func<byte[], StringName, bool> CallTransferRpc) {
+        // Get target node from method call expression
         if (Expression.Object.Evaluate() is not Node Target) {
             throw new Exception($"Remote call method target must be Node (got '{Expression.Object?.GetType().Name ?? "null"}'): '{Expression.Method.Name}'");
         }
@@ -93,14 +91,23 @@ public partial class RemSend : Node {
         byte[][] PackedArguments = Arguments.PackArguments(Expression.Method.GetParameters());
         // Create packet
         RemPacket Packet = new(Target.GetPath(), Expression.Method.Name, PackedArguments);
-        // Get RPC name
-        StringName RpcName = GetRpcForTransferMode(RemAttribute.Mode);
-        // Return RPC data
-        return (Packet, RpcName, RemAttribute);
+        // Pack packet
+        byte[] PackedPacket = MemoryPackSerializer.Serialize(Packet);
+        // Get RPC name for transfer
+        StringName TransferRpcName = GetRpcForTransferMode(RemAttribute.Mode);
+        // Transfer packet
+        if (CallTransferRpc(PackedPacket, TransferRpcName)) {
+            // Call RPC locally
+            if (RemAttribute.CallLocal) {
+                ReceivePacket(PackedPacket);
+            }
+        }
+        // Return packet ID to await response
+        return Packet.PacketId;
     }
-    private static async void ReceivePacket(byte[] PackedRemPacket) {
+    private static async void ReceivePacket(byte[] PackedPacket) {
         // Deserialise packet
-        RemPacket Packet = MemoryPackSerializer.Deserialize<RemPacket>(PackedRemPacket)!;
+        RemPacket Packet = MemoryPackSerializer.Deserialize<RemPacket>(PackedPacket)!;
 
         // Get peer IDs
         int RemoteId = Singleton.Multiplayer.GetRemoteSenderId();
@@ -161,7 +168,6 @@ public partial class RemSend : Node {
         // Rpc return value
         Singleton.RpcId(RemoteId, MethodName.PacketResponseRpc, Packet.PacketId, MemoryPackSerializer.Serialize(ReturnType, ReturnValue));
     }
-
     private async Task<T> AwaitResponseAsync<T>(ulong PacketId, double Timeout, CancellationToken CancelToken = default) {
         // Add response awaiter
         TaskCompletionSource<byte[]> ResponseAwaiter = ResponseAwaiters.GetOrAdd(PacketId, PacketId => new());
