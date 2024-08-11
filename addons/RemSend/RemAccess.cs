@@ -18,5 +18,5 @@ public enum RemAccess {
     /// <summary>
     /// Peers can call this remote procedure on other peers.
     /// </summary>
-    Global,
+    Any,
 }
