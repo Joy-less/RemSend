@@ -130,12 +130,12 @@ public partial class RemSend : Node {
             case RemAccess.None:
                 throw new Exception($"Remote method cannot be called: '{Packet.MethodName}'");
             case RemAccess.Authority:
-                if (RemoteId != MultiplayerPeer.TargetPeerServer) {
+                if (RemoteId is not (0 or 1)) {
                     throw new Exception($"Remote method cannot be called by non-authority: '{Packet.MethodName}'");
                 }
                 break;
             case RemAccess.Peer:
-                if (LocalId != MultiplayerPeer.TargetPeerServer) {
+                if (LocalId is not 1) {
                     throw new Exception($"Remote method cannot be called on non-authority: '{Packet.MethodName}'");
                 }
                 break;
