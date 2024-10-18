@@ -47,7 +47,7 @@ int Number = await Rem(1, () => GetNumberRem());
 1. Install MemoryPack through NuGet or by editing your `csproj` file:
 ```
 <ItemGroup>
-  <PackageReference Include="MemoryPack" Version="1.21.1" />
+  <PackageReference Include="MemoryPack" Version="1.21.3" />
 </ItemGroup>
 ```
 
