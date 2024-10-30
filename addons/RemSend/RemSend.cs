@@ -148,23 +148,30 @@ public partial class RemSend : Node {
         // Invoke method with arguments
         Type ReturnType = Method.ReturnType;
         object? ReturnValue = Method.Invoke(Target, Arguments);
-        
-        // Ensure method returns value
-        if (ReturnType == typeof(void) || ReturnType == typeof(Task)) {
+
+        // Method returns void
+        if (ReturnType == typeof(void)) {
+            // Don't return value
             return;
         }
-
-        // If returns task, await and get result
-        if (ReturnValue is Task Task) {
-            // Ensure task has return value
-            if (Task.GetType().GetProperty(nameof(Task<object>.Result)) is not PropertyInfo TaskResultProperty) {
-                return;
-            }
+        // Method returns task
+        else if (ReturnValue is Task Task) {
             // Await task
             await Task;
-            // Get unwrapped return type and value
-            ReturnType = TaskResultProperty.PropertyType;
-            ReturnValue = TaskResultProperty.GetValue(Task);
+
+            // Method returns task without value
+            if (ReturnType == typeof(Task)) {
+                // Return dummy value (instead of VoidTaskResult)
+                ReturnType = typeof(byte);
+                ReturnValue = (byte)0;
+            }
+            // Method returns task with value
+            else {
+                // Return task value
+                PropertyInfo TaskResultProperty = Task.GetType().GetProperty(nameof(Task<object>.Result))!;
+                ReturnType = TaskResultProperty.PropertyType;
+                ReturnValue = TaskResultProperty.GetValue(Task);
+            }
         }
 
         // Rpc return value
