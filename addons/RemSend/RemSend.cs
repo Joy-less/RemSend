@@ -20,6 +20,8 @@ public partial class RemSend : Node {
 
     private readonly ConcurrentDictionary<ulong, TaskCompletionSource<byte[]>> ResponseAwaiters = [];
 
+    private const BindingFlags Bindings = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy;
+
     public override void _EnterTree() {
         Singleton = this;
     }
@@ -117,7 +119,7 @@ public partial class RemSend : Node {
         Node Target = Singleton.GetNodeOrNull(Packet.TargetPath)
             ?? throw new Exception($"Remote node '{Packet.TargetPath}' not found: '{Packet.MethodName}'");
         // Get method from node
-        if (Target.GetType().GetMethod(Packet.MethodName) is not MethodInfo Method) {
+        if (Target.GetType().GetMethod(Packet.MethodName, Bindings) is not MethodInfo Method) {
             throw new Exception($"Remote method not found: '{Packet.MethodName}'");
         }
 
