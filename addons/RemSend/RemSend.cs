@@ -54,51 +54,39 @@ public partial class RemSend : Node {
         return await AwaitResponseAsync<T>(SendRem(PeerIds, CallExpression), Timeout, CancelToken);
     }
 
-    [Rpc(RpcMode.AnyPeer, TransferMode = TransferMode.Reliable)]
-    public void ReliablePacketRpc(byte[] PackedRemPacket) {
-        ReceivePacket(PackedRemPacket);
-    }
-    [Rpc(RpcMode.AnyPeer, TransferMode = TransferMode.UnreliableOrdered)]
-    public void UnreliableOrderedPacketRpc(byte[] PackedRemPacket) {
-        ReceivePacket(PackedRemPacket);
-    }
-    [Rpc(RpcMode.AnyPeer, TransferMode = TransferMode.Unreliable)]
-    public void UnreliablePacketRpc(byte[] PackedRemPacket) {
-        ReceivePacket(PackedRemPacket);
-    }
-    [Rpc(RpcMode.AnyPeer, TransferMode = TransferMode.Reliable)]
-    public void PacketResponseRpc(ulong PacketId, byte[] PackedReturnValue) {
-        ResponseAwaiters.GetValueOrDefault(PacketId)?.TrySetResult(PackedReturnValue);
-    }
-
-    private static StringName GetRpcForTransferMode(TransferMode TransferMode) {
-        return TransferMode switch {
-            TransferMode.Reliable => MethodName.ReliablePacketRpc,
-            TransferMode.UnreliableOrdered => MethodName.UnreliableOrderedPacketRpc,
-            TransferMode.Unreliable => MethodName.UnreliablePacketRpc,
-            _ => throw new NotImplementedException($"Remote call transfer mode not implemented: {TransferMode}")
-        };
-    }
     private static ulong SendPacket(Lq.MethodCallExpression Expression, Func<byte[], StringName, bool> CallTransferRpc) {
         // Get target node from method call expression
         if (Expression.Object.Evaluate() is not Node Target) {
             throw new Exception($"Remote call method target must be Node (got '{Expression.Object?.GetType().Name ?? "null"}'): '{Expression.Method.Name}'");
         }
+
         // Get rem attribute
         RemAttribute RemAttribute = Expression.Method.GetCustomAttribute<RemAttribute>()
             ?? throw new Exception($"Remote call method must have {typeof(RemAttribute).Name}: '{Expression.Method.Name}'");
+
         // Get arguments from method call
         object?[] Arguments = Expression.Arguments.Evaluate();
         // Pack arguments
         byte[][] PackedArguments = Arguments.PackArguments(Expression.Method.GetParameters());
+
         // Create packet
         RemPacket Packet = new(Target.GetPath(), Expression.Method.Name, PackedArguments);
         // Pack packet
         byte[] PackedPacket = MemoryPackSerializer.Serialize(Packet);
-        // Get RPC name for transfer
-        StringName TransferRpcName = GetRpcForTransferMode(RemAttribute.Mode);
+
+        // Ensure transfer mode is implemented
+        if (!TransferRpcs.TryGetValue(RemAttribute.Mode, out StringName[]? TransferRpcsForMode)) {
+            throw new NotImplementedException($"Remote call mode not implemented: {RemAttribute.Mode}");
+        }
+        // Ensure transfer channel is within supported range
+        if (RemAttribute.Channel < 0 || RemAttribute.Channel >= TransferRpcsForMode.Length) {
+            throw new InvalidOperationException($"Remote call channel out of range (0 to {TransferRpcsForMode.Length - 1}): {RemAttribute.Channel}");
+        }
+        // Get transfer RPC from attribute
+        StringName TransferRpc = TransferRpcsForMode[RemAttribute.Channel];
+
         // Transfer packet
-        if (CallTransferRpc(PackedPacket, TransferRpcName)) {
+        if (CallTransferRpc(PackedPacket, TransferRpc)) {
             // Call RPC locally
             if (RemAttribute.CallLocal) {
                 ReceivePacket(PackedPacket);
@@ -174,8 +162,15 @@ public partial class RemSend : Node {
             }
         }
 
+        // Ensure reponse transfer channel is within supported range
+        if (RemAttribute.Channel < 0 || RemAttribute.Channel >= ResponseTransferRpcs.Length) {
+            throw new InvalidOperationException($"Remote call channel out of range (0 to {ResponseTransferRpcs.Length - 1}): {RemAttribute.Channel}");
+        }
+        // Get reponse transfer RPC from attribute
+        StringName ResponseTransferRpc = ResponseTransferRpcs[RemAttribute.Channel];
+
         // Rpc return value
-        Singleton.RpcId(RemoteId, MethodName.PacketResponseRpc, Packet.PacketId, MemoryPackSerializer.Serialize(ReturnType, ReturnValue));
+        Singleton.RpcId(RemoteId, ResponseTransferRpc, Packet.PacketId, MemoryPackSerializer.Serialize(ReturnType, ReturnValue));
     }
     private async Task<T> AwaitResponseAsync<T>(ulong PacketId, double Timeout, CancellationToken CancelToken = default) {
         // Add response awaiter
