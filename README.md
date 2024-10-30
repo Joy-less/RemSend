@@ -40,7 +40,7 @@ int Number = await Rem(1, () => GetNumberRem());
 
 - Uses reflection (may be slow, incompatible with trimming, incompatible with GDScript)
 - Optional parameters must be passed explicitly (due to a current limitation with Linq Expressions)
-- Only supports one transfer channel
+- Only supports 4 transfer channels (since they are implemented manually)
 
 ## Setup
 
