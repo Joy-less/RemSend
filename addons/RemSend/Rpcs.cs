@@ -1,3 +1,8 @@
+#nullable enable
+
+using System.Collections.Generic;
+using Godot;
+
 using RpcMode = Godot.MultiplayerApi.RpcMode;
 
 namespace RemSend;
