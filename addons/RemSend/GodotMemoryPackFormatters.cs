@@ -14,6 +14,10 @@ internal static class GodotMemoryPackFormatters {
         MemoryPackFormatterProvider.Register(new Vector2IFormatter());
         MemoryPackFormatterProvider.Register(new Vector3IFormatter());
         MemoryPackFormatterProvider.Register(new Vector4IFormatter());
+        MemoryPackFormatterProvider.Register(new Rect2Formatter());
+        MemoryPackFormatterProvider.Register(new Rect2IFormatter());
+        MemoryPackFormatterProvider.Register(new AabbFormatter());
+        MemoryPackFormatterProvider.Register(new ColorFormatter());
         MemoryPackFormatterProvider.Register(new StringNameFormatter());
         MemoryPackFormatterProvider.Register(new NodePathFormatter());
     }
@@ -100,6 +104,56 @@ internal class Vector4IFormatter : MemoryPackFormatter<Vector4I> {
             Reader.ReadValue<int>(),
             Reader.ReadValue<int>(),
             Reader.ReadValue<int>()
+        );
+    }
+}
+internal class Rect2Formatter : MemoryPackFormatter<Rect2> {
+    public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref Rect2 Value) {
+        Writer.WriteValue(Value.Position);
+        Writer.WriteValue(Value.Size);
+    }
+    public override void Deserialize(ref MemoryPackReader Reader, scoped ref Rect2 Value) {
+        Value = new Rect2(
+            Reader.ReadValue<Vector2>(),
+            Reader.ReadValue<Vector2>()
+        );
+    }
+}
+internal class Rect2IFormatter : MemoryPackFormatter<Rect2I> {
+    public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref Rect2I Value) {
+        Writer.WriteValue(Value.Position);
+        Writer.WriteValue(Value.Size);
+    }
+    public override void Deserialize(ref MemoryPackReader Reader, scoped ref Rect2I Value) {
+        Value = new Rect2I(
+            Reader.ReadValue<Vector2I>(),
+            Reader.ReadValue<Vector2I>()
+        );
+    }
+}
+internal class AabbFormatter : MemoryPackFormatter<Aabb> {
+    public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref Aabb Value) {
+        Writer.WriteValue(Value.Position);
+        Writer.WriteValue(Value.Size);
+    }
+    public override void Deserialize(ref MemoryPackReader Reader, scoped ref Aabb Value) {
+        Value = new Aabb(
+            Reader.ReadValue<Vector3>(),
+            Reader.ReadValue<Vector3>()
+        );
+    }
+}
+internal class ColorFormatter : MemoryPackFormatter<Color> {
+    public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref Color Value) {
+        Writer.WriteValue(Value.R);
+        Writer.WriteValue(Value.G);
+        Writer.WriteValue(Value.B);
+    }
+    public override void Deserialize(ref MemoryPackReader Reader, scoped ref Color Value) {
+        Value = new Color(
+            Reader.ReadValue<float>(),
+            Reader.ReadValue<float>(),
+            Reader.ReadValue<float>()
         );
     }
 }
