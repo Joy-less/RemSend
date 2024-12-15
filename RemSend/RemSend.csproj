@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Godot.SourceGenerators" Version="4.3.0" />
+    <PackageReference Include="GodotSharp" Version="4.3.0" />
+    <PackageReference Include="MemoryPack" Version="1.21.3" />
+  </ItemGroup>
+</Project>
