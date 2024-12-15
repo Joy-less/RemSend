@@ -117,8 +117,6 @@ public partial class RemSend : Node {
         }
         // Ensure remote method is accessible
         switch (RemAttribute.Access) {
-            case RemAccess.None:
-                throw new Exception($"Remote method cannot be called: '{Packet.MethodName}'");
             case RemAccess.Authority:
                 if (RemoteId is not (0 or 1)) {
                     throw new Exception($"Remote method cannot be called by non-authority: '{Packet.MethodName}'");
@@ -129,6 +127,10 @@ public partial class RemSend : Node {
                     throw new Exception($"Remote method cannot be called on non-authority: '{Packet.MethodName}'");
                 }
                 break;
+            case RemAccess.Any:
+                break;
+            case RemAccess.None or _:
+                throw new Exception($"Remote method cannot be called: '{Packet.MethodName}'");
         }
 
         // Unpack arguments
