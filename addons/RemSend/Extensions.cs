@@ -12,14 +12,13 @@ namespace RemSend;
 
 internal static class Extensions {
     /// <summary>
-    /// Evaluate the value of the expression.
+    /// Gets the constant value of the expression or compiles it to a delegate and invokes it.
     /// </summary>
     public static object? Evaluate(this Lq.Expression? Expression) {
         if (Expression is null) {
             return null;
         }
         else if (Expression is Lq.ConstantExpression ConstantExpression) {
-            // Optimisation for constant expressions
             return ConstantExpression.Value;
         }
         else {
@@ -27,13 +26,13 @@ internal static class Extensions {
         }
     }
     /// <summary>
-    /// Evaluate the value of the expressions.
+    /// Gets the constant value of the expressions or compiles them to delegates and invokes them.
     /// </summary>
     public static object?[] Evaluate(this IEnumerable<Lq.Expression?> Expressions) {
         return Expressions.Select(Evaluate).ToArray();
     }
     /// <summary>
-    /// Serialise the arguments based on the parameter types.
+    /// Serialises the arguments based on the parameter types.
     /// </summary>
     public static byte[][] PackArguments(this IList<object?> Arguments, IList<ParameterInfo> Parameters) {
         byte[][] PackedArguments = new byte[Arguments.Count][];
@@ -48,7 +47,7 @@ internal static class Extensions {
         return PackedArguments;
     }
     /// <summary>
-    /// Deserialise the arguments based on the parameter types.
+    /// Deserialises the arguments based on the parameter types.
     /// </summary>
     public static object?[] UnpackArguments(this IList<byte[]> PackedArguments, IList<ParameterInfo> Parameters) {
         object?[] Arguments = new object[PackedArguments.Count];
