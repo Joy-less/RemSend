@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Collections.Frozen;
 using Godot;
 
 using RpcMode = Godot.MultiplayerApi.RpcMode;

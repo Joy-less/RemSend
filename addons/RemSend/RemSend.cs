@@ -11,7 +11,6 @@ using Godot;
 using MemoryPack;
 
 using Lq = System.Linq.Expressions;
-using RpcMode = Godot.MultiplayerApi.RpcMode;
 
 namespace RemSend;
 
@@ -48,10 +47,10 @@ public partial class RemSend : Node {
             return false;
         });
     }
-    internal async Task<T> BroadcastRemAwaitResponse<T>(Lq.MethodCallExpression CallExpression, double Timeout, CancellationToken CancelToken = default) {
+    internal async Task<T> BroadcastRemAndGetResponse<T>(Lq.MethodCallExpression CallExpression, double Timeout, CancellationToken CancelToken = default) {
         return await AwaitResponseAsync<T>(BroadcastRem(CallExpression), Timeout, CancelToken);
     }
-    internal async Task<T> SendRemAwaitResponse<T>(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression, double Timeout, CancellationToken CancelToken = default) {
+    internal async Task<T> SendRemAndGetResponse<T>(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression, double Timeout, CancellationToken CancelToken = default) {
         return await AwaitResponseAsync<T>(SendRem(PeerIds, CallExpression), Timeout, CancelToken);
     }
 
@@ -96,7 +95,7 @@ public partial class RemSend : Node {
     }
     private static async void ReceivePacket(byte[] PackedPacket) {
         // Deserialise packet
-        RemPacket Packet = MemoryPackSerializer.Deserialize<RemPacket>(PackedPacket)!;
+        RemPacket Packet = MemoryPackSerializer.Deserialize<RemPacket>(PackedPacket);
 
         // Get peer IDs
         int RemoteId = Singleton.Multiplayer.GetRemoteSenderId();
@@ -112,7 +111,7 @@ public partial class RemSend : Node {
 
         // Ensure remote method has attribute
         if (Method.GetCustomAttribute<RemAttribute>() is not RemAttribute RemAttribute) {
-            throw new Exception($"Remote method has no {typeof(RemAttribute).Name}: '{Packet.MethodName}'");
+            throw new Exception($"Remote method has no {nameof(RemAttribute)}: '{Packet.MethodName}'");
         }
         // Ensure remote method is accessible
         switch (RemAttribute.Access) {
