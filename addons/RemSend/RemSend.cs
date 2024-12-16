@@ -16,9 +16,9 @@ using RpcMode = Godot.MultiplayerApi.RpcMode;
 namespace RemSend;
 
 public partial class RemSend : Node {
-    public static RemSend Singleton {get; private set;}
+    public static RemSend Singleton { get; private set; }
 
-    private readonly ConcurrentDictionary<ulong, TaskCompletionSource<byte[]>> ResponseAwaiters = [];
+    private readonly ConcurrentDictionary<long, TaskCompletionSource<byte[]>> ResponseAwaiters = [];
 
     private const BindingFlags Bindings = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy;
 
@@ -29,7 +29,7 @@ public partial class RemSend : Node {
         GodotMemoryPackFormatters.RegisterTypes();
     }
 
-    internal ulong BroadcastRem(Lq.MethodCallExpression CallExpression) {
+    internal long BroadcastRem(Lq.MethodCallExpression CallExpression) {
         return SendPacket(CallExpression, (byte[] PackedPacket, StringName TransferRpcName) => {
             // Transfer packet to all peers
             Rpc(TransferRpcName, PackedPacket);
@@ -37,7 +37,7 @@ public partial class RemSend : Node {
             return true;
         });
     }
-    internal ulong SendRem(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression) {
+    internal long SendRem(IEnumerable<int> PeerIds, Lq.MethodCallExpression CallExpression) {
         return SendPacket(CallExpression, (byte[] PackedPacket, StringName TransferRpcName) => {
             // Transfer packet to given peers
             foreach (int PeerId in PeerIds) {
@@ -54,7 +54,7 @@ public partial class RemSend : Node {
         return await AwaitResponseAsync<T>(SendRem(PeerIds, CallExpression), Timeout, CancelToken);
     }
 
-    private static ulong SendPacket(Lq.MethodCallExpression Expression, Func<byte[], StringName, bool> CallTransferRpc) {
+    private static long SendPacket(Lq.MethodCallExpression Expression, Func<byte[], StringName, bool> CallTransferRpc) {
         // Get target node from method call expression
         if (Expression.Object.Evaluate() is not Node Target) {
             throw new Exception($"Remote call method target must be Node (got '{Expression.Object?.GetType().Name ?? "null"}'): '{Expression.Method.Name}'");
@@ -174,7 +174,7 @@ public partial class RemSend : Node {
         // Rpc return value
         Singleton.RpcId(RemoteId, ResponseTransferRpc, Packet.PacketId, MemoryPackSerializer.Serialize(ReturnType, ReturnValue));
     }
-    private async Task<T> AwaitResponseAsync<T>(ulong PacketId, double Timeout, CancellationToken CancelToken = default) {
+    private async Task<T> AwaitResponseAsync<T>(long PacketId, double Timeout, CancellationToken CancelToken = default) {
         // Add response awaiter
         TaskCompletionSource<byte[]> ResponseAwaiter = ResponseAwaiters.GetOrAdd(PacketId, PacketId => new());
         try {

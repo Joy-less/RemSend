@@ -49,7 +49,7 @@ public partial class RemSend {
         ReceivePacket(PackedRemPacket);
     }
     [Rpc(RpcMode.AnyPeer, TransferMode = TransferMode.Reliable, TransferChannel = 0)]
-    public void PacketResponseRpc(ulong PacketId, byte[] PackedReturnValue) {
+    public void PacketResponseRpc(long PacketId, byte[] PackedReturnValue) {
         ResponseAwaiters.GetValueOrDefault(PacketId)?.TrySetResult(PackedReturnValue);
     }
 #endregion
@@ -68,7 +68,7 @@ public partial class RemSend {
         UnreliablePacketRpc(PackedRemPacket);
     }
     [Rpc(RpcMode.AnyPeer, TransferMode = TransferMode.Reliable, TransferChannel = 1)]
-    public void PacketResponseRpc1(ulong PacketId, byte[] PackedReturnValue) {
+    public void PacketResponseRpc1(long PacketId, byte[] PackedReturnValue) {
         PacketResponseRpc(PacketId, PackedReturnValue);
     }
 #endregion
@@ -87,7 +87,7 @@ public partial class RemSend {
         UnreliablePacketRpc(PackedRemPacket);
     }
     [Rpc(RpcMode.AnyPeer, TransferMode = TransferMode.Reliable, TransferChannel = 2)]
-    public void PacketResponseRpc2(ulong PacketId, byte[] PackedReturnValue) {
+    public void PacketResponseRpc2(long PacketId, byte[] PackedReturnValue) {
         PacketResponseRpc(PacketId, PackedReturnValue);
     }
 #endregion
@@ -106,7 +106,7 @@ public partial class RemSend {
         UnreliablePacketRpc(PackedRemPacket);
     }
     [Rpc(RpcMode.AnyPeer, TransferMode = TransferMode.Reliable, TransferChannel = 3)]
-    public void PacketResponseRpc3(ulong PacketId, byte[] PackedReturnValue) {
+    public void PacketResponseRpc3(long PacketId, byte[] PackedReturnValue) {
         PacketResponseRpc(PacketId, PackedReturnValue);
     }
 #endregion
