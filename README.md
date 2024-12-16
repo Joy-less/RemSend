@@ -51,6 +51,6 @@ int Number = await Rem(1, () => GetNumberRem());
 </ItemGroup>
 ```
 
-2. Add the Rem Send addon to your project.
+2. Add the Rem Send addon to your project and build the project.
 
-3. Create a node and attach the `RemSend.cs` script.
+3. Create a `RemSend` node (or create a node and attach the `RemSend.cs` script).

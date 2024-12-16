@@ -15,6 +15,7 @@ using RpcMode = Godot.MultiplayerApi.RpcMode;
 
 namespace RemSend;
 
+[GlobalClass]
 public partial class RemSend : Node {
     public static RemSend Singleton { get; private set; }
 
