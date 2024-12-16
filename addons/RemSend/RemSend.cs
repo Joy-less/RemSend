@@ -57,13 +57,12 @@ public partial class RemSend : Node {
 
     private static long SendPacket(Lq.MethodCallExpression Expression, Func<byte[], StringName, bool> CallTransferRpc) {
         // Get target node from method call expression
-        if (Expression.Object.Evaluate() is not Node Target) {
-            throw new Exception($"Remote call method target must be Node (got '{Expression.Object?.GetType().Name ?? "null"}'): '{Expression.Method.Name}'");
-        }
+        Node Target = Expression.Object.Evaluate() as Node
+            ?? throw new Exception($"Remote call method target must be {nameof(Node)}: '{Expression.Method.Name}'");
 
         // Get rem attribute
         RemAttribute RemAttribute = Expression.Method.GetCustomAttribute<RemAttribute>()
-            ?? throw new Exception($"Remote call method must have {typeof(RemAttribute).Name}: '{Expression.Method.Name}'");
+            ?? throw new Exception($"Remote call method must have {nameof(RemAttribute)}: '{Expression.Method.Name}'");
 
         // Get arguments from method call
         object?[] Arguments = Expression.Arguments.Evaluate();
@@ -87,11 +86,10 @@ public partial class RemSend : Node {
         StringName TransferRpc = TransferRpcsForMode[RemAttribute.Channel];
 
         // Transfer packet
-        if (CallTransferRpc(PackedPacket, TransferRpc)) {
-            // Call RPC locally
-            if (RemAttribute.CallLocal) {
-                ReceivePacket(PackedPacket);
-            }
+        bool MaybeCallLocal = CallTransferRpc(PackedPacket, TransferRpc);
+        // Also call RPC locally
+        if (MaybeCallLocal && RemAttribute.CallLocal) {
+            ReceivePacket(PackedPacket);
         }
         // Return packet ID to await response
         return Packet.PacketId;
