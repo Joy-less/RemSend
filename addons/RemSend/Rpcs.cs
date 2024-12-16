@@ -9,7 +9,7 @@ using TransferModeEnum = Godot.MultiplayerPeer.TransferModeEnum;
 namespace RemSend;
 
 public partial class RemSend {
-    private static readonly Dictionary<RemMode, StringName[]> TransferRpcs = new() {
+    private static readonly FrozenDictionary<RemMode, StringName[]> TransferRpcs = new Dictionary<RemMode, StringName[]>() {
         [RemMode.Reliable] = [
             MethodName.ReliablePacketRpc,
             MethodName.ReliablePacketRpc1,
@@ -28,7 +28,7 @@ public partial class RemSend {
             MethodName.UnreliablePacketRpc2,
             MethodName.UnreliablePacketRpc3,
         ],
-    };
+    }.ToFrozenDictionary();
     private static readonly StringName[] ResponseTransferRpcs = [
         MethodName.PacketResponseRpc,
         MethodName.PacketResponseRpc1,
