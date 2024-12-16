@@ -150,15 +150,15 @@ public partial class RemSend : Node {
             // Await task
             await Task;
 
-            // Method returns task without value
+            // Method returns task without result
             if (ReturnType == typeof(Task)) {
                 // Return dummy value (instead of VoidTaskResult)
                 ReturnType = typeof(byte);
                 ReturnValue = (byte)0;
             }
-            // Method returns task with value
+            // Method returns task with result
             else {
-                // Return task value
+                // Return task result
                 PropertyInfo TaskResultProperty = Task.GetType().GetProperty(nameof(Task<object>.Result))!;
                 ReturnType = TaskResultProperty.PropertyType;
                 ReturnValue = TaskResultProperty.GetValue(Task);
