@@ -135,11 +135,11 @@ public partial class RemSend : Node {
         // Unpack arguments
         object?[] Arguments = Packet.PackedArguments.UnpackArguments(Method.GetParameters());
         // Invoke method with arguments
-        Type ReturnType = Method.ReturnType;
         object? ReturnValue = Method.Invoke(Target, Arguments);
+        Type ReturnType = ReturnValue?.GetType() ?? Method.ReturnType;
 
         // Method returns void
-        if (ReturnType == typeof(void)) {
+        if (Method.ReturnType == typeof(void)) {
             // Don't return value
             return;
         }
@@ -148,18 +148,19 @@ public partial class RemSend : Node {
             // Await task
             await Task;
 
-            // Method returns task without result
-            if (ReturnType == typeof(Task)) {
-                // Return dummy value (instead of VoidTaskResult)
-                ReturnType = typeof(byte);
-                ReturnValue = (byte)0;
-            }
+            // Get task result
+            PropertyInfo? TaskResultProperty = Task.GetType().GetProperty(nameof(Task<object>.Result));
             // Method returns task with result
-            else {
+            if (TaskResultProperty is not null) {
                 // Return task result
-                PropertyInfo TaskResultProperty = Task.GetType().GetProperty(nameof(Task<object>.Result))!;
-                ReturnType = TaskResultProperty.PropertyType;
                 ReturnValue = TaskResultProperty.GetValue(Task);
+                ReturnType = ReturnValue?.GetType() ?? TaskResultProperty.PropertyType;
+            }
+            // Method returns task without result
+            else {
+                // Return dummy value (instead of VoidTaskResult)
+                ReturnValue = (byte)0;
+                ReturnType = typeof(byte);
             }
         }
 
@@ -170,7 +171,7 @@ public partial class RemSend : Node {
         // Get reponse transfer RPC from attribute
         StringName ResponseTransferRpc = ResponseTransferRpcs[RemAttribute.Channel];
 
-        // Rpc return value
+        // RPC return value
         Singleton.RpcId(RemoteId, ResponseTransferRpc, Packet.PacketId, MemoryPackSerializer.Serialize(ReturnType, ReturnValue));
     }
     private async Task<T> AwaitResponseAsync<T>(long PacketId, double Timeout, CancellationToken CancelToken = default) {
