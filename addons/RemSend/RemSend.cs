@@ -126,37 +126,38 @@ public partial class RemSend : Node {
         // Unpack arguments
         object?[] Arguments = Packet.PackedArguments.UnpackArguments(Method.GetParameters());
         // Invoke method with arguments
+        Type ReturnType = Method.ReturnType;
         object? ReturnValue = Method.Invoke(Target, Arguments);
-        Type ReturnType = ReturnValue?.GetType() ?? Method.ReturnType;
-
-        // Convert ValueTask to Task
-        if (ReturnValue is ValueTask ValueTask) {
-            ReturnValue = ValueTask.AsTask();
-        }
 
         // Method returns void
         if (ReturnType == typeof(void)) {
             // Don't return value
             return;
         }
+
         // Method returns task
-        else if (ReturnValue is Task Task) {
+        if (ReturnValue is Task or ValueTask) {
             // Await task
-            await Task;
+            if (ReturnValue is Task ReturnValueTask) {
+                await ReturnValueTask;
+            }
+            if (ReturnValue is ValueTask ReturnValueValueTask) {
+                await ReturnValueValueTask;
+            }
 
             // Get task result
-            PropertyInfo? TaskResultProperty = Task.GetType().GetProperty(nameof(Task<object>.Result));
+            PropertyInfo? TaskResultProperty = ReturnValue.GetType().GetProperty(nameof(Task<object>.Result));
             // Method returns task with result
             if (TaskResultProperty is not null) {
                 // Return task result
-                ReturnValue = TaskResultProperty.GetValue(Task);
-                ReturnType = ReturnValue?.GetType() ?? TaskResultProperty.PropertyType;
+                ReturnType = TaskResultProperty.PropertyType;
+                ReturnValue = TaskResultProperty.GetValue(ReturnValue);
             }
             // Method returns task without result
             else {
                 // Return dummy value (instead of VoidTaskResult)
-                ReturnValue = (byte)0;
                 ReturnType = typeof(byte);
+                ReturnValue = (byte)0;
             }
         }
 
