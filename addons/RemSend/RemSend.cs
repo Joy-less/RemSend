@@ -73,16 +73,8 @@ public partial class RemSend : Node {
         // Pack packet
         byte[] PackedPacket = MemoryPackSerializer.Serialize(Packet);
 
-        // Ensure transfer mode is implemented
-        if (!TransferRpcs.TryGetValue(RemAttribute.Mode, out StringName[]? TransferRpcsForMode)) {
-            throw new NotImplementedException($"Remote call mode not implemented: {RemAttribute.Mode}");
-        }
-        // Ensure transfer channel is within supported range
-        if (RemAttribute.Channel < 0 || RemAttribute.Channel >= TransferRpcsForMode.Length) {
-            throw new InvalidOperationException($"Remote call channel out of range (0 to {TransferRpcsForMode.Length - 1}): {RemAttribute.Channel}");
-        }
         // Get transfer RPC from attribute
-        StringName TransferRpc = TransferRpcsForMode[RemAttribute.Channel];
+        StringName TransferRpc = GetTransferRpc(RemAttribute.Mode, RemAttribute.Channel);
 
         // Transfer packet
         bool MaybeCallLocal = CallTransferRpc(PackedPacket, TransferRpc);
@@ -168,12 +160,8 @@ public partial class RemSend : Node {
             }
         }
 
-        // Ensure reponse transfer channel is within supported range
-        if (RemAttribute.Channel < 0 || RemAttribute.Channel >= ResponseTransferRpcs.Length) {
-            throw new InvalidOperationException($"Remote call channel out of range (0 to {ResponseTransferRpcs.Length - 1}): {RemAttribute.Channel}");
-        }
         // Get reponse transfer RPC from attribute
-        StringName ResponseTransferRpc = ResponseTransferRpcs[RemAttribute.Channel];
+        StringName ResponseTransferRpc = GetResponseTransferRpc(RemAttribute.Channel);
 
         // RPC return value
         Singleton.RpcId(RemoteId, ResponseTransferRpc, Packet.PacketId, MemoryPackSerializer.Serialize(ReturnType, ReturnValue));

@@ -22,6 +22,6 @@ public class RemAttribute(RemAccess Access = RemAccess.None) : Attribute {
     /// The transfer channel number for remote method calls.<br/>
     /// Changing this can reduce congestion between unrelated calls (e.g. chatting and attacking).
     /// </summary>
-    /// <remarks>The supported channels are 0 to 3.</remarks>
+    /// <remarks>The supported channels are 0 to <inheritdoc cref="RemSend.MaxChannel" path="//value"/>.</remarks>
     public int Channel { get; set; } = 0;
 }
