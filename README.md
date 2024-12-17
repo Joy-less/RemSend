@@ -6,10 +6,11 @@ A Remote Procedure Call framework for Godot C#.
 
 ## Features
 
-- Call RPCs with static typing
-- Return values from RPCs
-- Send variant-incompatible values (with MemoryPack)
-- Extra access enum (peer -> authority)
+- Call RPCs with static typing.
+- Return values from RPCs.
+- Send variant-incompatible values (with MemoryPack).
+- Extra access enum (peer -> authority).
+- Created for use in a real [MMORPG](https://youtu.be/4ptBKI0cGhI).
 
 ## Dependencies
 - [MemoryPack](https://github.com/Cysharp/MemoryPack)
