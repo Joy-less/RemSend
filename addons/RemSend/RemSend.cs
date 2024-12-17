@@ -137,8 +137,13 @@ public partial class RemSend : Node {
         object? ReturnValue = Method.Invoke(Target, Arguments);
         Type ReturnType = ReturnValue?.GetType() ?? Method.ReturnType;
 
+        // Convert ValueTask to Task
+        if (ReturnValue is ValueTask ValueTask) {
+            ReturnValue = ValueTask.AsTask();
+        }
+
         // Method returns void
-        if (Method.ReturnType == typeof(void)) {
+        if (ReturnType == typeof(void)) {
             // Don't return value
             return;
         }
