@@ -32,7 +32,7 @@ public partial class RemSend : Node {
     internal long BroadcastRem(Lq.MethodCallExpression CallExpression) {
         return SendPacket(CallExpression, (byte[] PackedPacket, StringName TransferRpcName) => {
             // Transfer packet to all peers
-            Rpc(TransferRpcName, PackedPacket);
+            Rpc(TransferRpcName, [PackedPacket]);
             // Maybe call locally
             return true;
         });
@@ -41,7 +41,7 @@ public partial class RemSend : Node {
         return SendPacket(CallExpression, (byte[] PackedPacket, StringName TransferRpcName) => {
             // Transfer packet to given peers
             foreach (int PeerId in PeerIds) {
-                RpcId(PeerId, TransferRpcName, PackedPacket);
+                RpcId(PeerId, TransferRpcName, [PackedPacket]);
             }
             // Never call locally
             return false;
@@ -54,7 +54,7 @@ public partial class RemSend : Node {
         return await AwaitResponseAsync<T>(SendRem(PeerIds, CallExpression), Timeout, CancelToken);
     }
 
-    private static long SendPacket(Lq.MethodCallExpression Expression, Func<byte[], StringName, bool> CallTransferRpc) {
+    private long SendPacket(Lq.MethodCallExpression Expression, Func<byte[], StringName, bool> CallTransferRpc) {
         // Get target node from method call expression
         Node Target = Expression.Object.Evaluate() as Node
             ?? throw new Exception($"Remote call method target must be {nameof(Node)}: '{Expression.Method.Name}'");
@@ -85,7 +85,7 @@ public partial class RemSend : Node {
         // Return packet ID to await response
         return Packet.PacketId;
     }
-    private static async void ReceivePacket(byte[] PackedPacket) {
+    private async void ReceivePacket(byte[] PackedPacket) {
         // Deserialise packet
         RemPacket Packet = MemoryPackSerializer.Deserialize<RemPacket>(PackedPacket);
 
@@ -164,7 +164,7 @@ public partial class RemSend : Node {
         StringName ResponseTransferRpc = GetResponseTransferRpc(RemAttribute.Channel);
 
         // RPC return value
-        Singleton.RpcId(RemoteId, ResponseTransferRpc, Packet.PacketId, MemoryPackSerializer.Serialize(ReturnType, ReturnValue));
+        RpcId(RemoteId, ResponseTransferRpc, [Packet.PacketId, MemoryPackSerializer.Serialize(ReturnType, ReturnValue)]);
     }
     private async Task<T> AwaitResponseAsync<T>(long PacketId, double Timeout, CancellationToken CancelToken = default) {
         // Add response awaiter
