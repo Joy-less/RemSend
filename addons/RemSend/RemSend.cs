@@ -138,26 +138,27 @@ public partial class RemSend : Node {
         // Method returns task
         if (ReturnValue is Task or ValueTask) {
             // Await task
-            if (ReturnValue is Task ReturnValueTask) {
-                await ReturnValueTask;
+            if (ReturnValue is Task Task) {
+                await Task;
             }
-            if (ReturnValue is ValueTask ReturnValueValueTask) {
-                await ReturnValueValueTask;
+            if (ReturnValue is ValueTask ValueTask) {
+                await ValueTask;
             }
 
             // Get task result
             PropertyInfo? TaskResultProperty = ReturnValue.GetType().GetProperty(nameof(Task<object>.Result));
-            // Method returns task with result
-            if (TaskResultProperty is not null) {
-                // Return task result
-                ReturnType = TaskResultProperty.PropertyType;
-                ReturnValue = TaskResultProperty.GetValue(ReturnValue);
-            }
+
             // Method returns task without result
-            else {
+            if (TaskResultProperty is null || TaskResultProperty.PropertyType.FullName is "System.Threading.Tasks.VoidTaskResult") {
                 // Return dummy value (instead of VoidTaskResult)
                 ReturnType = typeof(byte);
                 ReturnValue = (byte)0;
+            }
+            // Method returns task with result
+            else {
+                // Return task result
+                ReturnType = TaskResultProperty.PropertyType;
+                ReturnValue = TaskResultProperty.GetValue(ReturnValue);
             }
         }
 
