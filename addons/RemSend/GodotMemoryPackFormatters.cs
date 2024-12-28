@@ -148,9 +148,11 @@ internal class ColorFormatter : MemoryPackFormatter<Color> {
         Writer.WriteValue(Value.R);
         Writer.WriteValue(Value.G);
         Writer.WriteValue(Value.B);
+        Writer.WriteValue(Value.A);
     }
     public override void Deserialize(ref MemoryPackReader Reader, scoped ref Color Value) {
         Value = new Color(
+            Reader.ReadValue<float>(),
             Reader.ReadValue<float>(),
             Reader.ReadValue<float>(),
             Reader.ReadValue<float>()
