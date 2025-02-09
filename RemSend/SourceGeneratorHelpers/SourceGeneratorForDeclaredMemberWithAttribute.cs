@@ -17,6 +17,14 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
 
     private const string GeneratedFilenameExtension = ".g.cs";
 
+    private static readonly char[] InvalidFileNameChars = [
+        '\"', '<', '>', '|', '\0',
+        (char)1, (char)2, (char)3, (char)4, (char)5, (char)6, (char)7, (char)8, (char)9, (char)10,
+        (char)11, (char)12, (char)13, (char)14, (char)15, (char)16, (char)17, (char)18, (char)19, (char)20,
+        (char)21, (char)22, (char)23, (char)24, (char)25, (char)26, (char)27, (char)28, (char)29, (char)30,
+        (char)31, ':', '*', '?', '\\', '/'
+    ];
+
     protected virtual IEnumerable<(string Name, string Source)> StaticSources => [];
 
     public void Initialize(GeneratorContext Context) {
@@ -42,10 +50,9 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
                 return false;
             }
         }
-
-        static TDeclarationSyntax GetSyntaxTarget(GeneratorSyntaxContext Context, CancellationToken CancelToken)
-            => (TDeclarationSyntax)Context.Node;
-
+        static TDeclarationSyntax GetSyntaxTarget(GeneratorSyntaxContext Context, CancellationToken CancelToken) {
+            return (TDeclarationSyntax)Context.Node;
+        }
         void OnExecute(SourceProductionContext Context, Compilation Compilation, ImmutableArray<TDeclarationSyntax> Nodes, AnalyzerConfigOptionsProvider Options) {
             foreach (TDeclarationSyntax Node in Nodes.Distinct()) {
                 if (Context.CancellationToken.IsCancellationRequested) {
@@ -77,7 +84,6 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
     }
 
     protected abstract (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(Compilation Compilation, SyntaxNode Node, ISymbol Symbol, AttributeData Attribute, AnalyzerConfigOptions Options);
-
     private (string? GeneratedCode, DiagnosticDetail? Error) SafeGenerateCode(Compilation Compilation, SyntaxNode Node, ISymbol Symbol, AttributeData Attribute, AnalyzerConfigOptions Options) {
         try {
             return GenerateCode(Compilation, Node, Symbol, Attribute, Options);
@@ -94,11 +100,28 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
         return Node;
     }
 
-    private static readonly char[] InvalidFileNameChars = [
-        '\"', '<', '>', '|', '\0',
-        (char)1, (char)2, (char)3, (char)4, (char)5, (char)6, (char)7, (char)8, (char)9, (char)10,
-        (char)11, (char)12, (char)13, (char)14, (char)15, (char)16, (char)17, (char)18, (char)19, (char)20,
-        (char)21, (char)22, (char)23, (char)24, (char)25, (char)26, (char)27, (char)28, (char)29, (char)30,
-        (char)31, ':', '*', '?', '\\', '/'
-    ];
+    protected static bool TryGetAttributeArgument<T>(AttributeData AttributeData, string ArgumentName, out T Value) {
+        // Try to get named argument
+        foreach (KeyValuePair<string, TypedConstant> NamedArgument in AttributeData.NamedArguments) {
+            if (NamedArgument.Key == ArgumentName) {
+                Value = (T)NamedArgument.Value.Value!;
+                return true;
+            }
+        }
+        // Try to get positional argument
+        if (AttributeData.AttributeConstructor is not null) {
+            foreach (IParameterSymbol Parameter in AttributeData.AttributeConstructor.Parameters) {
+                if (Parameter.Name == ArgumentName) {
+                    Value = (T)AttributeData.ConstructorArguments[Parameter.Ordinal].Value!;
+                    return true;
+                }
+            }
+        }
+        // Argument not found
+        Value = default!;
+        return false;
+    }
+    protected static T GetAttributeArgument<T>(AttributeData AttributeData, string ArgumentName, T? DefaultValue = default) {
+        return TryGetAttributeArgument(AttributeData, ArgumentName, out T Value) ? Value : DefaultValue!;
+    }
 }

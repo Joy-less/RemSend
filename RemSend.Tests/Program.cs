@@ -5,7 +5,7 @@ public partial class Program {
         new Program().DoStuff();
     }
 
-    [Rem(RemAccess.Any)]
+    [Rem(RemAccess.Any, Channel: 123, Mode = RemMode.UnreliableOrdered)]
     public void DoStuff() {
         SendDoStuff();
     }

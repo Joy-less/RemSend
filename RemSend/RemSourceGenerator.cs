@@ -16,36 +16,18 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
             public void Send{{Symbol.Name}}() {
                 Console.WriteLine("Hello, World!");
             }
+            // {{RemAttribute.Access}},{{RemAttribute.CallLocal}},{{RemAttribute.Mode}},{{RemAttribute.Channel}}
             """));
 
         return (SourceBuilder.ToString(), null);
     }
 
     private static RemAttribute ReconstructAttribute(AttributeData AttributeData) {
-        // Create attribute from arguments
-        RemAttribute Attribute = new(
-            Access: (RemAccess)AttributeData.ConstructorArguments.ElementAtOrDefault(0).Value!,
-            CallLocal: (bool)AttributeData.ConstructorArguments.ElementAtOrDefault(1).Value!,
-            Mode: (RemMode)AttributeData.ConstructorArguments.ElementAtOrDefault(2).Value!,
-            Channel: (int)AttributeData.ConstructorArguments.ElementAtOrDefault(3).Value!
+        return new RemAttribute(
+            Access: GetAttributeArgument(AttributeData, nameof(RemAttribute.Access), RemAccess.None),
+            CallLocal: GetAttributeArgument(AttributeData, nameof(RemAttribute.CallLocal), false),
+            Mode: GetAttributeArgument(AttributeData, nameof(RemAttribute.Mode), RemMode.Reliable),
+            Channel: GetAttributeArgument(AttributeData, nameof(RemAttribute.Channel), 0)
         );
-        // Update attribute with named arguments
-        foreach (KeyValuePair<string, TypedConstant> NamedArgument in AttributeData.NamedArguments) {
-            switch (NamedArgument.Key) {
-                case nameof(Attribute.Access):
-                    Attribute.Access = (RemAccess)NamedArgument.Value.Value!;
-                    break;
-                case nameof(Attribute.CallLocal):
-                    Attribute.CallLocal = (bool)NamedArgument.Value.Value!;
-                    break;
-                case nameof(Attribute.Mode):
-                    Attribute.Mode = (RemMode)NamedArgument.Value.Value!;
-                    break;
-                case nameof(Attribute.Channel):
-                    Attribute.Channel = (int)NamedArgument.Value.Value!;
-                    break;
-            }
-        }
-        return Attribute;
     }
 }
