@@ -1,7 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Text;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using RemSend.SourceGeneratorHelpers;
-using System.Text;
 
 namespace RemSend;
 
@@ -16,8 +16,7 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
             public void Send{{Symbol.Name}}() {
                 Console.WriteLine("Hello, World!");
             }
-            // {{RemAttribute.Access}},{{RemAttribute.CallLocal}},{{RemAttribute.Mode}},{{RemAttribute.Channel}}
-            """));
+            """, ["System"]));
 
         return (SourceBuilder.ToString(), null);
     }

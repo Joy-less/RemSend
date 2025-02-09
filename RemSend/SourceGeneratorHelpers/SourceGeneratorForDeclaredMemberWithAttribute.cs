@@ -1,9 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Immutable;
+using System.Text.RegularExpressions;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using System.Collections.Immutable;
-using System.Text.RegularExpressions;
 using GeneratorContext = Microsoft.CodeAnalysis.IncrementalGeneratorInitializationContext;
 
 namespace RemSend.SourceGeneratorHelpers;
