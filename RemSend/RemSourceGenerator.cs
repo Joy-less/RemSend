@@ -22,21 +22,30 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
     }
 
     private static RemAttribute ReconstructAttribute(AttributeData AttributeData) {
+        // Create attribute from arguments
         RemAttribute Attribute = new(
             Access: (RemAccess)AttributeData.ConstructorArguments.ElementAtOrDefault(0).Value!,
             CallLocal: (bool)AttributeData.ConstructorArguments.ElementAtOrDefault(1).Value!,
             Mode: (RemMode)AttributeData.ConstructorArguments.ElementAtOrDefault(2).Value!,
             Channel: (int)AttributeData.ConstructorArguments.ElementAtOrDefault(3).Value!
         );
-        return Attribute;
-
-        /*foreach (KeyValuePair<string, TypedConstant> NamedArgument in AttributeData.NamedArguments) {
-            if (NamedArgument.Key is nameof(Attribute.Access)) {
-                return new RemAttribute((RemAccess)NamedArgument.Value.Value);
+        // Update attribute with named arguments
+        foreach (KeyValuePair<string, TypedConstant> NamedArgument in AttributeData.NamedArguments) {
+            switch (NamedArgument.Key) {
+                case nameof(Attribute.Access):
+                    Attribute.Access = (RemAccess)NamedArgument.Value.Value!;
+                    break;
+                case nameof(Attribute.CallLocal):
+                    Attribute.CallLocal = (bool)NamedArgument.Value.Value!;
+                    break;
+                case nameof(Attribute.Mode):
+                    Attribute.Mode = (RemMode)NamedArgument.Value.Value!;
+                    break;
+                case nameof(Attribute.Channel):
+                    Attribute.Channel = (int)NamedArgument.Value.Value!;
+                    break;
             }
         }
-
-        AttributeData.NamedArguments.FirstOrDefault(NamedArgument => NamedArgument.Key == nameof(RemAttribute.Access));
-        return new RemAttribute(RemAccess.None);*/
+        return Attribute;
     }
 }
