@@ -1,0 +1,24 @@
+RemSend plan
+
+```cs
+[Rem(RemAccess.Peer)]
+public void SayWordsRem(List<string> Words) {
+    foreach (string Word in Words) {
+        GD.Print(Word);
+    }
+}
+```
+
+Generates:
+```cs
+public void SendSayWordsRem(RemSendTarget Target, List<string> Words) {
+    foreach (int PeerId in Target.GetPeerIds()) {
+        RpcId(PeerId, new RemPacket(Words));
+    }
+}
+[Rpc(RpcMode.AnyPeer)]
+public void SayWordsRemRpc(byte[] SerializedRemPacket) {
+    RemPacket Packet = MemoryPackSerializer.Deserialize<RemPacket>(PackedPacket);
+    SayWordsRem(Packet);
+}
+```

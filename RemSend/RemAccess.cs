@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace RemSend;
 
 public enum RemAccess {
@@ -8,15 +6,15 @@ public enum RemAccess {
     /// </summary>
     None,
     /// <summary>
-    /// The authority can call this remote method.
+    /// The authority can call this remote method on any peer.
     /// </summary>
     Authority,
     /// <summary>
-    /// Peers can call this remote method on the authority.
+    /// Any peer can call this remote method on the authority.
     /// </summary>
-    Peer,
+    PeerToAuthority,
     /// <summary>
-    /// Peers can call this remote method on other peers.
+    /// Any peer can call this remote method on any peer.
     /// </summary>
     Any,
 }

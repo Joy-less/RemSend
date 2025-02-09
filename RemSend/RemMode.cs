@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace RemSend;
 
 public enum RemMode {

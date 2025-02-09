@@ -2,7 +2,7 @@
 
 # Rem Send
 
-A Remote Procedure Call framework for Godot C#.
+A Remote Procedure Call framework for Godot C# using source generators.
 
 ## Features
 
@@ -18,40 +18,25 @@ A Remote Procedure Call framework for Godot C#.
 ## Examples
 
 ```cs
-[Rem(RemAccess.Peer)]
-public void SayWordsRem(List<string> Words) {
+[Rem(RemAccess.PeerToAuthority)]
+public void SayWords(List<string> Words) {
     foreach (string Word in Words) {
         GD.Print(Word);
     }
 }
 
-Rem(1, () => SayWordsRem(["cat", "dog"])); // The method name and arguments are extracted from the expression.
+SendSayWords(["cat", "dog"]);
 ```
 
 ```cs
-[Rem(RemAccess.Peer)]
-public int GetNumberRem() {
+[Rem(RemAccess.PeerToAuthority)]
+public int GetNumber() {
     return 5;
 }
 
-int Number = await Rem(1, () => GetNumberRem());
+int Number = await RequestGetNumber();
 ```
 
-## Limitations
+## Special Thanks
 
-- Uses reflection (may be slow, incompatible with trimming, incompatible with GDScript)
-- Optional parameters must be passed explicitly (due to a current limitation with Linq Expressions)
-- Only supports 4 transfer channels (since they are implemented manually)
-
-## Setup
-
-1. Install MemoryPack through NuGet or by editing your `csproj` file:
-```
-<ItemGroup>
-  <PackageReference Include="MemoryPack" Version="1.21.3" />
-</ItemGroup>
-```
-
-2. Add the Rem Send addon to your project and build the project.
-
-3. Create a `RemSend` node (or create a node and attach the `RemSend.cs` script).
+- [GodotSharp.SourceGenerators](https://github.com/Cat-Lips/GodotSharp.SourceGenerators)
