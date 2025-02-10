@@ -12,7 +12,7 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
 
         StringBuilder SourceBuilder = new();
 
-        SourceBuilder.Append(Symbol.ContainingType.GeneratePartialClass($$"""
+        SourceBuilder.Append(Symbol.ContainingType.GeneratePartialType($$"""
             public void Send{{Symbol.Name}}() {
                 Console.WriteLine("Hello, World!");
             }

@@ -26,13 +26,19 @@ public static class SymbolExtensions {
     public static string? ClassPath(this INamedTypeSymbol Symbol) {
         return Symbol.DeclaringSyntaxReferences.FirstOrDefault()?.SyntaxTree?.FilePath;
     }
-    public static string GeneratePartialClass(this INamedTypeSymbol Symbol, string Content, IEnumerable<string>? Usings = null) {
+    public static string GeneratePartialType(this INamedTypeSymbol Symbol, string Content, IEnumerable<string>? Usings = null) {
         (string? NamespaceDeclaration, string? NamespaceClosure, string? NamespaceIndent) = Symbol.GetNamespaceDeclaration();
+
+        string TypeModifiers =
+            (Symbol.IsRefLikeType ? "ref " : "")
+            + "partial "
+            + (Symbol.IsRecord ? "record " : "")
+            + (Symbol.IsValueType ? "struct" : "class");
 
         return $$"""
             {{string.Join("\n", (Usings ?? []).Select(Using => $"using {Using};"))}}
             {{NamespaceDeclaration?.Trim()}}
-            {{NamespaceIndent}}partial{{(Symbol.IsRecord ? " record" : "")}} {{(Symbol.IsValueType ? "struct" : "class")}} {{Symbol.ClassDef()}} {
+            {{NamespaceIndent}}{{TypeModifiers}} {{Symbol.ClassDef()}} {
             {{NamespaceIndent}}    {{string.Join($"\n{NamespaceIndent}    ", Content.SplitLines())}}
             {{NamespaceIndent}}}
             {{NamespaceClosure?.Trim()}}
