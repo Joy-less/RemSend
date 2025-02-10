@@ -1,5 +1,5 @@
 <Solution>
-  <Folder Name="/Solution Items/" Id="959e43f2-dcff-4adf-ae41-85386976d4de">
+  <Folder Name="/Solution Items/">
     <File Path="README.md" />
   </Folder>
   <Project Path="RemSend.Tests/RemSend.Tests.csproj" />
