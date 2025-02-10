@@ -9,13 +9,6 @@
   <ItemGroup>
     <ProjectReference Include="..\RemSend\RemSend.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
-
-  <!-- Fix source generators in Visual Studio (https://github.com/dotnet/roslyn/issues/50451) -->
-  <PropertyGroup>
-    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
-  </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
   </ItemGroup>
 </Project>
