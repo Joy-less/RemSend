@@ -32,7 +32,7 @@ public static class SymbolExtensions {
         return $$"""
             {{string.Join("\n", (Usings ?? []).Select(Using => $"using {Using};"))}}
             {{NamespaceDeclaration?.Trim()}}
-            {{NamespaceIndent}}partial class {{Symbol.ClassDef()}} {
+            {{NamespaceIndent}}partial{{(Symbol.IsRecord ? " record" : "")}} {{(Symbol.IsValueType ? "struct" : "class")}} {{Symbol.ClassDef()}} {
             {{NamespaceIndent}}    {{string.Join($"\n{NamespaceIndent}    ", Content.SplitLines())}}
             {{NamespaceIndent}}}
             {{NamespaceClosure?.Trim()}}
