@@ -10,5 +10,12 @@
     <ProjectReference Include="..\RemSend\RemSend.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="GodotSharp" Version="4.3.0" />
   </ItemGroup>
+
+  <!-- Source generator debugging -->
+  <PropertyGroup>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+  </PropertyGroup>
 </Project>
