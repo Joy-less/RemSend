@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -13,7 +12,7 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
     where TDeclarationSyntax : MemberDeclarationSyntax {
 
     private static readonly string AttributeType = typeof(TAttribute).Name;
-    private static readonly string AttributeName = Regex.Replace(AttributeType, "Attribute$", "", RegexOptions.Compiled);
+    private static readonly string AttributeName = AttributeType.TrimSuffix("Attribute");
 
     private const string GeneratedFilenameExtension = ".g.cs";
 
@@ -60,19 +59,17 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
                 }
 
                 SemanticModel Model = Compilation.GetSemanticModel(Node.SyntaxTree);
-                ISymbol? Symbol = Model.GetDeclaredSymbol(GetNode(Node));
-                if (Symbol is null) {
+                if (Model.GetDeclaredSymbol(GetNode(Node)) is not ISymbol Symbol) {
                     continue;
                 }
-                AttributeData? Attribute = Symbol.GetAttributes().SingleOrDefault(Attribute => Attribute.AttributeClass?.Name == AttributeType);
-                if (Attribute is null) {
+                if (Symbol.GetAttribute<TAttribute>() is not AttributeData Attribute) {
                     continue;
                 }
 
                 (string? GeneratedCode, DiagnosticDetail? Error) = SafeGenerateCode(Compilation, Node, Symbol, Attribute, Options.GlobalOptions);
 
                 if (GeneratedCode is null) {
-                    DiagnosticDescriptor Descriptor = new(Error!.Id ?? AttributeName, Error.Title, Error.Message, Error.Category ?? "Usage", DiagnosticSeverity.Error, true);
+                    DiagnosticDescriptor Descriptor = new(Error!.Id ?? typeof(TAttribute).Name, Error.Title, Error.Message, Error.Category ?? "Usage", DiagnosticSeverity.Error, true);
                     Diagnostic Diagnostic = Diagnostic.Create(Descriptor, Attribute.ApplicationSyntaxReference?.GetSyntax().GetLocation());
                     Context.ReportDiagnostic(Diagnostic);
                     continue;

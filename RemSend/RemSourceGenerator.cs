@@ -7,7 +7,7 @@ namespace RemSend;
 [Generator]
 internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribute<RemAttribute> {
     protected override (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(Compilation Compilation, SyntaxNode Node, IMethodSymbol Symbol, AttributeData Attribute, AnalyzerConfigOptions Options) {
-        RemAttribute RemAttribute = ReconstructAttribute(Attribute);
+        RemAttribute RemAttribute = ReconstructRemAttribute(Attribute);
 
         // Method names
         string SendMethodName = $"Send{Symbol.Name}";
@@ -15,22 +15,35 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         // Parameter names
         string PeerIdParameterName = "PeerId";
         string PeerIdsParameterName = "PeerIds";
+        // Local names
+        string SenderIdLocalName = "SenderId";
 
         // Access modifiers
         string AccessModifier = Symbol.GetDeclaredAccessibility();
 
+        // Filter parameters by category
+        List<IParameterSymbol> PseudoParameters = [.. Symbol.Parameters.Where(Parameter => Parameter.HasAttribute<SenderAttribute>())];
+        List <IParameterSymbol> RealParameters = [.. Symbol.Parameters.Except(PseudoParameters)];
+
         // Argument literals
-        IEnumerable<string> SendMethodArguments = Symbol.Parameters.Select(Parameter => Parameter.Name);
-        IEnumerable<string> SendMethodPackedArguments = Symbol.Parameters.Select(Parameter => $"{Parameter.Name}Pack");
+        List<string> SendMethodArguments = [.. RealParameters.Select(Parameter => Parameter.Name)];
+        List<string> SendMethodPackedArguments = [.. RealParameters.Select(Parameter => $"{Parameter.Name}Pack")];
         // Parameter definitions
-        IEnumerable<string> SendMethodParameters = Symbol.Parameters.Select(Parameter => $"{Parameter.GetAttributes().StringifyAttributes()}{Parameter}")
-            .Prepend($"int {PeerIdParameterName}");
-        IEnumerable<string> SendMethodMultiParameters = SendMethodParameters
-            .Skip(1).Prepend($"IEnumerable<int>? {PeerIdsParameterName}");
-        IEnumerable<string> SendRpcMethodParameters = SendMethodPackedArguments.Select(Argument => $"byte[] {Argument}");
+        List<string> SendMethodParameters = [.. RealParameters.Select(Parameter => $"{Parameter.GetAttributes().StringifyAttributes()}{Parameter}")
+            .Prepend($"int {PeerIdParameterName}")];
+        List<string> SendMethodMultiParameters = [.. SendMethodParameters
+            .Skip(1).Prepend($"IEnumerable<int>? {PeerIdsParameterName}")];
+        List<string> SendRpcMethodParameters = [.. SendMethodPackedArguments.Select(Argument => $"byte[] {Argument}")];
         // Statements
-        IEnumerable<string> SerializeStatements = Symbol.Parameters.Select(Parameter => $"byte[] {Parameter.Name}Pack = MemoryPackSerializer.Serialize({Parameter.Name});");
-        IEnumerable<string> DeserializeStatements = Symbol.Parameters.Select(Parameter => $"var {Parameter.Name} = MemoryPackSerializer.Deserialize<{Parameter.Type}>({Parameter.Name}Pack)!;");
+        List<string> SerializeStatements = [.. RealParameters.Select(Parameter => $"byte[] {Parameter.Name}Pack = MemoryPackSerializer.Serialize({Parameter.Name});")];
+        List<string> DeserializeStatements = [.. RealParameters.Select(Parameter => $"var {Parameter.Name} = MemoryPackSerializer.Deserialize<{Parameter.Type}>({Parameter.Name}Pack)!;")];
+
+        // Pass pseudo parameters
+        foreach (IParameterSymbol Parameter in Symbol.Parameters) {
+            if (Parameter.HasAttribute<SenderAttribute>()) {
+                SendMethodArguments.Insert(Parameter.Ordinal, SenderIdLocalName);
+            }
+        }
 
         // Method definitions
         string SendMethodDefinition = $$"""
@@ -73,13 +86,16 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
                 // Deserialize arguments
                 {{string.Join("\n    ", DeserializeStatements)}}
 
+                // Get sender peer ID
+                int {{SenderIdLocalName}} = Multiplayer.GetRemoteSenderId();
+
                 // Call target method
                 {{Symbol.Name}}({{string.Join(", ", SendMethodArguments)}});
             }
             """;
 
         // Using statements
-        IEnumerable<string> Usings = [
+        List<string> Usings = [
             "System.Collections.Generic",
             "System.Linq",
             "System.ComponentModel",
@@ -102,7 +118,7 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         return (GeneratedSource, null);
     }
 
-    private static RemAttribute ReconstructAttribute(AttributeData AttributeData) {
+    private static RemAttribute ReconstructRemAttribute(AttributeData AttributeData) {
         return new RemAttribute(
             Access: GetAttributeArgument(AttributeData, nameof(RemAttribute.Access), RemAccess.None),
             CallLocal: GetAttributeArgument(AttributeData, nameof(RemAttribute.CallLocal), false),
@@ -110,5 +126,4 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
             Channel: GetAttributeArgument(AttributeData, nameof(RemAttribute.Channel), 0)
         );
     }
-    
 }

@@ -6,4 +6,16 @@ public static class StringExtensions {
     public static string[] SplitLines(this string String, StringSplitOptions Options = StringSplitOptions.None) {
         return String.Split(LineSeparators, Options);
     }
+    public static string TrimPrefix(this string String, string Prefix) {
+        if (String.StartsWith(Prefix, StringComparison.Ordinal)) {
+            return String[Prefix.Length..];
+        }
+        return String;
+    }
+    public static string TrimSuffix(this string String, string Suffix) {
+        if (String.EndsWith(Suffix, StringComparison.Ordinal)) {
+            return String[..^Suffix.Length];
+        }
+        return String;
+    }
 }

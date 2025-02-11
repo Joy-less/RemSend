@@ -7,6 +7,24 @@ public static class SymbolExtensions {
     public static string GetDeclaredAccessibility(this ISymbol Symbol) {
         return SyntaxFacts.GetText(Symbol.DeclaredAccessibility);
     }
+    public static bool IsType(this INamedTypeSymbol? Symbol, Type TypeToCheck) {
+        return Symbol?.ToString() == TypeToCheck.ToString();
+    }
+    public static bool IsType<T>(this INamedTypeSymbol? Symbol) {
+        return Symbol.IsType(typeof(T));
+    }
+    public static AttributeData? GetAttribute(this ISymbol Symbol, Type AttributeType) {
+        return Symbol.GetAttributes().FirstOrDefault(Attribute => Attribute.AttributeClass.IsType(AttributeType));
+    }
+    public static AttributeData? GetAttribute<T>(this ISymbol Symbol) {
+        return Symbol.GetAttribute(typeof(T));
+    }
+    public static bool HasAttribute(this ISymbol Symbol, Type AttributeType) {
+        return Symbol.GetAttribute(AttributeType) is not null;
+    }
+    public static bool HasAttribute<T>(this ISymbol Symbol) {
+        return Symbol.HasAttribute(typeof(T));
+    }
     public static string GeneratePartialType(this INamedTypeSymbol Symbol, string Content, IEnumerable<string>? Usings = null, string Indent = "    ") {
         string PartialType = "";
         int Depth = 0;

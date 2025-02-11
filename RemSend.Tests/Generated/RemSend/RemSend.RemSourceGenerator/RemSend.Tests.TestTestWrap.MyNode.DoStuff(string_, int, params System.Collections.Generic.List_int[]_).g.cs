@@ -11,7 +11,7 @@ namespace RemSend.Tests;
 partial class TestTestWrap {
     partial class MyNode {    
         /// <summary>
-        /// Remotely calls <see cref="DoStuff(string?, System.Collections.Generic.List{int[]})"/>.<br/>
+        /// Remotely calls <see cref="DoStuff(string?, int, System.Collections.Generic.List{int[]})"/>.<br/>
         /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
         /// Set <paramref name="PeerId"/> to 1 to send to the authority.
         /// </summary>
@@ -25,7 +25,7 @@ partial class TestTestWrap {
         }
         
         /// <summary>
-        /// Remotely calls <see cref="DoStuff(string?, System.Collections.Generic.List{int[]})"/>.
+        /// Remotely calls <see cref="DoStuff(string?, int, System.Collections.Generic.List{int[]})"/>.
         /// </summary>
         public void SendDoStuff(IEnumerable<int>? PeerIds, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
             // Skip if no peers
@@ -50,8 +50,11 @@ partial class TestTestWrap {
             var Arg = MemoryPackSerializer.Deserialize<string?>(ArgPack)!;
             var Arg22 = MemoryPackSerializer.Deserialize<System.Collections.Generic.List<int[]>>(Arg22Pack)!;
         
+            // Get sender peer ID
+            int SenderId = Multiplayer.GetRemoteSenderId();
+        
             // Call target method
-            DoStuff(Arg, Arg22);
+            DoStuff(Arg, SenderId, Arg22);
         }
     }    
 }
