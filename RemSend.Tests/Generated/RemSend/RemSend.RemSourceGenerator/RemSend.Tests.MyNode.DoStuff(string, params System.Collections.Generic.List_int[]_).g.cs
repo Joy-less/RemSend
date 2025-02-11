@@ -6,7 +6,7 @@ using MemoryPack;
 namespace RemSend.Tests {
     partial class MyNode {
         /// 
-        public void SendDoStuff(int? PeerId, string Arg, System.Collections.Generic.List<int[]> Arg22) {
+        public void SendDoStuff(int? PeerId, string Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
             // Serialize arguments
             SendDoStuffPack ArgumentsPack = new(Arg, Arg22);
             byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);

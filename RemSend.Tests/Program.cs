@@ -1,4 +1,7 @@
-﻿namespace RemSend.Tests;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+
+namespace RemSend.Tests;
 
 public partial class Program {
     public static void Main() {
@@ -11,7 +14,7 @@ public partial class MyNode : Godot.Node {
     /// Test.
     /// </summary>
     [Rem(RemAccess.Any, Channel: 1234, Mode = RemMode.UnreliableOrdered)]
-    public void DoStuff(string Arg, System.Collections.Generic.List<int[]> Arg22) {
+    public void DoStuff(string Arg, [NotNullWhen(true)] params List<int[]> Arg22) {
         
     }
 }

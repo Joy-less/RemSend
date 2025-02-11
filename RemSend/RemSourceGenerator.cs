@@ -22,7 +22,7 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         string SerializedArgumentsPackLocalName = "SerializedArgumentsPack";
 
         // Parameter definitions
-        IEnumerable<string> SendMethodParameters = Symbol.Parameters.Select(Parameter => Parameter.ToString())
+        IEnumerable<string> SendMethodParameters = Symbol.Parameters.Select(Parameter => $"{Parameter.GetAttributes().StringifyAttributes()}{Parameter}")
             .Prepend($"int? {PeerIdParameterName}");
         IEnumerable<string> PackStructParameters = Symbol.Parameters.Select(Parameter => $"{Parameter.Type} {Parameter.Name}");
         // Arguments
@@ -93,4 +93,5 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
             Channel: GetAttributeArgument(AttributeData, nameof(RemAttribute.Channel), 0)
         );
     }
+    
 }
