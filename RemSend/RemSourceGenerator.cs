@@ -24,9 +24,9 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         IEnumerable<string> SendMethodPackedArguments = Symbol.Parameters.Select(Parameter => $"{Parameter.Name}Pack");
         // Parameter definitions
         IEnumerable<string> SendMethodParameters = Symbol.Parameters.Select(Parameter => $"{Parameter.GetAttributes().StringifyAttributes()}{Parameter}")
-            .Prepend($"int? {PeerIdParameterName}");
+            .Prepend($"int {PeerIdParameterName}");
         IEnumerable<string> SendMethodMultiParameters = SendMethodParameters
-            .Skip(1).Prepend($"IEnumerable<int> {PeerIdsParameterName}");
+            .Skip(1).Prepend($"IEnumerable<int>? {PeerIdsParameterName}");
         IEnumerable<string> SendRpcMethodParameters = SendMethodPackedArguments.Select(Argument => $"byte[] {Argument}");
         // Statements
         IEnumerable<string> SerializeStatements = Symbol.Parameters.Select(Parameter => $"byte[] {Parameter.Name}Pack = MemoryPackSerializer.Serialize({Parameter.Name});");
@@ -36,20 +36,15 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         string SendMethodDefinition = $$"""
             /// <summary>
             /// Remotely calls {{Symbol.GenerateSeeXml()}}.<br/>
-            /// If <paramref name="{{PeerIdParameterName}}"/> is <see langword="null"/>, broadcasts to all peers.
+            /// Set <paramref name="{{PeerIdParameterName}}"/> to 0 to broadcast to all peers.<br/>
+            /// Set <paramref name="{{PeerIdParameterName}}"/> to 1 to send to the authority.
             /// </summary>
             {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodParameters)}}) {
                 // Serialize arguments
                 {{string.Join("\n    ", SerializeStatements)}}
 
-                // Broadcast RPC to all peers
-                if ({{PeerIdParameterName}} is null) {
-                    Rpc("{{SendRpcMethodName}}", {{string.Join(", ", SendMethodPackedArguments)}});
-                }
-                // Send RPC to one peer
-                else {
-                    RpcId({{PeerIdParameterName}}.Value, "{{SendRpcMethodName}}", {{string.Join(", ", SendMethodPackedArguments)}});
-                }
+                // Send RPC to specific peer
+                RpcId({{PeerIdParameterName}}, "{{SendRpcMethodName}}", {{string.Join(", ", SendMethodPackedArguments)}});
             }
             """;
         string SendMethodMultiDefinition = $$"""
@@ -58,7 +53,7 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
             /// </summary>
             {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodMultiParameters)}}) {
                 // Skip if no peers
-                if (!{{PeerIdsParameterName}}.Any()) {
+                if ({{PeerIdsParameterName}} is null || !{{PeerIdsParameterName}}.Any()) {
                     return;
                 }
 

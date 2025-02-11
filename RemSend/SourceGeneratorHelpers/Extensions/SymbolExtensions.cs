@@ -45,8 +45,7 @@ public static class SymbolExtensions {
         }
 
         foreach (string ContentLine in Content.SplitLines()) {
-            Append(ContentLine);
-            Append("\n");
+            Append(ContentLine + "\n");
         }
 
         foreach (INamedTypeSymbol _ in ContainingTypes) {
