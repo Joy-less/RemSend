@@ -18,4 +18,11 @@
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
+  <Target Name="CleanSourceGeneratedFiles" BeforeTargets="BeforeBuild" DependsOnTargets="$(BeforeBuildDependsOn)">
+    <RemoveDir Directories="$(CompilerGeneratedFilesOutputPath)" />
+  </Target>
+  <ItemGroup>
+    <Compile Remove="$(CompilerGeneratedFilesOutputPath)\**" />
+    <Content Include="$(CompilerGeneratedFilesOutputPath)\**" />
+  </ItemGroup>
 </Project>
