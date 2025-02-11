@@ -4,29 +4,28 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace RemSend.SourceGeneratorHelpers;
 
 public static class SymbolExtensions {
-    public static string FullName(this ISymbol Symbol) {
-        string? ns = Symbol.NamespaceOrNull();
-        return ns is null ? $"global::{Symbol.Name}" : $"{ns}.{Symbol.Name}";
-    }
-    public static string? NamespaceOrNull(this ISymbol Symbol) {
+    /*public static string FullName(this ISymbol Symbol) {
+        if (Symbol.NamespaceOrNull() is not string Namespace) {
+            return $"global::{Symbol.Name}";
+        }
+        return $"{Namespace}.{Symbol.Name}";
+    }*/
+    public static string? GetNamespaceOrNull(this ISymbol Symbol) {
         return Symbol.ContainingNamespace.IsGlobalNamespace ? null : string.Join(".", Symbol.ContainingNamespace.ConstituentNamespaces);
     }
     public static (string? NamespaceDeclaration, string? NamespaceClosure, string? NamespaceIndent) GetNamespaceDeclaration(this ISymbol Symbol, string Indent = "    ") {
-        string? Namespace = Symbol.NamespaceOrNull();
-        return Namespace is null
-            ? (null, null, null)
-            : ($"namespace {Namespace} {{\n", "}\n", Indent);
+        if (Symbol.GetNamespaceOrNull() is not string Namespace) {
+            return (null, null, null);
+        }
+        return ($"namespace {Namespace} {{", "}", Indent);
     }
-    public static INamedTypeSymbol? OuterType(this ISymbol Symbol) {
-        return Symbol.ContainingType?.OuterType() ?? Symbol as INamedTypeSymbol;
+    public static INamedTypeSymbol? GetOuterType(this ISymbol Symbol) {
+        return Symbol.ContainingType?.GetOuterType() ?? Symbol as INamedTypeSymbol;
     }
-    public static string ClassDef(this INamedTypeSymbol Symbol) {
-        return Symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+    public static string GetDeclaredAccessibility(this ISymbol Symbol) {
+        return SyntaxFacts.GetText(Symbol.DeclaredAccessibility);
     }
-    public static string? ClassPath(this INamedTypeSymbol Symbol) {
-        return Symbol.DeclaringSyntaxReferences.FirstOrDefault()?.SyntaxTree?.FilePath;
-    }
-    public static string GeneratePartialType(this INamedTypeSymbol Symbol, string Content, IEnumerable<string>? Usings = null) {
+    public static string GeneratePartialType(this INamedTypeSymbol Symbol, string Content, IEnumerable<string>? Usings = null, string Indent = "    ") {
         (string? NamespaceDeclaration, string? NamespaceClosure, string? NamespaceIndent) = Symbol.GetNamespaceDeclaration();
 
         string TypeModifiers =
@@ -37,27 +36,14 @@ public static class SymbolExtensions {
 
         return $$"""
             {{string.Join("\n", (Usings ?? []).Select(Using => $"using {Using};"))}}
-            {{NamespaceDeclaration?.Trim()}}
-            {{NamespaceIndent}}{{TypeModifiers}} {{Symbol.ClassDef()}} {
-            {{NamespaceIndent}}    {{string.Join($"\n{NamespaceIndent}    ", Content.SplitLines())}}
+            {{NamespaceDeclaration}}
+            {{NamespaceIndent}}{{TypeModifiers}} {{Symbol.Name}} {
+            {{NamespaceIndent}}{{Indent}}{{string.Join($"\n{NamespaceIndent}{Indent}", Content.SplitLines())}}
             {{NamespaceIndent}}}
-            {{NamespaceClosure?.Trim()}}
+            {{NamespaceClosure}}
             """.TrimStart();
     }
-    public static bool InheritsFrom(this ITypeSymbol Symbol, string Type) {
-        INamedTypeSymbol? BaseType = Symbol.BaseType;
-        while (BaseType is not null) {
-            if (BaseType.Name == Type) {
-                return true;
-            }
-            BaseType = BaseType.BaseType;
-        }
-        return false;
-    }
-    public static string GetDeclaredAccessibility(this ISymbol Symbol) {
-        return SyntaxFacts.GetText(Symbol.DeclaredAccessibility);
-    }
-    public static string GenerateSeeCrefXml(this IMethodSymbol Symbol) {
+    public static string GenerateSeeXml(this IMethodSymbol Symbol) {
         // Add method name
         string Content = Symbol.Name;
         // Add type parameters

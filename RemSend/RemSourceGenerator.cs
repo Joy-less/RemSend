@@ -16,6 +16,9 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         string PeerIdParameterName = "PeerId";
         string PeerIdsParameterName = "PeerIds";
 
+        // Access modifiers
+        string AccessModifier = Symbol.GetDeclaredAccessibility();
+
         // Argument literals
         IEnumerable<string> SendMethodArguments = Symbol.Parameters.Select(Parameter => Parameter.Name);
         IEnumerable<string> SendMethodPackedArguments = Symbol.Parameters.Select(Parameter => $"{Parameter.Name}Pack");
@@ -32,10 +35,10 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         // Method definitions
         string SendMethodDefinition = $$"""
             /// <summary>
-            /// Remotely calls {{Symbol.GenerateSeeCrefXml()}}.<br/>
+            /// Remotely calls {{Symbol.GenerateSeeXml()}}.<br/>
             /// If <paramref name="{{PeerIdParameterName}}"/> is <see langword="null"/>, broadcasts to all peers.
             /// </summary>
-            public void {{SendMethodName}}({{string.Join(", ", SendMethodParameters)}}) {
+            {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodParameters)}}) {
                 // Serialize arguments
                 {{string.Join("\n    ", SerializeStatements)}}
 
@@ -51,9 +54,9 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
             """;
         string SendMethodMultiDefinition = $$"""
             /// <summary>
-            /// Remotely calls {{Symbol.GenerateSeeCrefXml()}}.
+            /// Remotely calls {{Symbol.GenerateSeeXml()}}.
             /// </summary>
-            public void {{SendMethodName}}({{string.Join(", ", SendMethodMultiParameters)}}) {
+            {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodMultiParameters)}}) {
                 // Skip if no peers
                 if (!{{PeerIdsParameterName}}.Any()) {
                     return;
@@ -71,7 +74,7 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         string SendRpcMethodDefinition = $$"""
             [EditorBrowsable(EditorBrowsableState.Never)]
             [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = {{(RemAttribute.CallLocal ? "true" : "false")}}, TransferChannel = {{RemAttribute.Channel}}, TransferMode = MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}})]
-            public void {{SendRpcMethodName}}({{string.Join(", ", SendRpcMethodParameters)}}) {
+            {{AccessModifier}} void {{SendRpcMethodName}}({{string.Join(", ", SendRpcMethodParameters)}}) {
                 // Deserialize arguments
                 {{string.Join("\n    ", DeserializeStatements)}}
 
