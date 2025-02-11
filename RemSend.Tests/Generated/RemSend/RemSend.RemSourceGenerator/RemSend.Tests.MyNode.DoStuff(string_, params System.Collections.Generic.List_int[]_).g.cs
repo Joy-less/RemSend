@@ -8,7 +8,8 @@ using MemoryPack;
 namespace RemSend.Tests {
     partial class MyNode {
         /// <summary>
-        /// Remotely calls <see cref="DoStuff(string?, System.Collections.Generic.List{int[]})"/>.
+        /// Remotely calls <see cref="DoStuff(string?, System.Collections.Generic.List{int[]})"/>.<br/>
+        /// If <paramref name="PeerId"/> is <see langword="null"/>, broadcasts to all peers.
         /// </summary>
         public void SendDoStuff(int? PeerId, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
             // Serialize arguments
@@ -25,6 +26,9 @@ namespace RemSend.Tests {
             }
         }
         
+        /// <summary>
+        /// Remotely calls <see cref="DoStuff(string?, System.Collections.Generic.List{int[]})"/>.
+        /// </summary>
         public void SendDoStuff(IEnumerable<int> PeerIds, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
             // Skip if no peers
             if (!PeerIds.Any()) {

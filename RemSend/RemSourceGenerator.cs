@@ -32,7 +32,8 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         // Method definitions
         string SendMethodDefinition = $$"""
             /// <summary>
-            /// Remotely calls {{Symbol.GenerateSeeCrefXml()}}.
+            /// Remotely calls {{Symbol.GenerateSeeCrefXml()}}.<br/>
+            /// If <paramref name="{{PeerIdParameterName}}"/> is <see langword="null"/>, broadcasts to all peers.
             /// </summary>
             public void {{SendMethodName}}({{string.Join(", ", SendMethodParameters)}}) {
                 // Serialize arguments
@@ -49,6 +50,9 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
             }
             """;
         string SendMethodMultiDefinition = $$"""
+            /// <summary>
+            /// Remotely calls {{Symbol.GenerateSeeCrefXml()}}.
+            /// </summary>
             public void {{SendMethodName}}({{string.Join(", ", SendMethodMultiParameters)}}) {
                 // Skip if no peers
                 if (!{{PeerIdsParameterName}}.Any()) {
