@@ -33,7 +33,9 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
 
         // Method definitions
         string SendMethodDefinition = $$"""
-            /// {{Symbol.GetDocumentationCommentXml()}}
+            /// <summary>
+            /// Remotely calls {{Symbol.GenerateSeeCrefXml()}}.
+            /// </summary>
             public void {{SendMethodName}}({{string.Join(", ", SendMethodParameters)}}) {
                 // Serialize arguments
                 {{PackTypeName}} {{ArgumentsPackLocalName}} = new({{string.Join(", ", SendMethodArguments)}});

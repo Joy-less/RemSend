@@ -57,4 +57,16 @@ public static class SymbolExtensions {
     public static string GetDeclaredAccessibility(this ISymbol Symbol) {
         return SyntaxFacts.GetText(Symbol.DeclaredAccessibility);
     }
+    public static string GenerateSeeCrefXml(this IMethodSymbol Symbol) {
+        // Add method name
+        string Content = Symbol.Name;
+        // Add type parameters
+        if (Symbol.TypeParameters.Length != 0) {
+            Content += "{" + string.Join(", ", Symbol.TypeParameters.Select(TypeParameter => TypeParameter.Name)) + "}";
+        }
+        // Add arguments
+        Content += "(" + string.Join(", ", Symbol.Parameters.Select(Parameter => Parameter.Type.ToString().Replace('<', '{').Replace('>', '}'))) + ")";
+        // Add see tag
+        return $"<see cref=\"{Content}\"/>";
+    }
 }

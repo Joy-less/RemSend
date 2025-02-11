@@ -7,6 +7,6 @@ public static class AttributeExtensions {
         if (!Attributes.Any()) {
             return "";
         }
-        return $"[{string.Join(", ", Attributes)}] ";
+        return "[" + string.Join(", ", Attributes) + "] ";
     }
 }

@@ -5,7 +5,9 @@ using System.ComponentModel;
 using MemoryPack;
 namespace RemSend.Tests {
     partial class MyNode {
-        /// 
+        /// <summary>
+        /// Remotely calls <see cref="DoStuff(string, System.Collections.Generic.List{int[]})"/>.
+        /// </summary>
         public void SendDoStuff(int? PeerId, string Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
             // Serialize arguments
             SendDoStuffPack ArgumentsPack = new(Arg, Arg22);
