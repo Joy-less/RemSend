@@ -17,11 +17,14 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
 
         // Argument literals
         IEnumerable<string> SendMethodArguments = Symbol.Parameters.Select(Parameter => Parameter.Name);
-        IEnumerable<string> SendMethodPackedArguments = SendMethodArguments.Select(Argument => $"{Argument}Pack");
+        IEnumerable<string> SendMethodPackedArguments = Symbol.Parameters.Select(Parameter => $"{Parameter.Name}Pack");
         // Parameter definitions
         IEnumerable<string> SendMethodParameters = Symbol.Parameters.Select(Parameter => $"{Parameter.GetAttributes().StringifyAttributes()}{Parameter}")
             .Prepend($"int? {PeerIdParameterName}");
         IEnumerable<string> SendRpcMethodParameters = SendMethodPackedArguments.Select(Argument => $"byte[] {Argument}");
+        // Statements
+        IEnumerable<string> SerializeStatements = Symbol.Parameters.Select(Parameter => $"byte[] {Parameter.Name}Pack = MemoryPackSerializer.Serialize({Parameter.Name});");
+        IEnumerable<string> DeserializeStatements = Symbol.Parameters.Select(Parameter => $"var {Parameter.Name} = MemoryPackSerializer.Deserialize<{Parameter.Type}>({Parameter.Name}Pack)!;");
 
         // Method definitions
         string SendMethodDefinition = $$"""
@@ -30,7 +33,7 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
             /// </summary>
             public void {{SendMethodName}}({{string.Join(", ", SendMethodParameters)}}) {
                 // Serialize arguments
-                {{string.Join("\n    ", SendMethodArguments.Select(Argument => $"byte[] {Argument}Pack = MemoryPackSerializer.Serialize({Argument});"))}}
+                {{string.Join("\n    ", SerializeStatements)}}
 
                 // Broadcast RPC to all peers
                 if ({{PeerIdParameterName}} is null) {
@@ -47,15 +50,15 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
             [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = {{(RemAttribute.CallLocal ? "true" : "false")}}, TransferChannel = {{RemAttribute.Channel}}, TransferMode = MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}})]
             public void {{SendRpcMethodName}}({{string.Join(", ", SendRpcMethodParameters)}}) {
                 // Deserialize arguments
-                {{string.Join("\n    ", Symbol.Parameters.Select(Parameter => $"var {Parameter.Name} = MemoryPackSerializer.Deserialize<{Parameter.Type}>({Parameter.Name}Pack)!;"))}}
+                {{string.Join("\n    ", DeserializeStatements)}}
 
                 // Call target method
-                {{Symbol.Name}}({{string.Join(", ", Symbol.Parameters.Select(Parameter => $"{Parameter.Name}"))}});
+                {{Symbol.Name}}({{string.Join(", ", SendMethodArguments)}});
             }
             """;
 
         // Using statements
-        IEnumerable<string> Usings = ["System", "System.ComponentModel", "Godot", "MemoryPack"];
+        IEnumerable<string> Usings = ["System.ComponentModel", "Godot", "MemoryPack"];
 
         // Generated source
         string GeneratedSource = $"""
