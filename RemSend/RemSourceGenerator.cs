@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using RemSend.SourceGeneratorHelpers;
+using System.Text;
 
 namespace RemSend;
 
@@ -16,7 +17,10 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         string PeerIdParameterName = "PeerId";
         string PeerIdsParameterName = "PeerIds";
         // Local names
-        string SenderIdLocalName = "SenderId";
+        string SenderIdLocalName = "_SenderId";
+        string PacketLocalName = "_Packet";
+        string NodePathBytesLocalName = "_NodePathBytes";
+        string MethodNameBytesLocalName = "_MethodNameBytes";
 
         // Access modifiers
         string AccessModifier = Symbol.GetDeclaredAccessibility();
@@ -27,16 +31,19 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
 
         // Argument literals
         List<string> SendMethodArguments = [.. RealParameters.Select(Parameter => Parameter.Name)];
-        List<string> SendMethodPackedArguments = [.. RealParameters.Select(Parameter => $"{Parameter.Name}Pack")];
+        List<string> SendMethodPackedArguments = [.. RealParameters.Select(Parameter => $"{Parameter.Name}Bytes")];
         // Parameter definitions
         List<string> SendMethodParameters = [.. RealParameters.Select(Parameter => $"{Parameter.GetAttributes().StringifyAttributes()}{Parameter}")
             .Prepend($"int {PeerIdParameterName}")];
         List<string> SendMethodMultiParameters = [.. SendMethodParameters
             .Skip(1).Prepend($"IEnumerable<int>? {PeerIdsParameterName}")];
-        List<string> SendRpcMethodParameters = [.. SendMethodPackedArguments.Select(Argument => $"byte[] {Argument}")];
+        List<string> SendRpcMethodParameters = [.. SendMethodPackedArguments.Select(Argument => $"Span<byte> {Argument}")];
         // Statements
-        List<string> SerializeStatements = [.. RealParameters.Select(Parameter => $"byte[] {Parameter.Name}Pack = MemoryPackSerializer.Serialize({Parameter.Name});")];
-        List<string> DeserializeStatements = [.. RealParameters.Select(Parameter => $"var {Parameter.Name} = MemoryPackSerializer.Deserialize<{Parameter.Type}>({Parameter.Name}Pack)!;")];
+        List<string> SerializeStatements = [.. RealParameters.Select(Parameter => $"Span<byte> {Parameter.Name}Bytes = MemoryPackSerializer.Serialize({Parameter.Name});")];
+        List<string> CombinePacketExpressions = [.. SendMethodPackedArguments.Select(Argument => $".. BitConverter.GetBytes({Argument}.Length), .. {Argument},")
+            .Prepend($".. BitConverter.GetBytes({NodePathBytesLocalName}.Length), .. {NodePathBytesLocalName},")
+            .Prepend($".. BitConverter.GetBytes({MethodNameBytesLocalName}.Length), .. {MethodNameBytesLocalName},")];
+        List<string> DeserializeStatements = [.. RealParameters.Select(Parameter => $"var {Parameter.Name} = MemoryPackSerializer.Deserialize<{Parameter.Type}>({Parameter.Name}Bytes)!;")];
 
         // Pass pseudo parameters
         foreach (IParameterSymbol Parameter in Symbol.Parameters) {
@@ -46,23 +53,36 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         }
 
         // Method definitions
-        string SendMethodDefinition = $$"""
+        string MethodDefinitions = $$"""
             /// <summary>
-            /// Remotely calls {{Symbol.GenerateSeeXml()}}.<br/>
+            /// Remotely calls {{Symbol.GenerateSeeXml()}} on the given peer.<br/>
             /// Set <paramref name="{{PeerIdParameterName}}"/> to 0 to broadcast to all peers.<br/>
             /// Set <paramref name="{{PeerIdParameterName}}"/> to 1 to send to the authority.
             /// </summary>
             {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodParameters)}}) {
+                // Serialize node path
+                Span<byte> {{NodePathBytesLocalName}} = Encoding.UTF8.GetBytes(GetPath());
+                // Serialize method name
+                Span<byte> {{MethodNameBytesLocalName}} = [{{string.Join(", ", Encoding.UTF8.GetBytes(SendMethodName))}}];
                 // Serialize arguments
                 {{string.Join("\n    ", SerializeStatements)}}
 
-                // Send RPC to specific peer
-                RpcId({{PeerIdParameterName}}, "{{SendRpcMethodName}}", {{string.Join(", ", SendMethodPackedArguments)}});
+                // Combine packet
+                Span<byte> {{PacketLocalName}} = [
+                    {{string.Join("\n        ", CombinePacketExpressions)}}
+                ];
+
+                // Send packet to single peer ID
+                ((SceneMultiplayer)Multiplayer).SendBytes(
+                    bytes: {{PacketLocalName}},
+                    id: {{PeerIdParameterName}},
+                    mode: MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}},
+                    channel: {{RemAttribute.Channel}}
+                );
             }
-            """;
-        string SendMethodMultiDefinition = $$"""
+
             /// <summary>
-            /// Remotely calls {{Symbol.GenerateSeeXml()}}.
+            /// Remotely calls {{Symbol.GenerateSeeXml()}} on each peer.
             /// </summary>
             {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodMultiParameters)}}) {
                 // Skip if no peers
@@ -70,34 +90,36 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
                     return;
                 }
 
+                // Serialize node path
+                Span<byte> {{NodePathBytesLocalName}} = Encoding.UTF8.GetBytes(GetPath());
+                // Serialize method name
+                Span<byte> {{MethodNameBytesLocalName}} = [{{string.Join(", ", Encoding.UTF8.GetBytes(SendMethodName))}}];
                 // Serialize arguments
                 {{string.Join("\n    ", SerializeStatements)}}
-
-                // Send RPC to multiple peers
+            
+                // Combine packet
+                Span<byte> {{PacketLocalName}} = [
+                    {{string.Join("\n        ", CombinePacketExpressions)}}
+                ];
+                
+                // Send call data to multiple peer IDs
                 foreach (int {{PeerIdParameterName}} in {{PeerIdsParameterName}}) {
-                    RpcId({{PeerIdParameterName}}, "{{SendRpcMethodName}}", {{string.Join(", ", SendMethodPackedArguments)}});
+                    ((SceneMultiplayer)Multiplayer).SendBytes(
+                        bytes: {{PacketLocalName}},
+                        id: {{PeerIdParameterName}},
+                        mode: MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}},
+                        channel: {{RemAttribute.Channel}}
+                    );
                 }
-            }
-            """;
-        string SendRpcMethodDefinition = $$"""
-            [EditorBrowsable(EditorBrowsableState.Never)]
-            [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = {{(RemAttribute.CallLocal ? "true" : "false")}}, TransferChannel = {{RemAttribute.Channel}}, TransferMode = MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}})]
-            {{AccessModifier}} void {{SendRpcMethodName}}({{string.Join(", ", SendRpcMethodParameters)}}) {
-                // Deserialize arguments
-                {{string.Join("\n    ", DeserializeStatements)}}
-
-                // Get sender peer ID
-                int {{SenderIdLocalName}} = Multiplayer.GetRemoteSenderId();
-
-                // Call target method
-                {{Symbol.Name}}({{string.Join(", ", SendMethodArguments)}});
             }
             """;
 
         // Using statements
         List<string> Usings = [
+            "System",
             "System.Collections.Generic",
             "System.Linq",
+            "System.Text",
             "System.ComponentModel",
             "Godot",
             "MemoryPack",
@@ -107,13 +129,7 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         string GeneratedSource = $"""
             #nullable enable
 
-            {Symbol.ContainingType.GeneratePartialType($"""
-                {SendMethodDefinition}
-
-                {SendMethodMultiDefinition}
-
-                {SendRpcMethodDefinition}
-                """, Usings)}
+            {Symbol.ContainingType.GeneratePartialType(MethodDefinitions, Usings)}
             """;
         return (GeneratedSource, null);
     }

@@ -1,7 +1,12 @@
+using System;
+using System.Text;
+using System.Threading.Tasks;
 using Godot;
 using RemSend;
 
 public partial class Main : Node {
+    private SceneMultiplayer SceneMultiplayer => (SceneMultiplayer)Multiplayer;
+
     public override async void _Ready() {
         //SendSayHello(0, 3);
 
@@ -9,17 +14,9 @@ public partial class Main : Node {
         if (OS.HasFeature("server")) {
             CreateServer(12345);
 
-            await ToSignal(Multiplayer, MultiplayerApi.SignalName.PeerConnected);
-            
-            while (Multiplayer.MultiplayerPeer.GetAvailablePacketCount() <= 0) {
-                await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-            }
-
-            GD.Print("got something");
-
-            //Multiplayer.MultiplayerPeer.GetPacketPeer();
-            byte[] Packet = Multiplayer.MultiplayerPeer.GetPacket();
-            GD.Print(Packet.Length);
+            SceneMultiplayer.PeerPacket += (long SenderId, byte[] Packet) => {
+                GD.Print($"received {Packet.Length} bytes from {SenderId}");
+            };
         }
         // Client
         else {
@@ -27,10 +24,9 @@ public partial class Main : Node {
 
             await ToSignal(Multiplayer, MultiplayerApi.SignalName.ConnectedToServer);
 
-            GD.Print("sending");
+            await Task.Delay(TimeSpan.FromSeconds(0.5));
 
-            Multiplayer.MultiplayerPeer.SetTargetPeer(1);
-            Multiplayer.MultiplayerPeer.PutPacket([1, 2, 5]);
+            SceneMultiplayer.SendBytes([1, 2, 3], 1, MultiplayerPeer.TransferModeEnum.Unreliable, 134);
         }
     }
 
