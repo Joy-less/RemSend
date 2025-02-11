@@ -14,7 +14,7 @@ public partial class MyNode : Godot.Node {
     /// Test.
     /// </summary>
     [Rem(RemAccess.Any, Channel: 1234, Mode = RemMode.UnreliableOrdered)]
-    public void DoStuff(string Arg, [NotNullWhen(true)] params List<int[]> Arg22) {
-        
+    public void DoStuff(string? Arg, [NotNullWhen(true)] params List<int[]> Arg22) {
+
     }
 }

@@ -12,24 +12,16 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         // Method names
         string SendMethodName = $"Send{Symbol.Name}";
         string SendRpcMethodName = $"{SendMethodName}Rpc";
-        // Type names
-        string PackTypeName = $"{SendMethodName}Pack";
         // Parameter names
         string PeerIdParameterName = "PeerId";
-        string SerializedArgumentsParameterName = "SerializedArguments";
-        // Local variable names
-        string ArgumentsPackLocalName = "ArgumentsPack";
-        string SerializedArgumentsPackLocalName = "SerializedArgumentsPack";
 
+        // Argument literals
+        IEnumerable<string> SendMethodArguments = Symbol.Parameters.Select(Parameter => Parameter.Name);
+        IEnumerable<string> SendMethodPackedArguments = SendMethodArguments.Select(Argument => $"{Argument}Pack");
         // Parameter definitions
         IEnumerable<string> SendMethodParameters = Symbol.Parameters.Select(Parameter => $"{Parameter.GetAttributes().StringifyAttributes()}{Parameter}")
             .Prepend($"int? {PeerIdParameterName}");
-        IEnumerable<string> PackStructParameters = Symbol.Parameters.Select(Parameter => $"{Parameter.Type} {Parameter.Name}");
-        // Arguments
-        IEnumerable<string> SendMethodArguments = Symbol.Parameters.Select(Parameter => Parameter.Name);
-
-        // Attributes
-        string NotBrowsableAttribute = "[EditorBrowsable(EditorBrowsableState.Never)]";
+        IEnumerable<string> SendRpcMethodParameters = SendMethodPackedArguments.Select(Argument => $"byte[] {Argument}");
 
         // Method definitions
         string SendMethodDefinition = $$"""
@@ -38,39 +30,32 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
             /// </summary>
             public void {{SendMethodName}}({{string.Join(", ", SendMethodParameters)}}) {
                 // Serialize arguments
-                {{PackTypeName}} {{ArgumentsPackLocalName}} = new({{string.Join(", ", SendMethodArguments)}});
-                byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
+                {{string.Join("\n    ", SendMethodArguments.Select(Argument => $"byte[] {Argument}Pack = MemoryPackSerializer.Serialize({Argument});"))}}
 
                 // Broadcast RPC to all peers
                 if ({{PeerIdParameterName}} is null) {
-                    Rpc("{{SendRpcMethodName}}", {{SerializedArgumentsPackLocalName}});
+                    Rpc("{{SendRpcMethodName}}", {{string.Join(", ", SendMethodPackedArguments)}});
                 }
                 // Send RPC to one peer
                 else {
-                    RpcId(PeerId.Value, "{{SendRpcMethodName}}", {{SerializedArgumentsPackLocalName}});
+                    RpcId(PeerId.Value, "{{SendRpcMethodName}}", {{string.Join(", ", SendMethodPackedArguments)}});
                 }
             }
             """;
         string SendRpcMethodDefinition = $$"""
-            {{NotBrowsableAttribute}}
+            [EditorBrowsable(EditorBrowsableState.Never)]
             [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = {{(RemAttribute.CallLocal ? "true" : "false")}}, TransferChannel = {{RemAttribute.Channel}}, TransferMode = MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}})]
-            public void {{SendRpcMethodName}}(byte[] {{SerializedArgumentsParameterName}}) {
+            public void {{SendRpcMethodName}}({{string.Join(", ", SendRpcMethodParameters)}}) {
                 // Deserialize arguments
-                {{PackTypeName}} {{ArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{PackTypeName}}>({{SerializedArgumentsParameterName}});
+                {{string.Join("\n    ", Symbol.Parameters.Select(Parameter => $"var {Parameter.Name} = MemoryPackSerializer.Deserialize<{Parameter.Type}>({Parameter.Name}Pack)!;"))}}
 
                 // Call target method
-                {{Symbol.Name}}({{string.Join(", ", Symbol.Parameters.Select(Parameter => $"{ArgumentsPackLocalName}.{Parameter.Name}"))}});
+                {{Symbol.Name}}({{string.Join(", ", Symbol.Parameters.Select(Parameter => $"{Parameter.Name}"))}});
             }
             """;
 
-        // Type definitions
-        string PackStructDefinition = $$"""
-            {{NotBrowsableAttribute}}
-            private record struct {{PackTypeName}}({{string.Join(", ", PackStructParameters)}});
-            """;
-
         // Using statements
-        IEnumerable<string> Usings = ["Godot", "System.ComponentModel", "MemoryPack"];
+        IEnumerable<string> Usings = ["System", "System.ComponentModel", "Godot", "MemoryPack"];
 
         // Generated source
         string GeneratedSource = $"""
@@ -80,8 +65,6 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
                 {SendMethodDefinition}
 
                 {SendRpcMethodDefinition}
-
-                {PackStructDefinition}
                 """, Usings)}
             """;
         return (GeneratedSource, null);
