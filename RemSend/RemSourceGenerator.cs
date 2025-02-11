@@ -14,6 +14,7 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         string SendRpcMethodName = $"{SendMethodName}Rpc";
         // Parameter names
         string PeerIdParameterName = "PeerId";
+        string PeerIdsParameterName = "PeerIds";
 
         // Argument literals
         IEnumerable<string> SendMethodArguments = Symbol.Parameters.Select(Parameter => Parameter.Name);
@@ -21,6 +22,8 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         // Parameter definitions
         IEnumerable<string> SendMethodParameters = Symbol.Parameters.Select(Parameter => $"{Parameter.GetAttributes().StringifyAttributes()}{Parameter}")
             .Prepend($"int? {PeerIdParameterName}");
+        IEnumerable<string> SendMethodMultiParameters = SendMethodParameters
+            .Skip(1).Prepend($"IEnumerable<int> {PeerIdsParameterName}");
         IEnumerable<string> SendRpcMethodParameters = SendMethodPackedArguments.Select(Argument => $"byte[] {Argument}");
         // Statements
         IEnumerable<string> SerializeStatements = Symbol.Parameters.Select(Parameter => $"byte[] {Parameter.Name}Pack = MemoryPackSerializer.Serialize({Parameter.Name});");
@@ -41,7 +44,23 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
                 }
                 // Send RPC to one peer
                 else {
-                    RpcId(PeerId.Value, "{{SendRpcMethodName}}", {{string.Join(", ", SendMethodPackedArguments)}});
+                    RpcId({{PeerIdParameterName}}.Value, "{{SendRpcMethodName}}", {{string.Join(", ", SendMethodPackedArguments)}});
+                }
+            }
+            """;
+        string SendMethodMultiDefinition = $$"""
+            public void {{SendMethodName}}({{string.Join(", ", SendMethodMultiParameters)}}) {
+                // Skip if no peers
+                if (!{{PeerIdsParameterName}}.Any()) {
+                    return;
+                }
+
+                // Serialize arguments
+                {{string.Join("\n    ", SerializeStatements)}}
+
+                // Send RPC to multiple peers
+                foreach (int {{PeerIdParameterName}} in {{PeerIdsParameterName}}) {
+                    RpcId({{PeerIdParameterName}}, "{{SendRpcMethodName}}", {{string.Join(", ", SendMethodPackedArguments)}});
                 }
             }
             """;
@@ -58,7 +77,13 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
             """;
 
         // Using statements
-        IEnumerable<string> Usings = ["System.ComponentModel", "Godot", "MemoryPack"];
+        IEnumerable<string> Usings = [
+            "System.Collections.Generic",
+            "System.Linq",
+            "System.ComponentModel",
+            "Godot",
+            "MemoryPack",
+        ];
 
         // Generated source
         string GeneratedSource = $"""
@@ -66,6 +91,8 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
 
             {Symbol.ContainingType.GeneratePartialType($"""
                 {SendMethodDefinition}
+
+                {SendMethodMultiDefinition}
 
                 {SendRpcMethodDefinition}
                 """, Usings)}

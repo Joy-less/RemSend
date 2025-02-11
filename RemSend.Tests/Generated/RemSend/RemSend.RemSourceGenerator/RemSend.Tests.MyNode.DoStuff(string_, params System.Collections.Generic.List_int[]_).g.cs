@@ -1,5 +1,7 @@
 ﻿#nullable enable
 
+using System.Collections.Generic;
+using System.Linq;
 using System.ComponentModel;
 using Godot;
 using MemoryPack;
@@ -20,6 +22,22 @@ namespace RemSend.Tests {
             // Send RPC to one peer
             else {
                 RpcId(PeerId.Value, "SendDoStuffRpc", ArgPack, Arg22Pack);
+            }
+        }
+        
+        public void SendDoStuff(IEnumerable<int> PeerIds, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
+            // Skip if no peers
+            if (!PeerIds.Any()) {
+                return;
+            }
+        
+            // Serialize arguments
+            byte[] ArgPack = MemoryPackSerializer.Serialize(Arg);
+            byte[] Arg22Pack = MemoryPackSerializer.Serialize(Arg22);
+        
+            // Send RPC to multiple peers
+            foreach (int PeerId in PeerIds) {
+                RpcId(PeerId, "SendDoStuffRpc", ArgPack, Arg22Pack);
             }
         }
         
