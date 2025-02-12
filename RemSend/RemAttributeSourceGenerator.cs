@@ -21,8 +21,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string PacketLocalName = "_Packet";
         string SerializedPacketLocalName = "_SerializedPacket";
         // Type names
-        string ArgumentsPackTypeName = $"{SendMethodName}Pack";
-        string ArgumentsPackTypeFormatterName = $"{ArgumentsPackTypeName}Formatter";
+        string SendArgumentsPackTypeName = $"{SendMethodName}Pack";
+        string SendArgumentsPackFormatterTypeName = $"{SendArgumentsPackTypeName}Formatter";
 
         // Access modifiers
         string AccessModifier = Input.Symbol.GetDeclaredAccessibility();
@@ -59,7 +59,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             /// </summary>
             {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodOneParameters)}}) {
                 // Create arguments pack
-                {{ArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = new({{string.Join(", ", RemoteParameters.Select(Parameter => Parameter.Name))}});
+                {{SendArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = new({{string.Join(", ", RemoteParameters.Select(Parameter => Parameter.Name))}});
                 // Serialize arguments pack
                 byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
 
@@ -87,7 +87,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 }
 
                 // Create arguments pack
-                {{ArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = new({{string.Join(", ", RemoteParameters.Select(Parameter => Parameter.Name))}});
+                {{SendArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = new({{string.Join(", ", RemoteParameters.Select(Parameter => Parameter.Name))}});
                 // Serialize arguments pack
                 byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
                 
@@ -110,21 +110,21 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             [EditorBrowsable(EditorBrowsableState.Never)]
             internal void {{SendHandlerMethodName}}(int {{SenderIdParameterName}}, {{nameof(RemPacket)}} {{PacketLocalName}}) {
                 // Deserialize arguments pack
-                {{ArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{ArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
+                {{SendArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{SendArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
                 
                 // Call target method
                 {{Input.Symbol.Name}}({{string.Join(", ", SendTargetMethodArguments)}});
             }
             
             [EditorBrowsable(EditorBrowsableState.Never)]
-            internal record struct {{ArgumentsPackTypeName}}({{string.Join(", ", SendMethodParameters)}});
+            internal record struct {{SendArgumentsPackTypeName}}({{string.Join(", ", SendMethodParameters)}});
             
             [EditorBrowsable(EditorBrowsableState.Never)]
-            internal sealed class {{ArgumentsPackTypeFormatterName}} : MemoryPackFormatter<{{ArgumentsPackTypeName}}> {
-                public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref {{ArgumentsPackTypeName}} Value) {
+            internal sealed class {{SendArgumentsPackFormatterTypeName}} : MemoryPackFormatter<{{SendArgumentsPackTypeName}}> {
+                public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref {{SendArgumentsPackTypeName}} Value) {
                     {{string.Join("\n        ", RemoteParameters.Select(Parameter => $"Writer.WriteValue(Value.@{Parameter.Name});"))}}
                 }
-                public override void Deserialize(ref MemoryPackReader Reader, scoped ref {{ArgumentsPackTypeName}} Value) {
+                public override void Deserialize(ref MemoryPackReader Reader, scoped ref {{SendArgumentsPackTypeName}} Value) {
                     Value = new() {
                         {{string.Join("\n            ", RemoteParameters.Select(Parameter => $"@{Parameter.Name} = Reader.ReadValue<{Parameter.Type}>()!,"))}}
                     };
@@ -153,6 +153,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         // Method names
         string SetupMethodName = "Setup";
         string HandlePacketMethodName = "HandlePacket";
+        string SendMethodName = "Send{0}";
+        string SendHandlerMethodName = $"{SendMethodName}Handler";
         // Parameter names
         string RootNodeParameterName = "Root";
         string SceneMultiplayerParameterName = "Multiplayer";
@@ -164,6 +166,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         // Type names
         string RemSendServiceTypeName = "RemSendService";
         string RemPacketFormatterTypeName = $"{nameof(RemPacket)}Formatter";
+        string SendArgumentsPackTypeName = $"{SendMethodName}Pack";
+        string SendArgumentsPackFormatterTypeName = $"{SendArgumentsPackTypeName}Formatter";
 
         // Generated source
         string GeneratedSource = $$"""
@@ -197,7 +201,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             {{string.Join("\n", Inputs.Select(Input => $$"""
                     if ({{NodeLocalName}} is @{{Input.Symbol.ContainingType}} @{{Input.Symbol.ContainingType.Name}}) {
                         if ({{PacketLocalName}}.{{nameof(RemPacket.MethodName)}} is "{{Input.Symbol.Name}}") {
-                            @{{Input.Symbol.ContainingType.Name}}.Send{{Input.Symbol.Name}}Handler({{SenderIdParameterName}}, {{PacketLocalName}});
+                            @{{Input.Symbol.ContainingType.Name}}.{{string.Format(SendHandlerMethodName, Input.Symbol.Name)}}({{SenderIdParameterName}}, {{PacketLocalName}});
                         }
                     }
             """))}}
@@ -207,11 +211,11 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     // Register MemoryPack formatters
                     MemoryPackFormatterProvider.Register(new {{RemPacketFormatterTypeName}}());
             {{string.Join("\n", Inputs.Select(Input => $$"""
-                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.Send{{Input.Symbol.Name}}PackFormatter());
+                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(SendArgumentsPackFormatterTypeName, Input.Symbol.Name)}}());
             """))}}
                 }
 
-                // Create a formatter for {{nameof(RemPacket)}} because MemoryPack doesn't support .NET Standard 2.0
+                // Formatter for {{nameof(RemPacket)}} because MemoryPack doesn't support .NET Standard 2.0
                 private sealed class {{RemPacketFormatterTypeName}}: MemoryPackFormatter<{{nameof(RemPacket)}}> {
                     public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref {{nameof(RemPacket)}} Value) {
                         Writer.WriteValue(Value.{{nameof(RemPacket.NodePath)}});

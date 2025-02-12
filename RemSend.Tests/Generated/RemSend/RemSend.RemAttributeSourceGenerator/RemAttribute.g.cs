@@ -38,7 +38,7 @@ public static class RemSendService {
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.SendDoStuffPackFormatter());
     }
 
-    // Create a formatter for RemPacket because MemoryPack doesn't support .NET Standard 2.0
+    // Formatter for RemPacket because MemoryPack doesn't support .NET Standard 2.0
     private sealed class RemPacketFormatter: MemoryPackFormatter<RemPacket> {
         public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref RemPacket Value) {
             Writer.WriteValue(Value.NodePath);
