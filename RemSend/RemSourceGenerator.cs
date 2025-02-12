@@ -12,7 +12,7 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
 
         // Method names
         string SendMethodName = $"Send{Symbol.Name}";
-        string SendRpcMethodName = $"{SendMethodName}Rpc";
+        string SendHandlerMethodName = $"{SendMethodName}Handler";
         // Parameter names
         string PeerIdParameterName = "PeerId";
         string PeerIdsParameterName = "PeerIds";
@@ -33,11 +33,11 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         List<string> SendMethodArguments = [.. RealParameters.Select(Parameter => Parameter.Name)];
         List<string> SendMethodPackedArguments = [.. RealParameters.Select(Parameter => $"{Parameter.Name}Bytes")];
         // Parameter definitions
-        List<string> SendMethodParameters = [.. RealParameters.Select(Parameter => $"{Parameter.GetAttributes().StringifyAttributes()}{Parameter}")
+        List<string> BaseSendMethodParameters = [.. RealParameters.Select(Parameter => $"{Parameter.GetAttributes().StringifyAttributes()}{Parameter}")];
+        List<string> SendMethodParameters = [.. BaseSendMethodParameters
             .Prepend($"int {PeerIdParameterName}")];
-        List<string> SendMethodMultiParameters = [.. SendMethodParameters
-            .Skip(1).Prepend($"IEnumerable<int>? {PeerIdsParameterName}")];
-        List<string> SendRpcMethodParameters = [.. SendMethodPackedArguments.Select(Argument => $"Span<byte> {Argument}")];
+        List<string> SendMethodMultiParameters = [.. BaseSendMethodParameters
+            .Prepend($"IEnumerable<int>? {PeerIdsParameterName}")];
         // Statements
         List<string> SerializeStatements = [.. RealParameters.Select(Parameter => $"Span<byte> {Parameter.Name}Bytes = MemoryPackSerializer.Serialize({Parameter.Name});")];
         List<string> CombinePacketExpressions = [.. SendMethodPackedArguments.Select(Argument => $".. BitConverter.GetBytes({Argument}.Length), .. {Argument},")
@@ -96,8 +96,8 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
                 Span<byte> {{MethodNameBytesLocalName}} = [{{string.Join(", ", Encoding.UTF8.GetBytes(SendMethodName))}}];
                 // Serialize arguments
                 {{string.Join("\n    ", SerializeStatements)}}
-            
-                // Combine packet
+                
+                // Combine packet components
                 Span<byte> {{PacketLocalName}} = [
                     {{string.Join("\n        ", CombinePacketExpressions)}}
                 ];
@@ -111,6 +111,43 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
                         channel: {{RemAttribute.Channel}}
                     );
                 }
+            }
+
+            private void {{SendHandlerMethodName}}(int SenderId, Span<byte> Packet) {
+                /*((SceneMultiplayer)Multiplayer).PeerPacket += (SenderId, Packet) => {
+                    GD.Print($"received {Packet.Length} bytes from {SenderId}");
+                };*/
+
+                // Deserialize arguments
+                {{string.Join("\n    ", DeserializeStatements)}}
+
+                // Call target method
+                {{Symbol.Name}}({{string.Join(", ", SendMethodArguments)}});
+            }
+
+            private void SendHandler(int SenderId, Span<byte> Packet) {
+                // Deserialize node path
+                NodePath NodePath = Encoding.UTF8.GetString(EatComponent(ref Packet));
+                // Deserialize method name
+                string MethodName = Encoding.UTF8.GetString(EatComponent(ref Packet));
+
+                // Find node
+                Node Node = GetNode(NodePath);
+                // Find handler method
+                if (MethodName == "{{SendMethodName}}") {
+                    Node.{{SendHandlerMethodName}}(SenderId, Packet);
+                }
+            }
+
+            private static Span<byte> EatComponent(ref Span<byte> Packet) {
+                // Eat component length
+                int Length = BitConverter.ToInt32(Packet[..sizeof(int)]);
+                Packet = Packet[sizeof(int)..];
+                // Eat component content
+                Span<byte> Content = Packet[..Length];
+                Packet = Packet[Length..];
+                // Return component content
+                return Content;
             }
             """;
 
