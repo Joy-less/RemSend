@@ -64,7 +64,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
 
                 // Create packet
-                RemPacket {{PacketLocalName}} = new(this.GetPath(), "{{SendMethodName}}", {{SerializedArgumentsPackLocalName}});
+                {{nameof(RemPacket)}} {{PacketLocalName}} = new(this.GetPath(), "{{SendMethodName}}", {{SerializedArgumentsPackLocalName}});
                 // Serialize packet
                 byte[] {{SerializedPacketLocalName}} = MemoryPackSerializer.Serialize({{PacketLocalName}});
 
@@ -143,6 +143,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             using System.ComponentModel;
             using Godot;
             using MemoryPack;
+            using RemSend;
 
             {Input.Symbol.ContainingType.GeneratePartialType(MethodDefinitions)}
             """;

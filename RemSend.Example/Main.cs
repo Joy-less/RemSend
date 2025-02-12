@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Frozen;
-using System.Text;
 using System.Threading.Tasks;
 using Godot;
 using RemSend;
@@ -32,7 +30,9 @@ public partial class Main : Node {
     }
 
     [Rem(RemAccess.Any, CallLocal: true)]
-    public void SayHello([Sender] int SenderId, int Times) {
+    public void SayHello(int Times, [Sender] int SenderId) {
+        GD.Print($"{nameof(SayHello)} called by {SenderId}");
+
         for (int Counter = 0; Counter < Times; Counter++) {
             GD.Print("Hello!");
         }
@@ -42,12 +42,12 @@ public partial class Main : Node {
         ENetMultiplayerPeer Peer = new();
         Peer.CreateServer(Port);
         Multiplayer.MultiplayerPeer = Peer;
-        RemSender.Setup(GetTree().Root, (SceneMultiplayer)Multiplayer);
+        RemSendService.Setup(GetTree().Root, (SceneMultiplayer)Multiplayer);
     }
     private void CreateClient(string Address, int Port) {
         ENetMultiplayerPeer Peer = new();
         Peer.CreateClient(Address, Port);
         Multiplayer.MultiplayerPeer = Peer;
-        RemSender.Setup(GetTree().Root, (SceneMultiplayer)Multiplayer);
+        RemSendService.Setup(GetTree().Root, (SceneMultiplayer)Multiplayer);
     }
 }

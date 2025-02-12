@@ -7,6 +7,7 @@ using System.Text;
 using System.ComponentModel;
 using Godot;
 using MemoryPack;
+using RemSend;
 
 namespace RemSend.Tests;
 
