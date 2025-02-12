@@ -77,10 +77,10 @@ partial class MyNode {
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    private record struct SendDoStuffPack(string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22);
+    internal record struct SendDoStuffPack(string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22);
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    private sealed class SendDoStuffPackFormatter : MemoryPackFormatter<SendDoStuffPack> {
+    internal sealed class SendDoStuffPackFormatter : MemoryPackFormatter<SendDoStuffPack> {
         public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref SendDoStuffPack Value) {
             Writer.WriteValue(Value.@Arg);
             Writer.WriteValue(Value.@Arg22);

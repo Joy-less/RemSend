@@ -34,5 +34,23 @@ public static class RemSendService {
 
     static RemSendService() {
         // Register MemoryPack formatters
+        MemoryPackFormatterProvider.Register(new RemPacketFormatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.SendDoStuffPackFormatter());
+    }
+
+    // Create a formatter for RemPacket because MemoryPack doesn't support .NET Standard 2.0
+    private sealed class RemPacketFormatter: MemoryPackFormatter<RemPacket> {
+        public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref RemPacket Value) {
+            Writer.WriteValue(Value.NodePath);
+            Writer.WriteValue(Value.MethodName);
+            Writer.WriteValue(Value.ArgumentsPack);
+        }
+        public override void Deserialize(ref MemoryPackReader Reader, scoped ref RemPacket Value) {
+            Value = new() {
+                NodePath = Reader.ReadValue<string>()!,
+                MethodName = Reader.ReadValue<string>()!,
+                ArgumentsPack = Reader.ReadValue<byte[]>()!,
+            };
+        }
     }
 }

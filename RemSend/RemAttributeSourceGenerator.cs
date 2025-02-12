@@ -117,10 +117,10 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             }
             
             [EditorBrowsable(EditorBrowsableState.Never)]
-            private record struct {{ArgumentsPackTypeName}}({{string.Join(", ", SendMethodParameters)}});
+            internal record struct {{ArgumentsPackTypeName}}({{string.Join(", ", SendMethodParameters)}});
             
             [EditorBrowsable(EditorBrowsableState.Never)]
-            private sealed class {{ArgumentsPackTypeFormatterName}} : MemoryPackFormatter<{{ArgumentsPackTypeName}}> {
+            internal sealed class {{ArgumentsPackTypeFormatterName}} : MemoryPackFormatter<{{ArgumentsPackTypeName}}> {
                 public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref {{ArgumentsPackTypeName}} Value) {
                     {{string.Join("\n        ", RemoteParameters.Select(Parameter => $"Writer.WriteValue(Value.@{Parameter.Name});"))}}
                 }
@@ -163,6 +163,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string NodeLocalName = "_Node";
         // Type names
         string RemSendServiceTypeName = "RemSendService";
+        string RemPacketFormatterTypeName = $"{nameof(RemPacket)}Formatter";
 
         // Generated source
         string GeneratedSource = $$"""
@@ -204,6 +205,26 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
 
                 static {{RemSendServiceTypeName}}() {
                     // Register MemoryPack formatters
+                    MemoryPackFormatterProvider.Register(new {{RemPacketFormatterTypeName}}());
+            {{string.Join("\n", Inputs.Select(Input => $$"""
+                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.Send{{Input.Symbol.Name}}PackFormatter());
+            """))}}
+                }
+
+                // Create a formatter for {{nameof(RemPacket)}} because MemoryPack doesn't support .NET Standard 2.0
+                private sealed class {{RemPacketFormatterTypeName}}: MemoryPackFormatter<{{nameof(RemPacket)}}> {
+                    public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref {{nameof(RemPacket)}} Value) {
+                        Writer.WriteValue(Value.{{nameof(RemPacket.NodePath)}});
+                        Writer.WriteValue(Value.{{nameof(RemPacket.MethodName)}});
+                        Writer.WriteValue(Value.{{nameof(RemPacket.ArgumentsPack)}});
+                    }
+                    public override void Deserialize(ref MemoryPackReader Reader, scoped ref {{nameof(RemPacket)}} Value) {
+                        Value = new() {
+                            {{nameof(RemPacket.NodePath)}} = Reader.ReadValue<string>()!,
+                            {{nameof(RemPacket.MethodName)}} = Reader.ReadValue<string>()!,
+                            {{nameof(RemPacket.ArgumentsPack)}} = Reader.ReadValue<byte[]>()!,
+                        };
+                    }
                 }
             }
             """;
