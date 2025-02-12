@@ -20,11 +20,12 @@ public partial class Main : Node {
             await ToSignal(Multiplayer, MultiplayerApi.SignalName.ConnectedToServer);
 
             SendSayHello(1, 4);
+            SendSayHello(1);
         }
     }
 
     [Rem(RemAccess.Any, CallLocal: true)]
-    public void SayHello(int Times, [Sender] int SenderId) {
+    public void SayHello([Sender] int SenderId, int Times = 1) {
         GD.Print($"{nameof(SayHello)} called by {SenderId}");
 
         for (int Counter = 0; Counter < Times; Counter++) {

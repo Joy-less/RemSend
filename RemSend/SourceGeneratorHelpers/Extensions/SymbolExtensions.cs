@@ -26,12 +26,22 @@ public static class SymbolExtensions {
     public static bool HasAttribute<T>(this ISymbol Symbol) {
         return Symbol.HasAttribute(typeof(T));
     }
-    public static string StringifyAttributes(this ISymbol Symbol) {
-        ImmutableArray<AttributeData> Attributes = Symbol.GetAttributes();
-        if (Attributes.IsEmpty) {
-            return "";
+    public static string GetParameterDeclaration(this IParameterSymbol Parameter) {
+        // Attributes
+        string AttributesDeclaration = "";
+        ImmutableArray<AttributeData> Attributes = Parameter.GetAttributes();
+        if (!Attributes.IsDefaultOrEmpty) {
+            AttributesDeclaration = "[" + string.Join(", ", Attributes) + "] ";
         }
-        return "[" + string.Join(", ", Attributes) + "] ";
+
+        // Default value
+        string DefaultValueDeclaration = "";
+        if (Parameter.HasExplicitDefaultValue) {
+            DefaultValueDeclaration = " = " + SymbolDisplay.FormatPrimitive(Parameter.ExplicitDefaultValue!, quoteStrings: true, useHexadecimalNumbers: false);
+        }
+
+        // Combined result
+        return $"{AttributesDeclaration}{Parameter}{DefaultValueDeclaration}";
     }
     public static string GeneratePartialType(this INamedTypeSymbol Symbol, string Content, IEnumerable<string>? Usings = null, string Indent = "    ") {
         string PartialType = "";

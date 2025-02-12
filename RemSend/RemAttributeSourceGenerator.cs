@@ -32,7 +32,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         List <IParameterSymbol> RemoteParameters = [.. Input.Symbol.Parameters.Except(PseudoParameters)];
 
         // Parameter definitions
-        List<string> SendMethodParameters = [.. RemoteParameters.Select(Parameter => $"{Parameter.StringifyAttributes()}{Parameter}")];
+        List<string> SendMethodParameters = [.. RemoteParameters.Select(Parameter => Parameter.GetParameterDeclaration())];
         List<string> SendMethodOneParameters = [.. SendMethodParameters
             .Prepend($"int {PeerIdParameterName}")];
         List<string> SendMethodMultiParameters = [.. SendMethodParameters
