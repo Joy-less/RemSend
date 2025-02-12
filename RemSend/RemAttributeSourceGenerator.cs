@@ -177,14 +177,16 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             namespace {{nameof(RemSend)}};
 
             public static class {{RemSendServiceTypeName}} {
-                public static void {{SetupMethodName}}(Node {{RootNodeParameterName}}, SceneMultiplayer {{SceneMultiplayerParameterName}}) {
+                public static void {{SetupMethodName}}(SceneMultiplayer {{SceneMultiplayerParameterName}}, Node? {{RootNodeParameterName}} = null) {
+                    // Default root node
+                    {{RootNodeParameterName}} ??= ((SceneTree)Engine.GetMainLoop()).Root;
                     // Listen for packets
                     {{SceneMultiplayerParameterName}}.PeerPacket += ({{SenderIdParameterName}}, {{PacketBytesParameterName}}) => {
-                        {{HandlePacketMethodName}}({{RootNodeParameterName}}, {{SceneMultiplayerParameterName}}, (int){{SenderIdParameterName}}, {{PacketBytesParameterName}});
+                        {{HandlePacketMethodName}}({{SceneMultiplayerParameterName}}, {{RootNodeParameterName}}, (int){{SenderIdParameterName}}, {{PacketBytesParameterName}});
                     };
                 }
 
-                private static void {{HandlePacketMethodName}}(Node {{RootNodeParameterName}}, SceneMultiplayer {{SceneMultiplayerParameterName}}, int {{SenderIdParameterName}}, ReadOnlySpan<byte> {{PacketBytesParameterName}}) {
+                private static void {{HandlePacketMethodName}}(SceneMultiplayer {{SceneMultiplayerParameterName}}, Node {{RootNodeParameterName}}, int {{SenderIdParameterName}}, ReadOnlySpan<byte> {{PacketBytesParameterName}}) {
                     // Deserialize packet
                     {{nameof(RemPacket)}} {{PacketLocalName}} = MemoryPackSerializer.Deserialize<{{nameof(RemPacket)}}>({{PacketBytesParameterName}});
 

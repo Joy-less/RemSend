@@ -42,12 +42,12 @@ public partial class Main : Node {
         ENetMultiplayerPeer Peer = new();
         Peer.CreateServer(Port);
         Multiplayer.MultiplayerPeer = Peer;
-        RemSendService.Setup(GetTree().Root, (SceneMultiplayer)Multiplayer);
+        RemSendService.Setup((SceneMultiplayer)Multiplayer, GetTree().Root);
     }
     private void CreateClient(string Address, int Port) {
         ENetMultiplayerPeer Peer = new();
         Peer.CreateClient(Address, Port);
         Multiplayer.MultiplayerPeer = Peer;
-        RemSendService.Setup(GetTree().Root, (SceneMultiplayer)Multiplayer);
+        RemSendService.Setup((SceneMultiplayer)Multiplayer, GetTree().Root);
     }
 }

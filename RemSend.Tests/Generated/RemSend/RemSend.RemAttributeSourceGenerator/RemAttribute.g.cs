@@ -9,14 +9,16 @@ using MemoryPack;
 namespace RemSend;
 
 public static class RemSendService {
-    public static void Setup(Node Root, SceneMultiplayer Multiplayer) {
+    public static void Setup(SceneMultiplayer Multiplayer, Node? Root = null) {
+        // Default root node
+        Root ??= ((SceneTree)Engine.GetMainLoop()).Root;
         // Listen for packets
         Multiplayer.PeerPacket += (SenderId, PacketBytes) => {
-            HandlePacket(Root, Multiplayer, (int)SenderId, PacketBytes);
+            HandlePacket(Multiplayer, Root, (int)SenderId, PacketBytes);
         };
     }
 
-    private static void HandlePacket(Node Root, SceneMultiplayer Multiplayer, int SenderId, ReadOnlySpan<byte> PacketBytes) {
+    private static void HandlePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> PacketBytes) {
         // Deserialize packet
         RemPacket _Packet = MemoryPackSerializer.Deserialize<RemPacket>(PacketBytes);
 
