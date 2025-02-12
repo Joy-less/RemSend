@@ -29,7 +29,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
 
         // Filter parameters by category
         List<IParameterSymbol> PseudoParameters = [.. Input.Symbol.Parameters.Where(Parameter => Parameter.HasAttribute<SenderAttribute>())];
-        List <IParameterSymbol> RemoteParameters = [.. Input.Symbol.Parameters.Except(PseudoParameters)];
+        List<IParameterSymbol> RemoteParameters = [.. Input.Symbol.Parameters.Except(PseudoParameters)];
 
         // Parameter definitions
         List<string> SendMethodParameters = [.. RemoteParameters.Select(Parameter => Parameter.GetParameterDeclaration())];
@@ -53,7 +53,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         // Method definitions
         string MethodDefinitions = $$"""
             /// <summary>
-            /// Remotely calls {{Input.Symbol.GenerateSeeXml()}} on the given peer.<br/>
+            /// Remotely calls {{MethodSeeXml}} on the given peer.<br/>
             /// Set <paramref name="{{PeerIdParameterName}}"/> to 0 to broadcast to all peers.<br/>
             /// Set <paramref name="{{PeerIdParameterName}}"/> to 1 to send to the authority.
             /// </summary>
