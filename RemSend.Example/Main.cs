@@ -25,7 +25,7 @@ public partial class Main : Node {
 
             await Task.Delay(TimeSpan.FromSeconds(0.5));
 
-            SceneMultiplayer.SendBytes([1, 2, 3], 1, MultiplayerPeer.TransferModeEnum.Unreliable, 134);
+            SendSayHello(1, 4);
         }
     }
 

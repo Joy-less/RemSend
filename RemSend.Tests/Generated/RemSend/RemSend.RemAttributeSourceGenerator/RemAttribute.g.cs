@@ -26,7 +26,7 @@ public static class RemSendService {
         Node _Node = Root.GetNode(Multiplayer.RootPath).GetNode(_Packet.NodePath);
         // Find target handler method
         if (_Node is @RemSend.Tests.MyNode @MyNode) {
-            if (_Packet.MethodName is "DoStuff") {
+            if (_Packet.MethodName is nameof(RemSend.Tests.MyNode.SendDoStuff)) {
                 @MyNode.SendDoStuffHandler(SenderId, _Packet);
             }
         }
