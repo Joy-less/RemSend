@@ -18,4 +18,7 @@ public static class StringExtensions {
         }
         return String;
     }
+    public static string SanitizeFileName(this string FileName) {
+        return Path.GetInvalidFileNameChars().Aggregate(FileName, (String, InvalidChar) => String.Replace(InvalidChar, '_'));
+    }
 }

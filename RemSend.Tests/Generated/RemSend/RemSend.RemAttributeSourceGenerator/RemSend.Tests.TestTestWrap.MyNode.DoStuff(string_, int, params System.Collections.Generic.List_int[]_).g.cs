@@ -80,41 +80,12 @@ partial class TestTestWrap {
         }
         
         private void SendDoStuffHandler(int SenderId, Span<byte> Packet) {
-            /*((SceneMultiplayer)Multiplayer).PeerPacket += (SenderId, Packet) => {
-                GD.Print($"received {Packet.Length} bytes from {SenderId}");
-            };*/
-        
             // Deserialize arguments
             var Arg = MemoryPackSerializer.Deserialize<string?>(ArgBytes)!;
             var Arg22 = MemoryPackSerializer.Deserialize<System.Collections.Generic.List<int[]>>(Arg22Bytes)!;
         
             // Call target method
-            DoStuff(Arg, _SenderId, Arg22);
-        }
-        
-        private void SendHandler(int SenderId, Span<byte> Packet) {
-            // Deserialize node path
-            NodePath NodePath = Encoding.UTF8.GetString(EatComponent(ref Packet));
-            // Deserialize method name
-            string MethodName = Encoding.UTF8.GetString(EatComponent(ref Packet));
-        
-            // Find node
-            Node Node = GetNode(NodePath);
-            // Find handler method
-            if (MethodName == "SendDoStuff") {
-                Node.SendDoStuffHandler(SenderId, Packet);
-            }
-        }
-        
-        private static Span<byte> EatComponent(ref Span<byte> Packet) {
-            // Eat component length
-            int Length = BitConverter.ToInt32(Packet[..sizeof(int)]);
-            Packet = Packet[sizeof(int)..];
-            // Eat component content
-            Span<byte> Content = Packet[..Length];
-            Packet = Packet[Length..];
-            // Return component content
-            return Content;
+            DoStuff(Arg, SenderId, Arg22);
         }
     }    
 }

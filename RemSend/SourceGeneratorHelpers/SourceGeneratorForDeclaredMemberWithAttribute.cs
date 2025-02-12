@@ -1,9 +1,9 @@
 ﻿using System.Collections.Immutable;
+using System.Runtime.InteropServices.ComTypes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using GeneratorContext = Microsoft.CodeAnalysis.IncrementalGeneratorInitializationContext;
 
 namespace RemSend.SourceGeneratorHelpers;
 
@@ -16,17 +16,9 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
 
     private const string GeneratedFilenameExtension = ".g.cs";
 
-    private static readonly char[] InvalidFileNameChars = [
-        '\"', '<', '>', '|', '\0',
-        (char)1, (char)2, (char)3, (char)4, (char)5, (char)6, (char)7, (char)8, (char)9, (char)10,
-        (char)11, (char)12, (char)13, (char)14, (char)15, (char)16, (char)17, (char)18, (char)19, (char)20,
-        (char)21, (char)22, (char)23, (char)24, (char)25, (char)26, (char)27, (char)28, (char)29, (char)30,
-        (char)31, ':', '*', '?', '\\', '/'
-    ];
-
     protected virtual IEnumerable<(string Name, string Source)> StaticSources => [];
 
-    public void Initialize(GeneratorContext Context) {
+    public void Initialize(IncrementalGeneratorInitializationContext Context) {
         foreach ((string Name, string Source) in StaticSources) {
             Context.RegisterPostInitializationOutput(Context => Context.AddSource(Name + GeneratedFilenameExtension, Source));
         }
@@ -91,7 +83,7 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
     }
 
     protected virtual string GenerateFilename(ISymbol Symbol) {
-        return string.Join("_", Symbol.ToString().Split(InvalidFileNameChars)) + GeneratedFilenameExtension;
+        return Symbol.ToString().SanitizeFileName() + ".g";
     }
     protected virtual SyntaxNode GetNode(TDeclarationSyntax Node) {
         return Node;

@@ -6,7 +6,7 @@ using System.Text;
 namespace RemSend;
 
 [Generator]
-internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribute<RemAttribute> {
+internal class RemAttributeSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribute<RemAttribute> {
     protected override (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(Compilation Compilation, SyntaxNode Node, IMethodSymbol Symbol, AttributeData Attribute, AnalyzerConfigOptions Options) {
         RemAttribute RemAttribute = ReconstructRemAttribute(Attribute);
 
@@ -16,8 +16,8 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         // Parameter names
         string PeerIdParameterName = "PeerId";
         string PeerIdsParameterName = "PeerIds";
+        string SenderIdParameterName = "SenderId";
         // Local names
-        string SenderIdLocalName = "_SenderId";
         string PacketLocalName = "_Packet";
         string NodePathBytesLocalName = "_NodePathBytes";
         string MethodNameBytesLocalName = "_MethodNameBytes";
@@ -48,7 +48,7 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
         // Pass pseudo parameters
         foreach (IParameterSymbol Parameter in Symbol.Parameters) {
             if (Parameter.HasAttribute<SenderAttribute>()) {
-                SendMethodArguments.Insert(Parameter.Ordinal, SenderIdLocalName);
+                SendMethodArguments.Insert(Parameter.Ordinal, SenderIdParameterName);
             }
         }
 
@@ -113,41 +113,12 @@ internal class RemSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribut
                 }
             }
 
-            private void {{SendHandlerMethodName}}(int SenderId, Span<byte> Packet) {
-                /*((SceneMultiplayer)Multiplayer).PeerPacket += (SenderId, Packet) => {
-                    GD.Print($"received {Packet.Length} bytes from {SenderId}");
-                };*/
-
+            private void {{SendHandlerMethodName}}(int {{SenderIdParameterName}}, Span<byte> Packet) {
                 // Deserialize arguments
                 {{string.Join("\n    ", DeserializeStatements)}}
 
                 // Call target method
                 {{Symbol.Name}}({{string.Join(", ", SendMethodArguments)}});
-            }
-
-            private void SendHandler(int SenderId, Span<byte> Packet) {
-                // Deserialize node path
-                NodePath NodePath = Encoding.UTF8.GetString(EatComponent(ref Packet));
-                // Deserialize method name
-                string MethodName = Encoding.UTF8.GetString(EatComponent(ref Packet));
-
-                // Find node
-                Node Node = GetNode(NodePath);
-                // Find handler method
-                if (MethodName == "{{SendMethodName}}") {
-                    Node.{{SendHandlerMethodName}}(SenderId, Packet);
-                }
-            }
-
-            private static Span<byte> EatComponent(ref Span<byte> Packet) {
-                // Eat component length
-                int Length = BitConverter.ToInt32(Packet[..sizeof(int)]);
-                Packet = Packet[sizeof(int)..];
-                // Eat component content
-                Span<byte> Content = Packet[..Length];
-                Packet = Packet[Length..];
-                // Return component content
-                return Content;
             }
             """;
 

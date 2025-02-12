@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Frozen;
+using System.Text;
 using System.Threading.Tasks;
 using Godot;
 using RemSend;
@@ -40,10 +42,12 @@ public partial class Main : Node {
         ENetMultiplayerPeer Peer = new();
         Peer.CreateServer(Port);
         Multiplayer.MultiplayerPeer = Peer;
+        RemSender.Setup(GetTree().Root, (SceneMultiplayer)Multiplayer);
     }
     private void CreateClient(string Address, int Port) {
         ENetMultiplayerPeer Peer = new();
         Peer.CreateClient(Address, Port);
         Multiplayer.MultiplayerPeer = Peer;
+        RemSender.Setup(GetTree().Root, (SceneMultiplayer)Multiplayer);
     }
 }
