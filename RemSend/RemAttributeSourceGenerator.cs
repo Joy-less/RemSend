@@ -38,8 +38,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         List<string> SendMethodMultiParameters = [.. SendMethodParameters
             .Prepend($"IEnumerable<int>? {PeerIdsParameterName}")];
 
-        // Arguments for locally calling target RemAttribute method
-        List<string> SendTargetMethodArguments = [.. RemoteParameters.Select(Parameter => Parameter.Name)];
+        // Arguments for locally calling target method
+        List<string> SendTargetMethodArguments = [.. RemoteParameters.Select(Parameter => $"{ArgumentsPackLocalName}.{Parameter.Name}")];
         // Pass pseudo parameters
         foreach (IParameterSymbol Parameter in PseudoParameters) {
             if (Parameter.HasAttribute<SenderAttribute>()) {
@@ -112,15 +112,14 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 // Deserialize arguments pack
                 {{ArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{ArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
                 
-                // Extract arguments
-                {{string.Join("\n    ", RemoteParameters.Select(Parameter => $"{Parameter.Type} {Parameter.Name} = {ArgumentsPackLocalName}.{Parameter.Name};"))}}
-
                 // Call target method
                 {{Input.Symbol.Name}}({{string.Join(", ", SendTargetMethodArguments)}});
             }
-
+            
+            [EditorBrowsable(EditorBrowsableState.Never)]
             private record struct {{ArgumentsPackTypeName}}({{string.Join(", ", SendMethodParameters)}});
-
+            
+            [EditorBrowsable(EditorBrowsableState.Never)]
             private sealed class {{ArgumentsPackTypeFormatterName}} : MemoryPackFormatter<{{ArgumentsPackTypeName}}> {
                 public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref {{ArgumentsPackTypeName}} Value) {
                     {{string.Join("\n        ", RemoteParameters.Select(Parameter => $"Writer.WriteValue(Value.@{Parameter.Name});"))}}
@@ -150,6 +149,20 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         return (GeneratedSource, null);
     }
     protected override (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(IEnumerable<GenerateInput> Inputs) {
+        // Method names
+        string SetupMethodName = "Setup";
+        string HandlePacketMethodName = "HandlePacket";
+        // Parameter names
+        string RootNodeParameterName = "Root";
+        string SceneMultiplayerParameterName = "Multiplayer";
+        string SenderIdParameterName = "SenderId";
+        string PacketBytesParameterName = "PacketBytes";
+        // Local names
+        string PacketLocalName = "_Packet";
+        string NodeLocalName = "_Node";
+        // Type names
+        string RemSendServiceTypeName = "RemSendService";
+
         // Generated source
         string GeneratedSource = $$"""
             #nullable enable
@@ -160,29 +173,34 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             using Godot;
             using MemoryPack;
 
-            namespace RemSend;
+            namespace {{nameof(RemSend)}};
 
-            public static class RemSendService {
-                public static void Setup(Node Root, SceneMultiplayer Multiplayer) {
-                    Multiplayer.PeerPacket += (SenderId, PacketBytes) => {
-                        ReceivePacket(Root, Multiplayer, (int)SenderId, PacketBytes);
+            public static class {{RemSendServiceTypeName}} {
+                public static void {{SetupMethodName}}(Node {{RootNodeParameterName}}, SceneMultiplayer {{SceneMultiplayerParameterName}}) {
+                    // Listen for packets
+                    {{SceneMultiplayerParameterName}}.PeerPacket += ({{SenderIdParameterName}}, {{PacketBytesParameterName}}) => {
+                        {{HandlePacketMethodName}}({{RootNodeParameterName}}, {{SceneMultiplayerParameterName}}, (int){{SenderIdParameterName}}, {{PacketBytesParameterName}});
                     };
                 }
 
-                private static void ReceivePacket(Node Root, SceneMultiplayer Multiplayer, int SenderId, ReadOnlySpan<byte> PacketBytes) {
+                private static void {{HandlePacketMethodName}}(Node {{RootNodeParameterName}}, SceneMultiplayer {{SceneMultiplayerParameterName}}, int {{SenderIdParameterName}}, ReadOnlySpan<byte> {{PacketBytesParameterName}}) {
                     // Deserialize packet
-                    RemPacket Packet = MemoryPackSerializer.Deserialize<RemPacket>(PacketBytes);
+                    {{nameof(RemPacket)}} {{PacketLocalName}} = MemoryPackSerializer.Deserialize<{{nameof(RemPacket)}}>({{PacketBytesParameterName}});
 
                     // Find target node
-                    Node Node = Root.GetNode(Multiplayer.RootPath).GetNode(Packet.NodePath);
+                    Node {{NodeLocalName}} = {{RootNodeParameterName}}.GetNode({{SceneMultiplayerParameterName}}.RootPath).GetNode({{PacketLocalName}}.{{nameof(RemPacket.NodePath)}});
                     // Find target handler method
             {{string.Join("\n", Inputs.Select(Input => $$"""
-                    if (Node is @{{Input.Symbol.ContainingType}} @{{Input.Symbol.ContainingType.Name}}) {
-                        if (Packet.MethodName is "{{Input.Symbol.Name}}") {
-                            @{{Input.Symbol.ContainingType.Name}}.Send{{Input.Symbol.Name}}Handler((int)SenderId, Packet);
+                    if ({{NodeLocalName}} is @{{Input.Symbol.ContainingType}} @{{Input.Symbol.ContainingType.Name}}) {
+                        if ({{PacketLocalName}}.{{nameof(RemPacket.MethodName)}} is "{{Input.Symbol.Name}}") {
+                            @{{Input.Symbol.ContainingType.Name}}.Send{{Input.Symbol.Name}}Handler({{SenderIdParameterName}}, {{PacketLocalName}});
                         }
                     }
             """))}}
+                }
+
+                static {{RemSendServiceTypeName}}() {
+                    // Register MemoryPack formatters
                 }
             }
             """;

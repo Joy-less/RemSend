@@ -10,22 +10,27 @@ namespace RemSend;
 
 public static class RemSendService {
     public static void Setup(Node Root, SceneMultiplayer Multiplayer) {
+        // Listen for packets
         Multiplayer.PeerPacket += (SenderId, PacketBytes) => {
-            ReceivePacket(Root, Multiplayer, (int)SenderId, PacketBytes);
+            HandlePacket(Root, Multiplayer, (int)SenderId, PacketBytes);
         };
     }
 
-    private static void ReceivePacket(Node Root, SceneMultiplayer Multiplayer, int SenderId, ReadOnlySpan<byte> PacketBytes) {
+    private static void HandlePacket(Node Root, SceneMultiplayer Multiplayer, int SenderId, ReadOnlySpan<byte> PacketBytes) {
         // Deserialize packet
-        RemPacket Packet = MemoryPackSerializer.Deserialize<RemPacket>(PacketBytes);
+        RemPacket _Packet = MemoryPackSerializer.Deserialize<RemPacket>(PacketBytes);
 
         // Find target node
-        Node Node = Root.GetNode(Multiplayer.RootPath).GetNode(Packet.NodePath);
+        Node _Node = Root.GetNode(Multiplayer.RootPath).GetNode(_Packet.NodePath);
         // Find target handler method
-        if (Node is @RemSend.Tests.MyNode @MyNode) {
-            if (Packet.MethodName is "DoStuff") {
-                @MyNode.SendDoStuffHandler((int)SenderId, Packet);
+        if (_Node is @RemSend.Tests.MyNode @MyNode) {
+            if (_Packet.MethodName is "DoStuff") {
+                @MyNode.SendDoStuffHandler(SenderId, _Packet);
             }
         }
+    }
+
+    static RemSendService() {
+        // Register MemoryPack formatters
     }
 }

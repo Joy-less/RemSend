@@ -71,16 +71,14 @@ partial class MyNode {
         // Deserialize arguments pack
         SendDoStuffPack _ArgumentsPack = MemoryPackSerializer.Deserialize<SendDoStuffPack>(_Packet.ArgumentsPack);
         
-        // Extract arguments
-        string? Arg = _ArgumentsPack.Arg;
-        System.Collections.Generic.List<int[]> Arg22 = _ArgumentsPack.Arg22;
-    
         // Call target method
-        DoStuff(Arg, SenderId, Arg22);
+        DoStuff(_ArgumentsPack.Arg, SenderId, _ArgumentsPack.Arg22);
     }
     
+    [EditorBrowsable(EditorBrowsableState.Never)]
     private record struct SendDoStuffPack(string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22);
     
+    [EditorBrowsable(EditorBrowsableState.Never)]
     private sealed class SendDoStuffPackFormatter : MemoryPackFormatter<SendDoStuffPack> {
         public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref SendDoStuffPack Value) {
             Writer.WriteValue(Value.@Arg);
