@@ -133,22 +133,19 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             }
             """;
 
-        // Using statements
-        List<string> Usings = [
-            "System",
-            "System.Collections.Generic",
-            "System.Linq",
-            "System.Text",
-            "System.ComponentModel",
-            "Godot",
-            "MemoryPack",
-        ];
-
         // Generated source
         string GeneratedSource = $"""
             #nullable enable
 
-            {Input.Symbol.ContainingType.GeneratePartialType(MethodDefinitions, Usings)}
+            using System;
+            using System.Collections.Generic;
+            using System.Linq;
+            using System.Text;
+            using System.ComponentModel;
+            using Godot;
+            using MemoryPack;
+
+            {Input.Symbol.ContainingType.GeneratePartialType(MethodDefinitions)}
             """;
         return (GeneratedSource, null);
     }
