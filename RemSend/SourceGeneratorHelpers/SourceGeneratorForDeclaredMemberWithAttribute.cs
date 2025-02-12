@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using System.Runtime.InteropServices.ComTypes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -14,13 +13,11 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
     private static readonly string AttributeType = typeof(TAttribute).Name;
     private static readonly string AttributeName = AttributeType.TrimSuffix("Attribute");
 
-    private const string GeneratedFilenameExtension = ".g.cs";
-
     protected virtual IEnumerable<(string Name, string Source)> StaticSources => [];
 
     public void Initialize(IncrementalGeneratorInitializationContext Context) {
         foreach ((string Name, string Source) in StaticSources) {
-            Context.RegisterPostInitializationOutput(Context => Context.AddSource(Name + GeneratedFilenameExtension, Source));
+            Context.RegisterPostInitializationOutput(Context => Context.AddSource($"{Name}.g", Source));
         }
 
         var SyntaxProvider = Context.SyntaxProvider.CreateSyntaxProvider(IsSyntaxTarget, GetSyntaxTarget);
@@ -51,7 +48,7 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
                 }
 
                 SemanticModel Model = Compilation.GetSemanticModel(Node.SyntaxTree);
-                if (Model.GetDeclaredSymbol(GetNode(Node)) is not ISymbol Symbol) {
+                if (Model.GetDeclaredSymbol(GetSyntaxNode(Node)) is not ISymbol Symbol) {
                     continue;
                 }
                 if (Symbol.GetAttribute<TAttribute>() is not AttributeData Attribute) {
@@ -83,9 +80,9 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
     }
 
     protected virtual string GenerateFilename(ISymbol Symbol) {
-        return Symbol.ToString().SanitizeFileName() + ".g";
+        return $"{Symbol.ToString().SanitizeFileName()}.g";
     }
-    protected virtual SyntaxNode GetNode(TDeclarationSyntax Node) {
+    protected virtual SyntaxNode GetSyntaxNode(TDeclarationSyntax Node) {
         return Node;
     }
 

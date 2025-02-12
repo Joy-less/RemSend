@@ -1,7 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using RemSend.SourceGeneratorHelpers;
-using System.Text;
 
 namespace RemSend;
 
@@ -18,37 +17,34 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForDeclaredMethodWit
         string PeerIdsParameterName = "PeerIds";
         string SenderIdParameterName = "SenderId";
         // Local names
+        string ArgumentsPackLocalName = "_ArgumentsPack";
+        string SerializedArgumentsPackLocalName = "_SerializedArgumentsPack";
         string PacketLocalName = "_Packet";
-        string NodePathBytesLocalName = "_NodePathBytes";
-        string MethodNameBytesLocalName = "_MethodNameBytes";
+        string SerializedPacketLocalName = "_SerializedPacket";
+        // Type names
+        string ArgumentsPackTypeName = $"{SendMethodName}Pack";
+        string ArgumentsPackTypeFormatterName = $"{ArgumentsPackTypeName}Formatter";
 
         // Access modifiers
         string AccessModifier = Symbol.GetDeclaredAccessibility();
 
         // Filter parameters by category
         List<IParameterSymbol> PseudoParameters = [.. Symbol.Parameters.Where(Parameter => Parameter.HasAttribute<SenderAttribute>())];
-        List <IParameterSymbol> RealParameters = [.. Symbol.Parameters.Except(PseudoParameters)];
+        List <IParameterSymbol> RemoteParameters = [.. Symbol.Parameters.Except(PseudoParameters)];
 
-        // Argument literals
-        List<string> SendMethodArguments = [.. RealParameters.Select(Parameter => Parameter.Name)];
-        List<string> SendMethodPackedArguments = [.. RealParameters.Select(Parameter => $"{Parameter.Name}Bytes")];
         // Parameter definitions
-        List<string> BaseSendMethodParameters = [.. RealParameters.Select(Parameter => $"{Parameter.GetAttributes().StringifyAttributes()}{Parameter}")];
-        List<string> SendMethodParameters = [.. BaseSendMethodParameters
+        List<string> SendMethodParameters = [.. RemoteParameters.Select(Parameter => $"{Parameter.StringifyAttributes()}{Parameter}")];
+        List<string> SendMethodOneParameters = [.. SendMethodParameters
             .Prepend($"int {PeerIdParameterName}")];
-        List<string> SendMethodMultiParameters = [.. BaseSendMethodParameters
+        List<string> SendMethodMultiParameters = [.. SendMethodParameters
             .Prepend($"IEnumerable<int>? {PeerIdsParameterName}")];
-        // Statements
-        List<string> SerializeStatements = [.. RealParameters.Select(Parameter => $"Span<byte> {Parameter.Name}Bytes = MemoryPackSerializer.Serialize({Parameter.Name});")];
-        List<string> CombinePacketExpressions = [.. SendMethodPackedArguments.Select(Argument => $".. BitConverter.GetBytes({Argument}.Length), .. {Argument},")
-            .Prepend($".. BitConverter.GetBytes({NodePathBytesLocalName}.Length), .. {NodePathBytesLocalName},")
-            .Prepend($".. BitConverter.GetBytes({MethodNameBytesLocalName}.Length), .. {MethodNameBytesLocalName},")];
-        List<string> DeserializeStatements = [.. RealParameters.Select(Parameter => $"var {Parameter.Name} = MemoryPackSerializer.Deserialize<{Parameter.Type}>({Parameter.Name}Bytes)!;")];
 
+        // Arguments for locally calling target RemAttribute method
+        List<string> SendTargetMethodArguments = [.. RemoteParameters.Select(Parameter => Parameter.Name)];
         // Pass pseudo parameters
-        foreach (IParameterSymbol Parameter in Symbol.Parameters) {
+        foreach (IParameterSymbol Parameter in PseudoParameters) {
             if (Parameter.HasAttribute<SenderAttribute>()) {
-                SendMethodArguments.Insert(Parameter.Ordinal, SenderIdParameterName);
+                SendTargetMethodArguments.Insert(Parameter.Ordinal, SenderIdParameterName);
             }
         }
 
@@ -59,22 +55,20 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForDeclaredMethodWit
             /// Set <paramref name="{{PeerIdParameterName}}"/> to 0 to broadcast to all peers.<br/>
             /// Set <paramref name="{{PeerIdParameterName}}"/> to 1 to send to the authority.
             /// </summary>
-            {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodParameters)}}) {
-                // Serialize node path
-                Span<byte> {{NodePathBytesLocalName}} = Encoding.UTF8.GetBytes(GetPath());
-                // Serialize method name
-                Span<byte> {{MethodNameBytesLocalName}} = [{{string.Join(", ", Encoding.UTF8.GetBytes(SendMethodName))}}];
-                // Serialize arguments
-                {{string.Join("\n    ", SerializeStatements)}}
+            {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodOneParameters)}}) {
+                // Create arguments pack
+                {{ArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = new({{string.Join(", ", RemoteParameters.Select(Parameter => Parameter.Name))}});
+                // Serialize arguments pack
+                byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
 
-                // Combine packet
-                Span<byte> {{PacketLocalName}} = [
-                    {{string.Join("\n        ", CombinePacketExpressions)}}
-                ];
+                // Create packet
+                RemPacket {{PacketLocalName}} = new(this.GetPath(), "{{SendMethodName}}", {{SerializedArgumentsPackLocalName}});
+                // Serialize packet
+                byte[] {{SerializedPacketLocalName}} = MemoryPackSerializer.Serialize({{PacketLocalName}});
 
-                // Send packet to single peer ID
-                ((SceneMultiplayer)Multiplayer).SendBytes(
-                    bytes: {{PacketLocalName}},
+                // Send packet to peer ID
+                ((SceneMultiplayer)this.Multiplayer).SendBytes(
+                    bytes: {{SerializedPacketLocalName}},
                     id: {{PeerIdParameterName}},
                     mode: MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}},
                     channel: {{RemAttribute.Channel}}
@@ -90,22 +84,20 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForDeclaredMethodWit
                     return;
                 }
 
-                // Serialize node path
-                Span<byte> {{NodePathBytesLocalName}} = Encoding.UTF8.GetBytes(GetPath());
-                // Serialize method name
-                Span<byte> {{MethodNameBytesLocalName}} = [{{string.Join(", ", Encoding.UTF8.GetBytes(SendMethodName))}}];
-                // Serialize arguments
-                {{string.Join("\n    ", SerializeStatements)}}
+                // Create arguments pack
+                {{ArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = new({{string.Join(", ", RemoteParameters.Select(Parameter => Parameter.Name))}});
+                // Serialize arguments pack
+                byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
+            
+                // Create packet
+                {{nameof(RemPacket)}} {{PacketLocalName}} = new(this.GetPath(), "{{SendMethodName}}", {{SerializedArgumentsPackLocalName}});
+                // Serialize packet
+                byte[] {{SerializedPacketLocalName}} = MemoryPackSerializer.Serialize({{PacketLocalName}});
                 
-                // Combine packet components
-                Span<byte> {{PacketLocalName}} = [
-                    {{string.Join("\n        ", CombinePacketExpressions)}}
-                ];
-                
-                // Send call data to multiple peer IDs
+                // Send packet to each peer ID
                 foreach (int {{PeerIdParameterName}} in {{PeerIdsParameterName}}) {
-                    ((SceneMultiplayer)Multiplayer).SendBytes(
-                        bytes: {{PacketLocalName}},
+                    ((SceneMultiplayer)this.Multiplayer).SendBytes(
+                        bytes: {{SerializedPacketLocalName}},
                         id: {{PeerIdParameterName}},
                         mode: MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}},
                         channel: {{RemAttribute.Channel}}
@@ -113,12 +105,28 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForDeclaredMethodWit
                 }
             }
 
-            private void {{SendHandlerMethodName}}(int {{SenderIdParameterName}}, Span<byte> Packet) {
-                // Deserialize arguments
-                {{string.Join("\n    ", DeserializeStatements)}}
+            private void {{SendHandlerMethodName}}(int {{SenderIdParameterName}}, {{nameof(RemPacket)}} {{PacketLocalName}}) {
+                // Deserialize arguments pack
+                {{ArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{ArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
+                
+                // Extract arguments
+                {{string.Join("\n    ", RemoteParameters.Select(Parameter => $"{Parameter.Type} {Parameter.Name} = {ArgumentsPackLocalName}.{Parameter.Name};"))}}
 
                 // Call target method
-                {{Symbol.Name}}({{string.Join(", ", SendMethodArguments)}});
+                {{Symbol.Name}}({{string.Join(", ", SendTargetMethodArguments)}});
+            }
+
+            private record struct {{ArgumentsPackTypeName}}({{string.Join(", ", SendMethodParameters)}});
+
+            private sealed class {{ArgumentsPackTypeFormatterName}} : MemoryPackFormatter<{{ArgumentsPackTypeName}}> {
+                public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref {{ArgumentsPackTypeName}} Value) {
+                    {{string.Join("\n        ", RemoteParameters.Select(Parameter => $"Writer.WriteValue(Value.@{Parameter.Name});"))}}
+                }
+                public override void Deserialize(ref MemoryPackReader Reader, scoped ref {{ArgumentsPackTypeName}} Value) {
+                    Value = new() {
+                        {{string.Join("\n            ", RemoteParameters.Select(Parameter => $"@{Parameter.Name} = Reader.ReadValue<{Parameter.Type}>()!,"))}}
+                    };
+                }
             }
             """;
 

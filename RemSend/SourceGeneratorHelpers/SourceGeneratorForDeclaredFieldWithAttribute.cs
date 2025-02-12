@@ -10,6 +10,6 @@ public abstract class SourceGeneratorForDeclaredFieldWithAttribute<TAttribute> :
     protected abstract (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(Compilation Compilation, SyntaxNode Node, IFieldSymbol Symbol, AttributeData Attribute, AnalyzerConfigOptions Options);
     protected sealed override (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(Compilation Compilation, SyntaxNode Node, ISymbol Symbol, AttributeData Attribute, AnalyzerConfigOptions Options)
         => GenerateCode(Compilation, Node, (IFieldSymbol)Symbol, Attribute, Options);
-    protected override SyntaxNode GetNode(FieldDeclarationSyntax Node)
+    protected override SyntaxNode GetSyntaxNode(FieldDeclarationSyntax Node)
         => Node.Declaration.Variables.Single();
 }

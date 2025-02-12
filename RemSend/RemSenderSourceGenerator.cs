@@ -13,41 +13,29 @@ public sealed class RemSenderSourceGenerator : IIncrementalGenerator {
                 using System.Text;
                 using System.ComponentModel;
                 using Godot;
+                using MemoryPack;
 
                 namespace RemSend;
 
                 public static class RemSender {
                     public static void Setup(Node Root, SceneMultiplayer Multiplayer) {
-                        Multiplayer.PeerPacket += (SenderId, Packet) => {
-                            ReceivePacket(Root, Multiplayer, (int)SenderId, Packet);
+                        Multiplayer.PeerPacket += (SenderId, PacketBytes) => {
+                            ReceivePacket(Root, Multiplayer, (int)SenderId, PacketBytes);
                         };
                     }
 
-                    public static void ReceivePacket(Node Root, SceneMultiplayer Multiplayer, int SenderId, Span<byte> Packet) {
-                        // Deserialize node path
-                        NodePath NodePath = Encoding.UTF8.GetString(DecodePacketComponent(ref Packet));
-                        // Deserialize method name
-                        string MethodName = Encoding.UTF8.GetString(DecodePacketComponent(ref Packet));
-                
+                    private static void ReceivePacket(Node Root, SceneMultiplayer Multiplayer, int SenderId, ReadOnlySpan<byte> PacketBytes) {
+                        // Deserialize packet
+                        RemPacket Packet = MemoryPackSerializer.Deserialize<RemPacket>(PacketBytes);
+                        
                         // Find target node
-                        Node Node = Root.GetNode(Multiplayer.RootPath).GetNode(NodePath);
+                        Node Node = Root.GetNode(Multiplayer.RootPath).GetNode(Packet.NodePath);
                         // Find target handler method
                         if (Node is @Main @Main) {
-                            if (MethodName is "SendSayHello") {
+                            if (Packet.MethodName is "SendSayHello") {
                                 @Main.SendSayHelloHandler((int)SenderId, Packet);
                             }
                         }
-                    }
-
-                    public static Span<byte> DecodePacketComponent(ref Span<byte> Packet) {
-                        // Read component length
-                        int Length = BitConverter.ToInt32(Packet[..sizeof(int)]);
-                        Packet = Packet[sizeof(int)..];
-                        // Read component content
-                        Span<byte> Content = Packet[..Length];
-                        Packet = Packet[Length..];
-                        // Return component content
-                        return Content;
                     }
                 }
                 """;

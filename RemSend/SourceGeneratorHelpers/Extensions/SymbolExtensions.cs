@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace RemSend.SourceGeneratorHelpers;
@@ -24,6 +25,13 @@ public static class SymbolExtensions {
     }
     public static bool HasAttribute<T>(this ISymbol Symbol) {
         return Symbol.HasAttribute(typeof(T));
+    }
+    public static string StringifyAttributes(this ISymbol Symbol) {
+        ImmutableArray<AttributeData> Attributes = Symbol.GetAttributes();
+        if (Attributes.IsEmpty) {
+            return "";
+        }
+        return "[" + string.Join(", ", Attributes) + "] ";
     }
     public static string GeneratePartialType(this INamedTypeSymbol Symbol, string Content, IEnumerable<string>? Usings = null, string Indent = "    ") {
         string PartialType = "";
