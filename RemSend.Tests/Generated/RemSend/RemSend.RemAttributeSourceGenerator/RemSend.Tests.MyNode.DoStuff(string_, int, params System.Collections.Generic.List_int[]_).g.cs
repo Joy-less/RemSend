@@ -24,7 +24,7 @@ partial class MyNode {
         byte[] _SerializedArgumentsPack = MemoryPackSerializer.Serialize(_ArgumentsPack);
     
         // Create packet
-        RemPacket _Packet = new(this.GetPath(), "SendDoStuff", _SerializedArgumentsPack);
+        RemPacket _Packet = new(this.GetPath(), nameof(SendDoStuff), _SerializedArgumentsPack);
         // Serialize packet
         byte[] _SerializedPacket = MemoryPackSerializer.Serialize(_Packet);
     

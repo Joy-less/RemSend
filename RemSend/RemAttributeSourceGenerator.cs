@@ -62,9 +62,9 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 {{SendArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = new({{string.Join(", ", RemoteParameters.Select(Parameter => Parameter.Name))}});
                 // Serialize arguments pack
                 byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
-
+            
                 // Create packet
-                {{nameof(RemPacket)}} {{PacketLocalName}} = new(this.GetPath(), "{{SendMethodName}}", {{SerializedArgumentsPackLocalName}});
+                {{nameof(RemPacket)}} {{PacketLocalName}} = new(this.GetPath(), nameof({{SendMethodName}}), {{SerializedArgumentsPackLocalName}});
                 // Serialize packet
                 byte[] {{SerializedPacketLocalName}} = MemoryPackSerializer.Serialize({{PacketLocalName}});
 

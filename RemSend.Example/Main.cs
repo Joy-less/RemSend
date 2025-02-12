@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Godot;
 using RemSend;
 
@@ -7,8 +5,6 @@ public partial class Main : Node {
     private SceneMultiplayer SceneMultiplayer => (SceneMultiplayer)Multiplayer;
 
     public override async void _Ready() {
-        //SendSayHello(0, 3);
-
         // Server
         if (OS.HasFeature("server")) {
             CreateServer(12345);
@@ -22,8 +18,6 @@ public partial class Main : Node {
             CreateClient("localhost", 12345);
 
             await ToSignal(Multiplayer, MultiplayerApi.SignalName.ConnectedToServer);
-
-            await Task.Delay(TimeSpan.FromSeconds(0.5));
 
             SendSayHello(1, 4);
         }
