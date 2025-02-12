@@ -55,7 +55,7 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
                     continue;
                 }
 
-                (string? GeneratedCode, DiagnosticDetail? Error) = SafeGenerateCode(Compilation, Node, Symbol, Attribute, Options.GlobalOptions);
+                (string? GeneratedCode, DiagnosticDetail? Error) = SafeGenerateCode(Compilation, Node, Symbol, Attribute, Options.GetOptions(Node.SyntaxTree));
 
                 if (GeneratedCode is null) {
                     DiagnosticDescriptor Descriptor = new(Error!.Id ?? typeof(TAttribute).Name, Error.Title, Error.Message, Error.Category ?? "Usage", DiagnosticSeverity.Error, true);
