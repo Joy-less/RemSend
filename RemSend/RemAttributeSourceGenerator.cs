@@ -92,7 +92,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
                 
                 // Create packet
-                {{nameof(RemPacket)}} {{PacketLocalName}} = new(this.GetPath(), "{{SendMethodName}}", {{SerializedArgumentsPackLocalName}});
+                {{nameof(RemPacket)}} {{PacketLocalName}} = new(this.GetPath(), nameof({{SendMethodName}}), {{SerializedArgumentsPackLocalName}});
                 // Serialize packet
                 byte[] {{SerializedPacketLocalName}} = MemoryPackSerializer.Serialize({{PacketLocalName}});
                 
