@@ -1,16 +1,15 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
 using RemSend.SourceGeneratorHelpers;
 
 namespace RemSend;
 
 [Generator]
-internal class RemAttributeSourceGenerator : SourceGeneratorForDeclaredMethodWithAttribute<RemAttribute> {
-    protected override (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(Compilation Compilation, SyntaxNode Node, IMethodSymbol Symbol, AttributeData Attribute, AnalyzerConfigOptions Options) {
-        RemAttribute RemAttribute = ReconstructRemAttribute(Attribute);
+internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribute<RemAttribute> {
+    protected override (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(GenerateInput Input) {
+        RemAttribute RemAttribute = ReconstructRemAttribute(Input.Attribute);
 
         // Method names
-        string SendMethodName = $"Send{Symbol.Name}";
+        string SendMethodName = $"Send{Input.Symbol.Name}";
         string SendHandlerMethodName = $"{SendMethodName}Handler";
         // Parameter names
         string PeerIdParameterName = "PeerId";
@@ -26,11 +25,11 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForDeclaredMethodWit
         string ArgumentsPackTypeFormatterName = $"{ArgumentsPackTypeName}Formatter";
 
         // Access modifiers
-        string AccessModifier = Symbol.GetDeclaredAccessibility();
+        string AccessModifier = Input.Symbol.GetDeclaredAccessibility();
 
         // Filter parameters by category
-        List<IParameterSymbol> PseudoParameters = [.. Symbol.Parameters.Where(Parameter => Parameter.HasAttribute<SenderAttribute>())];
-        List <IParameterSymbol> RemoteParameters = [.. Symbol.Parameters.Except(PseudoParameters)];
+        List<IParameterSymbol> PseudoParameters = [.. Input.Symbol.Parameters.Where(Parameter => Parameter.HasAttribute<SenderAttribute>())];
+        List <IParameterSymbol> RemoteParameters = [.. Input.Symbol.Parameters.Except(PseudoParameters)];
 
         // Parameter definitions
         List<string> SendMethodParameters = [.. RemoteParameters.Select(Parameter => $"{Parameter.StringifyAttributes()}{Parameter}")];
@@ -48,10 +47,13 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForDeclaredMethodWit
             }
         }
 
+        // XML references
+        string MethodSeeXml = Input.Symbol.GenerateSeeXml();
+
         // Method definitions
         string MethodDefinitions = $$"""
             /// <summary>
-            /// Remotely calls {{Symbol.GenerateSeeXml()}} on the given peer.<br/>
+            /// Remotely calls {{Input.Symbol.GenerateSeeXml()}} on the given peer.<br/>
             /// Set <paramref name="{{PeerIdParameterName}}"/> to 0 to broadcast to all peers.<br/>
             /// Set <paramref name="{{PeerIdParameterName}}"/> to 1 to send to the authority.
             /// </summary>
@@ -76,7 +78,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForDeclaredMethodWit
             }
 
             /// <summary>
-            /// Remotely calls {{Symbol.GenerateSeeXml()}} on each peer.
+            /// Remotely calls {{MethodSeeXml}} on each peer.
             /// </summary>
             {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodMultiParameters)}}) {
                 // Skip if no peers
@@ -88,7 +90,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForDeclaredMethodWit
                 {{ArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = new({{string.Join(", ", RemoteParameters.Select(Parameter => Parameter.Name))}});
                 // Serialize arguments pack
                 byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
-            
+                
                 // Create packet
                 {{nameof(RemPacket)}} {{PacketLocalName}} = new(this.GetPath(), "{{SendMethodName}}", {{SerializedArgumentsPackLocalName}});
                 // Serialize packet
@@ -105,7 +107,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForDeclaredMethodWit
                 }
             }
 
-            private void {{SendHandlerMethodName}}(int {{SenderIdParameterName}}, {{nameof(RemPacket)}} {{PacketLocalName}}) {
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            internal void {{SendHandlerMethodName}}(int {{SenderIdParameterName}}, {{nameof(RemPacket)}} {{PacketLocalName}}) {
                 // Deserialize arguments pack
                 {{ArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{ArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
                 
@@ -113,7 +116,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForDeclaredMethodWit
                 {{string.Join("\n    ", RemoteParameters.Select(Parameter => $"{Parameter.Type} {Parameter.Name} = {ArgumentsPackLocalName}.{Parameter.Name};"))}}
 
                 // Call target method
-                {{Symbol.Name}}({{string.Join(", ", SendTargetMethodArguments)}});
+                {{Input.Symbol.Name}}({{string.Join(", ", SendTargetMethodArguments)}});
             }
 
             private record struct {{ArgumentsPackTypeName}}({{string.Join(", ", SendMethodParameters)}});
@@ -145,7 +148,46 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForDeclaredMethodWit
         string GeneratedSource = $"""
             #nullable enable
 
-            {Symbol.ContainingType.GeneratePartialType(MethodDefinitions, Usings)}
+            {Input.Symbol.ContainingType.GeneratePartialType(MethodDefinitions, Usings)}
+            """;
+        return (GeneratedSource, null);
+    }
+    protected override (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(IEnumerable<GenerateInput> Inputs) {
+        // Generated source
+        string GeneratedSource = $$"""
+            #nullable enable
+
+            using System;
+            using System.Text;
+            using System.ComponentModel;
+            using Godot;
+            using MemoryPack;
+
+            namespace RemSend;
+
+            public static class RemSendService {
+                public static void Setup(Node Root, SceneMultiplayer Multiplayer) {
+                    Multiplayer.PeerPacket += (SenderId, PacketBytes) => {
+                        ReceivePacket(Root, Multiplayer, (int)SenderId, PacketBytes);
+                    };
+                }
+
+                private static void ReceivePacket(Node Root, SceneMultiplayer Multiplayer, int SenderId, ReadOnlySpan<byte> PacketBytes) {
+                    // Deserialize packet
+                    RemPacket Packet = MemoryPackSerializer.Deserialize<RemPacket>(PacketBytes);
+
+                    // Find target node
+                    Node Node = Root.GetNode(Multiplayer.RootPath).GetNode(Packet.NodePath);
+                    // Find target handler method
+            {{string.Join("\n", Inputs.Select(Input => $$"""
+                    if (Node is @{{Input.Symbol.ContainingType}} @{{Input.Symbol.ContainingType.Name}}) {
+                        if (Packet.MethodName is "{{Input.Symbol.Name}}") {
+                            @{{Input.Symbol.ContainingType.Name}}.Send{{Input.Symbol.Name}}Handler((int)SenderId, Packet);
+                        }
+                    }
+            """))}}
+                }
+            }
             """;
         return (GeneratedSource, null);
     }

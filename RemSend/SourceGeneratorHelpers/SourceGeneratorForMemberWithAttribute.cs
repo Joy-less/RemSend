@@ -6,9 +6,10 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace RemSend.SourceGeneratorHelpers;
 
-public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, TDeclarationSyntax> : IIncrementalGenerator
+public abstract class SourceGeneratorForMemberWithAttribute<TAttribute, TDeclarationSyntax, TSymbol> : IIncrementalGenerator
     where TAttribute : Attribute
-    where TDeclarationSyntax : MemberDeclarationSyntax {
+    where TDeclarationSyntax : MemberDeclarationSyntax
+    where TSymbol : ISymbol {
 
     private static readonly string AttributeType = typeof(TAttribute).Name;
     private static readonly string AttributeName = AttributeType.TrimSuffix("Attribute");
@@ -42,45 +43,51 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
             return (TDeclarationSyntax)Context.Node;
         }
         void OnExecute(SourceProductionContext Context, Compilation Compilation, ImmutableArray<TDeclarationSyntax> Nodes, AnalyzerConfigOptionsProvider Options) {
+            List<GenerateInput> Inputs = [];
+
             foreach (TDeclarationSyntax Node in Nodes.Distinct()) {
                 if (Context.CancellationToken.IsCancellationRequested) {
                     return;
                 }
 
                 SemanticModel Model = Compilation.GetSemanticModel(Node.SyntaxTree);
-                if (Model.GetDeclaredSymbol(GetSyntaxNode(Node)) is not ISymbol Symbol) {
+                if (Model.GetDeclaredSymbol(GetSyntaxNode(Node)) is not TSymbol Symbol) {
                     continue;
                 }
                 if (Symbol.GetAttribute<TAttribute>() is not AttributeData Attribute) {
                     continue;
                 }
 
-                (string? GeneratedCode, DiagnosticDetail? Error) = SafeGenerateCode(Compilation, Node, Symbol, Attribute, Options.GetOptions(Node.SyntaxTree));
+                GenerateInput Input = new(Compilation, Node, Symbol, Attribute, Options.GetOptions(Node.SyntaxTree));
+                Inputs.Add(Input);
 
-                if (GeneratedCode is null) {
-                    DiagnosticDescriptor Descriptor = new(Error!.Id ?? typeof(TAttribute).Name, Error.Title, Error.Message, Error.Category ?? "Usage", DiagnosticSeverity.Error, true);
-                    Diagnostic Diagnostic = Diagnostic.Create(Descriptor, Attribute.ApplicationSyntaxReference?.GetSyntax().GetLocation());
-                    Context.ReportDiagnostic(Diagnostic);
-                    continue;
-                }
+                GenerateAndAddSource(
+                    Context,
+                    GenerateFileName(Input.Symbol),
+                    () => GenerateCode(Input),
+                    () => Input.Attribute.ApplicationSyntaxReference?.GetSyntax().GetLocation()
+                );
+            }
 
-                Context.AddSource(GenerateFilename(Symbol), GeneratedCode);
+            if (Inputs.Count > 0) {
+                GenerateAndAddSource(
+                    Context,
+                    GenerateFileName(),
+                    () => GenerateCode(Inputs),
+                    null
+                );
             }
         }
     }
 
-    protected abstract (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(Compilation Compilation, SyntaxNode Node, ISymbol Symbol, AttributeData Attribute, AnalyzerConfigOptions Options);
-    private (string? GeneratedCode, DiagnosticDetail? Error) SafeGenerateCode(Compilation Compilation, SyntaxNode Node, ISymbol Symbol, AttributeData Attribute, AnalyzerConfigOptions Options) {
-        try {
-            return GenerateCode(Compilation, Node, Symbol, Attribute, Options);
-        }
-        catch (Exception Ex) {
-            return (null, new DiagnosticDetail("Internal Error", Ex.Message));
-        }
-    }
+    protected abstract (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(GenerateInput Input);
+    protected abstract (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(IEnumerable<GenerateInput> Input);
 
-    protected virtual string GenerateFilename(ISymbol Symbol) {
+    protected virtual string GenerateFileName(ISymbol Symbol) {
         return $"{Symbol.ToString().SanitizeFileName()}.g";
+    }
+    protected virtual string GenerateFileName() {
+        return $"{AttributeType.SanitizeFileName()}.g";
     }
     protected virtual SyntaxNode GetSyntaxNode(TDeclarationSyntax Node) {
         return Node;
@@ -110,4 +117,28 @@ public abstract class SourceGeneratorForDeclaredMemberWithAttribute<TAttribute, 
     protected static T GetAttributeArgument<T>(AttributeData AttributeData, string ArgumentName, T? DefaultValue = default) {
         return TryGetAttributeArgument(AttributeData, ArgumentName, out T Value) ? Value : DefaultValue!;
     }
+
+    private static void GenerateAndAddSource(SourceProductionContext Context, string FileName, Func<(string?, DiagnosticDetail?)> GenerateCode, Func<Location?>? GetLocation) {
+        string? GeneratedCode;
+        DiagnosticDetail? Error;
+        try {
+            (GeneratedCode, Error) = GenerateCode();
+        }
+        catch (Exception Ex) {
+            (GeneratedCode, Error) = (null, new DiagnosticDetail("Internal Error", Ex.Message));
+        }
+
+        if (Error is not null) {
+            DiagnosticDescriptor Descriptor = new(Error.Id ?? typeof(TAttribute).Name, Error.Title, Error.Message, Error.Category ?? "Usage", DiagnosticSeverity.Error, true);
+            Diagnostic Diagnostic = Diagnostic.Create(Descriptor, GetLocation?.Invoke());
+            Context.ReportDiagnostic(Diagnostic);
+        }
+        if (GeneratedCode is null) {
+            return;
+        }
+
+        Context.AddSource(FileName, GeneratedCode);
+    }
+
+    protected readonly record struct GenerateInput(Compilation Compilation, SyntaxNode Node, TSymbol Symbol, AttributeData Attribute, AnalyzerConfigOptions Options);
 }

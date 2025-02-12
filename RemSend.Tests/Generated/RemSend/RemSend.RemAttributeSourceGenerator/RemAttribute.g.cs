@@ -8,7 +8,7 @@ using MemoryPack;
 
 namespace RemSend;
 
-public static class RemSender {
+public static class RemSendService {
     public static void Setup(Node Root, SceneMultiplayer Multiplayer) {
         Multiplayer.PeerPacket += (SenderId, PacketBytes) => {
             ReceivePacket(Root, Multiplayer, (int)SenderId, PacketBytes);
@@ -18,13 +18,13 @@ public static class RemSender {
     private static void ReceivePacket(Node Root, SceneMultiplayer Multiplayer, int SenderId, ReadOnlySpan<byte> PacketBytes) {
         // Deserialize packet
         RemPacket Packet = MemoryPackSerializer.Deserialize<RemPacket>(PacketBytes);
-        
+
         // Find target node
         Node Node = Root.GetNode(Multiplayer.RootPath).GetNode(Packet.NodePath);
         // Find target handler method
-        if (Node is @Main @Main) {
-            if (Packet.MethodName is "SendSayHello") {
-                @Main.SendSayHelloHandler((int)SenderId, Packet);
+        if (Node is @RemSend.Tests.MyNode @MyNode) {
+            if (Packet.MethodName is "DoStuff") {
+                @MyNode.SendDoStuffHandler((int)SenderId, Packet);
             }
         }
     }

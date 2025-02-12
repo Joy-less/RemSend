@@ -49,7 +49,7 @@ partial class MyNode {
         SendDoStuffPack _ArgumentsPack = new(Arg, Arg22);
         // Serialize arguments pack
         byte[] _SerializedArgumentsPack = MemoryPackSerializer.Serialize(_ArgumentsPack);
-    
+        
         // Create packet
         RemPacket _Packet = new(this.GetPath(), "SendDoStuff", _SerializedArgumentsPack);
         // Serialize packet
@@ -66,7 +66,8 @@ partial class MyNode {
         }
     }
     
-    private void SendDoStuffHandler(int SenderId, RemPacket _Packet) {
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal void SendDoStuffHandler(int SenderId, RemPacket _Packet) {
         // Deserialize arguments pack
         SendDoStuffPack _ArgumentsPack = MemoryPackSerializer.Deserialize<SendDoStuffPack>(_Packet.ArgumentsPack);
         
