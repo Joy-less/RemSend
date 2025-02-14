@@ -60,9 +60,6 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         // Arguments
         List<string> SendArgumentsPackArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
         List<string> RequestArgumentsPackArguments = [.. SendArgumentsPackArguments.Prepend(RequestIdLocalName)];
-        //List<string> SendMethodOneArguments = [.. SendMethodArguments.Prepend(PeerIdParameterName)];
-        //List<string> SendMethodMultiArguments = [.. SendMethodArguments.Prepend(PeerIdsParameterName)];
-        //List<string> RequestMethodArguments = [.. SendMethodParameters.Prepend(TimeoutParameterName).Prepend(PeerIdParameterName)];
 
         // Properties
         List<string> SendArgumentsPackProperties = [.. SendMethodParameters];
@@ -294,21 +291,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 {{GenerateMemoryPackFormatterCode("internal", RequestArgumentsPackFormatterTypeName, RequestArgumentsPackTypeName, "",
                     RemoteParameters.Select(Parameter => (Parameter.Name, Parameter.Type.ToString()))
                         .Prepend((RequestIdPropertyName, "Guid"))
-                )
-                /*[EditorBrowsable(EditorBrowsableState.Never)]
-                internal sealed class {{RequestArgumentsPackFormatterTypeName}} : MemoryPackFormatter<{{RequestArgumentsPackTypeName}}> {
-                    public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref {{RequestArgumentsPackTypeName}} Value) {
-                        Writer.WriteValue(Value.{{RequestIdPropertyName}});
-                        {{string.Join("\n        ", RemoteParameters.Select(Parameter => $"Writer.WriteValue(Value.@{Parameter.Name});"))}}
-                    }
-                    public override void Deserialize(ref MemoryPackReader Reader, scoped ref {{RequestArgumentsPackTypeName}} Value) {
-                        Value = new() {
-                            {{RequestIdPropertyName}} = Reader.ReadValue<Guid>()!,
-                            {{string.Join("\n            ", RemoteParameters.Select(Parameter => $"@{Parameter.Name} = Reader.ReadValue<{Parameter.Type}>()!,"))}}
-                        };
-                    }
-                }*/
-                }}
+                )}}
                 """);
         }
         // Result Arguments Pack & Formatter
@@ -320,21 +303,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 {{GenerateMemoryPackFormatterCode("internal", ResultArgumentsPackFormatterTypeName, ResultArgumentsPackTypeName, "", [
                     (RequestIdPropertyName, "Guid"),
                     (ReturnValuePropertyName, Input.Symbol.ReturnType.ToString()),
-                ])
-                /*[EditorBrowsable(EditorBrowsableState.Never)]
-                internal sealed class {{ResultArgumentsPackFormatterTypeName}} : MemoryPackFormatter<{{ResultArgumentsPackTypeName}}> {
-                    public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref {{ResultArgumentsPackTypeName}} Value) {
-                        Writer.WriteValue(Value.{{RequestIdPropertyName}});
-                        Writer.WriteValue(Value.{{ReturnValuePropertyName}});
-                    }
-                    public override void Deserialize(ref MemoryPackReader Reader, scoped ref {{ResultArgumentsPackTypeName}} Value) {
-                        Value = new() {
-                            {{RequestIdPropertyName}} = Reader.ReadValue<Guid>()!,
-                            {{ReturnValuePropertyName}} = Reader.ReadValue<{{Input.Symbol.ReturnType}}>()!,
-                        };
-                    }
-                }*/
-                }}
+                ])}}
                 """);
         }
 
@@ -434,23 +403,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     (nameof(RemPacket.NodePath), "string"),
                     (nameof(RemPacket.MethodName), "string"),
                     (nameof(RemPacket.ArgumentsPack), "byte[]"),
-                ])
-                /*private sealed class {{RemPacketFormatterTypeName}}: MemoryPackFormatter<{{nameof(RemPacket)}}> {
-                    public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref {{nameof(RemPacket)}} Value) {
-                        Writer.WriteValue(Value.{{nameof(RemPacket.Type)}});
-                        Writer.WriteValue(Value.{{nameof(RemPacket.NodePath)}});
-                        Writer.WriteValue(Value.{{nameof(RemPacket.MethodName)}});
-                        Writer.WriteValue(Value.{{nameof(RemPacket.ArgumentsPack)}});
-                    }
-                    public override void Deserialize(ref MemoryPackReader Reader, scoped ref {{nameof(RemPacket)}} Value) {
-                        Value = new() {
-                            {{nameof(RemPacket.Type)}} = Reader.ReadValue<{{nameof(RemPacketType)}}>()!,
-                            {{nameof(RemPacket.NodePath)}} = Reader.ReadValue<string>()!,
-                            {{nameof(RemPacket.MethodName)}} = Reader.ReadValue<string>()!,
-                            {{nameof(RemPacket.ArgumentsPack)}} = Reader.ReadValue<byte[]>()!,
-                        };
-                    }
-                }*/}}
+                ])}}
             }
             """;
         return (GeneratedSource, null);
