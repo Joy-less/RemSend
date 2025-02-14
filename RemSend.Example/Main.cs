@@ -23,6 +23,8 @@ public partial class Main : Node {
             await RequestWaitASecond(1, Timeout: 10);
 
             GD.Print(await RequestAreYouTheServer(1, Timeout: 10));
+
+            GD.Print(await RequestGiveNineAfterASecond(1, Timeout: 10));
         }
     }
 
@@ -41,6 +43,11 @@ public partial class Main : Node {
     [Rem(RemAccess.Any)]
     public async Task WaitASecond() {
         await Task.Delay(TimeSpan.FromSeconds(1));
+    }
+    [Rem(RemAccess.Any)]
+    public async Task<sbyte> GiveNineAfterASecond() {
+        await Task.Delay(TimeSpan.FromSeconds(1));
+        return 9;
     }
 
     private void CreateServer(int Port) {
