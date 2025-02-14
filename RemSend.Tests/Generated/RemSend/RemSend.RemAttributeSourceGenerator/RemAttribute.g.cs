@@ -25,9 +25,14 @@ public static class RemSendService {
         // Find target node
         Node TargetNode = Root.GetNode(Multiplayer.RootPath).GetNode(RemPacket.NodePath);
         // Find target receive method
-        if (TargetNode is @RemSend.Tests.MyNode @MyNode) {
-            if (RemPacket.MethodName is nameof(RemSend.Tests.MyNode.GetMagicNumber)) {
-                @MyNode.ReceiveGetMagicNumber(SenderId, RemPacket);
+        if (TargetNode is @int.RemSend.Tests.MyNode) {
+            if (RemPacket.MethodName is nameof(@int.RemSend.Tests.MyNode.GetMagicNumber)) {
+                ((@int.RemSend.Tests.MyNode)TargetNode).ReceiveGetMagicNumber(SenderId, RemPacket);
+            }
+        }
+        if (TargetNode is @int.RemSend.Tests.MyNode) {
+            if (RemPacket.MethodName is nameof(@int.RemSend.Tests.MyNode.GetMagicNumberAsync)) {
+                ((@int.RemSend.Tests.MyNode)TargetNode).ReceiveGetMagicNumberAsync(SenderId, RemPacket);
             }
         }
     }
@@ -35,9 +40,12 @@ public static class RemSendService {
     static RemSendService() {
         // Register MemoryPack formatters
         MemoryPackFormatterProvider.Register(new RemPacketFormatter());
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberSendPack.Formatter());
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberRequestPack.Formatter());
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberResultPack.Formatter());
+        MemoryPackFormatterProvider.Register(new @int.RemSend.Tests.MyNode.GetMagicNumberSendPack.Formatter());
+        MemoryPackFormatterProvider.Register(new @int.RemSend.Tests.MyNode.GetMagicNumberRequestPack.Formatter());
+        MemoryPackFormatterProvider.Register(new @int.RemSend.Tests.MyNode.GetMagicNumberResultPack.Formatter());
+        MemoryPackFormatterProvider.Register(new @int.RemSend.Tests.MyNode.GetMagicNumberAsyncSendPack.Formatter());
+        MemoryPackFormatterProvider.Register(new @int.RemSend.Tests.MyNode.GetMagicNumberAsyncRequestPack.Formatter());
+        MemoryPackFormatterProvider.Register(new @int.RemSend.Tests.MyNode.GetMagicNumberAsyncResultPack.Formatter());
     }
 
     // Formatter for RemPacket because MemoryPack doesn't support .NET Standard 2.0

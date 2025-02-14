@@ -19,6 +19,9 @@ public static class StringExtensions {
         return String;
     }
     public static string SanitizeFileName(this string FileName) {
+        // Symbols not allowed in generated source hint names
+        FileName = FileName.Replace('@', '_');
+        // Symbols not allowed in any file name
         return Path.GetInvalidFileNameChars().Aggregate(FileName, (String, InvalidChar) => String.Replace(InvalidChar, '_'));
     }
 }

@@ -107,7 +107,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
                 
                 // Create packet
-                {{nameof(RemPacket)}} {{PacketLocalName}} = new({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Message)}}, this.GetPath(), "{{Input.Symbol.Name}}", {{SerializedArgumentsPackLocalName}});
+                {{nameof(RemPacket)}} {{PacketLocalName}} = new({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Message)}}, this.GetPath(), nameof({{Input.Symbol.ContainingType}}.{{Input.Symbol.Name}}), {{SerializedArgumentsPackLocalName}});
                 // Serialize packet
                 byte[] {{SerializedPacketLocalName}} = MemoryPackSerializer.Serialize({{PacketLocalName}});
                 
@@ -137,7 +137,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
                 
                 // Create packet
-                {{nameof(RemPacket)}} {{PacketLocalName}} = new({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Message)}}, this.GetPath(), "{{Input.Symbol.Name}}", {{SerializedArgumentsPackLocalName}});
+                {{nameof(RemPacket)}} {{PacketLocalName}} = new({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Message)}}, this.GetPath(), nameof({{Input.Symbol.ContainingType}}.{{Input.Symbol.Name}}), {{SerializedArgumentsPackLocalName}});
                 // Serialize packet
                 byte[] {{SerializedPacketLocalName}} = MemoryPackSerializer.Serialize({{PacketLocalName}});
                 
@@ -174,7 +174,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
                     
                     // Create packet
-                    {{nameof(RemPacket)}} {{PacketLocalName}} = new({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Request)}}, this.GetPath(), "{{Input.Symbol.Name}}", {{SerializedArgumentsPackLocalName}});
+                    {{nameof(RemPacket)}} {{PacketLocalName}} = new({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Request)}}, this.GetPath(), nameof({{Input.Symbol.ContainingType}}.{{Input.Symbol.Name}}), {{SerializedArgumentsPackLocalName}});
                     // Serialize packet
                     byte[] {{SerializedPacketLocalName}} = MemoryPackSerializer.Serialize({{PacketLocalName}});
                     
@@ -248,7 +248,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
                     
                         // Create packet
-                        {{nameof(RemPacket)}} {{ResultPacketLocalName}} = new({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Result)}}, this.GetPath(), "{{Input.Symbol.Name}}", {{SerializedArgumentsPackLocalName}});
+                        {{nameof(RemPacket)}} {{ResultPacketLocalName}} = new({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Result)}}, this.GetPath(), nameof({{Input.Symbol.ContainingType}}.{{Input.Symbol.Name}}), {{SerializedArgumentsPackLocalName}});
                         // Serialize packet
                         byte[] {{SerializedResultPacketLocalName}} = MemoryPackSerializer.Serialize({{ResultPacketLocalName}});
                 
@@ -376,9 +376,9 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     Node {{NodeLocalName}} = {{RootNodeParameterName}}.GetNode({{SceneMultiplayerParameterName}}.RootPath).GetNode({{PacketLocalName}}.{{nameof(RemPacket.NodePath)}});
                     // Find target receive method
             {{string.Join("\n", Inputs.Select(Input => $$"""
-                    if ({{NodeLocalName}} is @{{Input.Symbol.ContainingType}} @{{Input.Symbol.ContainingType.Name}}) {
+                    if ({{NodeLocalName}} is {{Input.Symbol.ContainingType}}) {
                         if ({{PacketLocalName}}.{{nameof(RemPacket.MethodName)}} is nameof({{Input.Symbol.ContainingType}}.{{Input.Symbol.Name}})) {
-                            @{{Input.Symbol.ContainingType.Name}}.{{string.Format(ReceiveMethodName, Input.Symbol.Name)}}({{SenderIdParameterName}}, {{PacketLocalName}});
+                            (({{Input.Symbol.ContainingType}}){{NodeLocalName}}).{{string.Format(ReceiveMethodName, Input.Symbol.Name)}}({{SenderIdParameterName}}, {{PacketLocalName}});
                         }
                     }
             """))}}

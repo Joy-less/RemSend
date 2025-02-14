@@ -2,8 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 
-namespace RemSend.Tests;
+using RemSend;
+
+namespace @int.RemSend.Tests;
 
 public partial class Program {
     public static void Main() {
@@ -24,6 +27,11 @@ public partial class MyNode : Godot.Node {
 
     [Rem(RemAccess.Any)]
     public ushort GetMagicNumber(bool Dummy) {
+        return 7;
+    }
+    [Rem(RemAccess.Any)]
+    public async Task<ushort> GetMagicNumberAsync(bool Dummy) {
+        await Task.Delay(0);
         return 7;
     }
 }
