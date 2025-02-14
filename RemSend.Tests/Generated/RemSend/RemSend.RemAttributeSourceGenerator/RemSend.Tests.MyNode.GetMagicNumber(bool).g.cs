@@ -46,7 +46,7 @@ partial class MyNode {
             bytes: SerializedRemPacket,
             id: PeerId,
             mode: MultiplayerPeer.TransferModeEnum.Reliable,
-            channel: 0
+            channel: GetMagicNumberRemAttribute.Channel
         );
     }
     
@@ -75,7 +75,7 @@ partial class MyNode {
                 bytes: SerializedRemPacket,
                 id: PeerId,
                 mode: MultiplayerPeer.TransferModeEnum.Reliable,
-                channel: 0
+                channel: GetMagicNumberRemAttribute.Channel
             );
         }
     }
@@ -107,7 +107,7 @@ partial class MyNode {
             bytes: SerializedRemPacket,
             id: PeerId,
             mode: MultiplayerPeer.TransferModeEnum.Reliable,
-            channel: 0
+            channel: GetMagicNumberRemAttribute.Channel
         );
     
         // Create result listener
@@ -164,7 +164,7 @@ partial class MyNode {
                 bytes: SerializedResultRemPacket,
                 id: SenderId,
                 mode: MultiplayerPeer.TransferModeEnum.Reliable,
-                channel: 0
+                channel: GetMagicNumberRemAttribute.Channel
             );
         }
         // Result

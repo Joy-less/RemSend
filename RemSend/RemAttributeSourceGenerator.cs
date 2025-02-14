@@ -122,7 +122,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     bytes: {{SerializedPacketLocalName}},
                     id: {{PeerIdParameterName}},
                     mode: MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}},
-                    channel: {{RemAttribute.Channel}}
+                    channel: {{AttributePropertyName}}.{{nameof(RemAttribute.Channel)}}
                 );
             }
             """);
@@ -153,7 +153,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         bytes: {{SerializedPacketLocalName}},
                         id: {{PeerIdParameterName}},
                         mode: MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}},
-                        channel: {{RemAttribute.Channel}}
+                        channel: {{AttributePropertyName}}.{{nameof(RemAttribute.Channel)}}
                     );
                 }
             }
@@ -189,7 +189,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         bytes: {{SerializedPacketLocalName}},
                         id: {{PeerIdParameterName}},
                         mode: MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}},
-                        channel: {{RemAttribute.Channel}}
+                        channel: {{AttributePropertyName}}.{{nameof(RemAttribute.Channel)}}
                     );
 
                     // Create result listener
@@ -270,7 +270,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                             bytes: {{SerializedResultPacketLocalName}},
                             id: {{SenderIdParameterName}},
                             mode: MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}},
-                            channel: {{RemAttribute.Channel}}
+                            channel: {{AttributePropertyName}}.{{nameof(RemAttribute.Channel)}}
                         );
                     }
                     // Result
