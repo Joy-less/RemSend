@@ -26,6 +26,61 @@ public static class SymbolExtensions {
     public static bool HasAttribute<T>(this ISymbol Symbol) {
         return Symbol.HasAttribute(typeof(T));
     }
+    public static bool IsDerivedType(this ITypeSymbol Symbol, Type BaseType) {
+        if (Symbol.ToString() == BaseType.FullName) {
+            return true;
+        }
+        if (Symbol.BaseType is not null) {
+            return Symbol.BaseType.IsDerivedType(BaseType);
+        }
+        return false;
+    }
+    public static bool IsDerivedType<T>(this ITypeSymbol Symbol) {
+        return Symbol.IsDerivedType(typeof(T));
+    }
+    public static bool IsTask(this ITypeSymbol Symbol) {
+        return Symbol.IsDerivedType<Task>() || Symbol.IsDerivedType<ValueTask>();
+    }
+    public static bool IsGenericTask(this ITypeSymbol Symbol) {
+        return Symbol.IsTask() && Symbol is INamedTypeSymbol { IsGenericType: true };
+    }
+    public static bool IsNonGenericTask(this ITypeSymbol Symbol) {
+        return Symbol.IsTask() && Symbol is not INamedTypeSymbol { IsGenericType: true };
+    }
+    public static INamedTypeSymbol GetReturnTypeAsTask(this IMethodSymbol Symbol, Compilation Compilation) {
+        // Method returns task
+        if (Symbol.ReturnType.IsTask()) {
+            // Return task as-is
+            return (INamedTypeSymbol)Symbol.ReturnType;
+        }
+        // Method returns void
+        else if (Symbol.ReturnsVoid) {
+            // Return non-generic task
+            return Compilation.GetTypeByMetadataName(typeof(Task<>).FullName)!;
+        }
+        // Method returns value
+        else {
+            // Return generic task
+            return Compilation.GetTypeByMetadataName(typeof(Task<>).FullName)!.Construct(Symbol.ReturnType);
+        }
+    }
+    public static ITypeSymbol GetReturnTypeAsValue(this IMethodSymbol Symbol, Compilation Compilation) {
+        // Method returns value
+        if (!Symbol.ReturnType.IsTask()) {
+            // Return value as-is
+            return Symbol.ReturnType;
+        }
+        // Method returns non-generic task
+        else if (Symbol.ReturnType.IsNonGenericTask()) {
+            // Return void
+            return Compilation.GetSpecialType(SpecialType.System_Void);
+        }
+        // Method returns generic task
+        else {
+            // Return value
+            return ((INamedTypeSymbol)Symbol.ReturnType).TypeArguments[0];
+        }
+    }
     public static string GetParameterDeclaration(this IParameterSymbol Parameter) {
         // Attributes
         string AttributesDeclaration = "";

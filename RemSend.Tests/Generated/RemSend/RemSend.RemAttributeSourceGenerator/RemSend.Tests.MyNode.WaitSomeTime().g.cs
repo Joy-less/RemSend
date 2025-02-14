@@ -9,35 +9,35 @@ using Godot;
 using MemoryPack;
 using RemSend;
 
-namespace @int.RemSend.Tests;
+namespace RemSend.Tests;
 
 partial class MyNode {
     /// <summary>
-    /// The <see cref="RemAttribute"/> defined on <see cref="GetMagicNumber(bool)"/>.
+    /// The <see cref="RemAttribute"/> defined on <see cref="WaitSomeTime()"/>.
     /// </summary>
     /// <remarks>
     /// Todo: use the changed values of this attribute if it's changed.
     /// </remarks>
-    public RemAttribute GetMagicNumberRemAttribute { get; set; } = new() {
-        Access = RemAccess.Any,
+    public RemAttribute WaitSomeTimeRemAttribute { get; set; } = new() {
+        Access = RemAccess.None,
         CallLocal = false,
         Mode = RemMode.Reliable,
         Channel = 0,
     };
     
     /// <summary>
-    /// Remotely calls <see cref="GetMagicNumber(bool)"/> on the given peer.<br/>
+    /// Remotely calls <see cref="WaitSomeTime()"/> on the given peer.<br/>
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    public void SendGetMagicNumber(int PeerId, bool Dummy) {
+    public void SendWaitSomeTime(int PeerId) {
         // Create arguments pack
-        GetMagicNumberSendPack ArgumentsPack = new(@Dummy);
+        WaitSomeTimeSendPack ArgumentsPack = new();
         // Serialize arguments pack
         byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
         
         // Create packet
-        RemPacket RemPacket = new(RemPacketType.Message, this.GetPath(), nameof(@int.RemSend.Tests.MyNode.GetMagicNumber), SerializedArgumentsPack);
+        RemPacket RemPacket = new(RemPacketType.Message, this.GetPath(), nameof(RemSend.Tests.MyNode.WaitSomeTime), SerializedArgumentsPack);
         // Serialize packet
         byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
         
@@ -51,21 +51,21 @@ partial class MyNode {
     }
     
     /// <summary>
-    /// Remotely calls <see cref="GetMagicNumber(bool)"/> on each peer.
+    /// Remotely calls <see cref="WaitSomeTime()"/> on each peer.
     /// </summary>
-    public void SendGetMagicNumber(IEnumerable<int>? PeerIds, bool Dummy) {
+    public void SendWaitSomeTime(IEnumerable<int>? PeerIds) {
         // Skip if no peers
         if (PeerIds is null || !PeerIds.Any()) {
             return;
         }
         
         // Create arguments pack
-        GetMagicNumberSendPack ArgumentsPack = new(@Dummy);
+        WaitSomeTimeSendPack ArgumentsPack = new();
         // Serialize arguments pack
         byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
         
         // Create packet
-        RemPacket RemPacket = new(RemPacketType.Message, this.GetPath(), nameof(@int.RemSend.Tests.MyNode.GetMagicNumber), SerializedArgumentsPack);
+        RemPacket RemPacket = new(RemPacketType.Message, this.GetPath(), nameof(RemSend.Tests.MyNode.WaitSomeTime), SerializedArgumentsPack);
         // Serialize packet
         byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
         
@@ -81,24 +81,24 @@ partial class MyNode {
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal event Action<GetMagicNumberResultPack>? OnReceiveGetMagicNumberResult;
+    internal event Action<WaitSomeTimeResultPack>? OnReceiveWaitSomeTimeResult;
     
     /// <summary>
-    /// Remotely calls <see cref="GetMagicNumber(bool)"/> on the given peer and awaits the return value.<br/>
+    /// Remotely calls <see cref="WaitSomeTime()"/> on the given peer and awaits the return value.<br/>
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    public async Task<ushort> RequestGetMagicNumber(int PeerId, double Timeout, bool Dummy) {
+    public async System.Threading.Tasks.Task RequestWaitSomeTime(int PeerId, double Timeout) {
         // Generate request ID
         Guid RequestId = Guid.NewGuid();
     
         // Create arguments pack
-        GetMagicNumberRequestPack ArgumentsPack = new(RequestId, @Dummy);
+        WaitSomeTimeRequestPack ArgumentsPack = new(RequestId);
         // Serialize arguments pack
         byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
         
         // Create packet
-        RemPacket RemPacket = new(RemPacketType.Request, this.GetPath(), nameof(@int.RemSend.Tests.MyNode.GetMagicNumber), SerializedArgumentsPack);
+        RemPacket RemPacket = new(RemPacketType.Request, this.GetPath(), nameof(RemSend.Tests.MyNode.WaitSomeTime), SerializedArgumentsPack);
         // Serialize packet
         byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
         
@@ -111,51 +111,49 @@ partial class MyNode {
         );
     
         // Create result listener
-        TaskCompletionSource<ushort> ResultAwaiter = new();
-        void ResultCallback(GetMagicNumberResultPack ResultPack) {
+        TaskCompletionSource ResultAwaiter = new();
+        void ResultCallback(WaitSomeTimeResultPack ResultPack) {
             if (ResultPack.RequestId == RequestId) {
-                ResultAwaiter.TrySetResult(ResultPack.ReturnValue);
+                ResultAwaiter.TrySetResult();
             }
         }
         try {
             // Add result listener
-            OnReceiveGetMagicNumberResult += ResultCallback;
-            // Await result
-            ushort ReturnValue = await ResultAwaiter.Task.WaitAsync(TimeSpan.FromSeconds(Timeout));
-            // Return result
-            return ReturnValue;
+            OnReceiveWaitSomeTimeResult += ResultCallback;
+            // Await completion
+            await ResultAwaiter.Task.WaitAsync(TimeSpan.FromSeconds(Timeout));
         }
         finally {
             // Remove result listener
-            OnReceiveGetMagicNumberResult -= ResultCallback;
+            OnReceiveWaitSomeTimeResult -= ResultCallback;
         }
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal void ReceiveGetMagicNumber(int SenderId, RemPacket RemPacket) {
+    internal async void ReceiveWaitSomeTime(int SenderId, RemPacket RemPacket) {
         // Message
         if (RemPacket.Type is RemPacketType.Message) {
             // Deserialize send arguments pack
-            GetMagicNumberSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberSendPack>(RemPacket.ArgumentsPack);
+            WaitSomeTimeSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeSendPack>(RemPacket.ArgumentsPack);
         
             // Call target method
-            GetMagicNumber(DeserializedArgumentsPack.Dummy);
+            _ = WaitSomeTime();
         }
         // Request
         else if (RemPacket.Type is RemPacketType.Request) {
             // Deserialize request arguments pack
-            GetMagicNumberRequestPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberRequestPack>(RemPacket.ArgumentsPack);
+            WaitSomeTimeRequestPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeRequestPack>(RemPacket.ArgumentsPack);
     
             // Call target method
-            ushort ReturnValue = GetMagicNumber(DeserializedArgumentsPack.Dummy);
+            await WaitSomeTime();
     
             // Create arguments pack
-            GetMagicNumberResultPack ArgumentsPack = new(DeserializedArgumentsPack.RequestId, ReturnValue);
+            WaitSomeTimeResultPack ArgumentsPack = new(DeserializedArgumentsPack.RequestId);
             // Serialize arguments pack
             byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
         
             // Create packet
-            RemPacket ResultRemPacket = new(RemPacketType.Result, this.GetPath(), nameof(@int.RemSend.Tests.MyNode.GetMagicNumber), SerializedArgumentsPack);
+            RemPacket ResultRemPacket = new(RemPacketType.Result, this.GetPath(), nameof(RemSend.Tests.MyNode.WaitSomeTime), SerializedArgumentsPack);
             // Serialize packet
             byte[] SerializedResultRemPacket = MemoryPackSerializer.Serialize(ResultRemPacket);
     
@@ -170,57 +168,53 @@ partial class MyNode {
         // Result
         else if (RemPacket.Type is RemPacketType.Result) {
             // Deserialize result arguments pack
-            GetMagicNumberResultPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberResultPack>(RemPacket.ArgumentsPack);
+            WaitSomeTimeResultPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeResultPack>(RemPacket.ArgumentsPack);
             
             // Invoke receive event
-            OnReceiveGetMagicNumberResult?.Invoke(DeserializedArgumentsPack);
+            OnReceiveWaitSomeTimeResult?.Invoke(DeserializedArgumentsPack);
         }
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal record struct GetMagicNumberSendPack(bool Dummy) {
+    internal record struct WaitSomeTimeSendPack() {
         // Formatter
-        internal sealed class Formatter : MemoryPackFormatter<GetMagicNumberSendPack> {
-            public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref GetMagicNumberSendPack Value) {
-                Writer.WriteValue(Value.@Dummy);
+        internal sealed class Formatter : MemoryPackFormatter<WaitSomeTimeSendPack> {
+            public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref WaitSomeTimeSendPack Value) {
+                
             }
-            public override void Deserialize(ref MemoryPackReader Reader, scoped ref GetMagicNumberSendPack Value) {
+            public override void Deserialize(ref MemoryPackReader Reader, scoped ref WaitSomeTimeSendPack Value) {
                 Value = new() {
-                    @Dummy = Reader.ReadValue<bool>()!,
+                    
                 };
             }
         }
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal record struct GetMagicNumberRequestPack(Guid RequestId, bool Dummy) {
+    internal record struct WaitSomeTimeRequestPack(Guid RequestId) {
         // Formatter
-        internal sealed class Formatter : MemoryPackFormatter<GetMagicNumberRequestPack> {
-            public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref GetMagicNumberRequestPack Value) {
+        internal sealed class Formatter : MemoryPackFormatter<WaitSomeTimeRequestPack> {
+            public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref WaitSomeTimeRequestPack Value) {
                 Writer.WriteValue(Value.@RequestId);
-                Writer.WriteValue(Value.@Dummy);
             }
-            public override void Deserialize(ref MemoryPackReader Reader, scoped ref GetMagicNumberRequestPack Value) {
+            public override void Deserialize(ref MemoryPackReader Reader, scoped ref WaitSomeTimeRequestPack Value) {
                 Value = new() {
                     @RequestId = Reader.ReadValue<Guid>()!,
-                    @Dummy = Reader.ReadValue<bool>()!,
                 };
             }
         }
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal record struct GetMagicNumberResultPack(Guid RequestId, ushort ReturnValue) {
+    internal record struct WaitSomeTimeResultPack(Guid RequestId) {
         // Formatter
-        internal sealed class Formatter : MemoryPackFormatter<GetMagicNumberResultPack> {
-            public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref GetMagicNumberResultPack Value) {
+        internal sealed class Formatter : MemoryPackFormatter<WaitSomeTimeResultPack> {
+            public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref WaitSomeTimeResultPack Value) {
                 Writer.WriteValue(Value.@RequestId);
-                Writer.WriteValue(Value.@ReturnValue);
             }
-            public override void Deserialize(ref MemoryPackReader Reader, scoped ref GetMagicNumberResultPack Value) {
+            public override void Deserialize(ref MemoryPackReader Reader, scoped ref WaitSomeTimeResultPack Value) {
                 Value = new() {
                     @RequestId = Reader.ReadValue<Guid>()!,
-                    @ReturnValue = Reader.ReadValue<ushort>()!,
                 };
             }
         }

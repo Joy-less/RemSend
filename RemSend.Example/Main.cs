@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using Godot;
 using RemSend;
 
@@ -8,10 +10,6 @@ public partial class Main : Node {
         // Server
         if (OS.HasFeature("server")) {
             CreateServer(12345);
-
-            SceneMultiplayer.PeerPacket += (long SenderId, byte[] Packet) => {
-                GD.Print($"received {Packet.Length} bytes from {SenderId}");
-            };
         }
         // Client
         else {
@@ -21,6 +19,10 @@ public partial class Main : Node {
 
             SendSayHello(1, 4);
             SendSayHello(1);
+
+            await RequestWaitASecond(1, Timeout: 10);
+
+            GD.Print(await RequestAreYouTheServer(1, Timeout: 10));
         }
     }
 
@@ -31,6 +33,14 @@ public partial class Main : Node {
         for (int Counter = 0; Counter < Times; Counter++) {
             GD.Print("Hello!");
         }
+    }
+    [Rem(RemAccess.PeerToAuthority)]
+    public bool AreYouTheServer() {
+        return OS.HasFeature("server");
+    }
+    [Rem(RemAccess.Any)]
+    public async Task WaitASecond() {
+        await Task.Delay(TimeSpan.FromSeconds(1));
     }
 
     private void CreateServer(int Port) {

@@ -49,6 +49,12 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         List<IParameterSymbol> PseudoParameters = [.. Input.Symbol.Parameters.Where(Parameter => Parameter.HasAttribute<SenderAttribute>())];
         List<IParameterSymbol> RemoteParameters = [.. Input.Symbol.Parameters.Except(PseudoParameters)];
 
+        // Handle task return values
+        bool ReturnsTask = Input.Symbol.ReturnType.IsTask();
+        bool ReturnsNonGenericTask = Input.Symbol.ReturnType.IsNonGenericTask();
+        INamedTypeSymbol ReturnTypeAsTask = Input.Symbol.GetReturnTypeAsTask(Input.Compilation);
+        ITypeSymbol ReturnTypeAsValue = Input.Symbol.GetReturnTypeAsValue(Input.Compilation);
+
         // Parameters
         List<string> SendMethodParameters = [.. RemoteParameters.Select(Parameter => Parameter.GetParameterDeclaration())];
         List<string> SendMethodOneParameters = [.. SendMethodParameters.Prepend($"int {PeerIdParameterName}")];
@@ -62,7 +68,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         // Properties
         List<string> SendArgumentsPackProperties = [.. SendMethodParameters];
         List<string> RequestArgumentsPackProperties = [.. SendArgumentsPackProperties.Prepend($"Guid {RequestIdPropertyName}")];
-        List<string> ResultArgumentsPackProperties = [$"Guid {RequestIdPropertyName}", $"{Input.Symbol.ReturnType} {ReturnValuePropertyName}"];
+        List<string> ResultArgumentsPackProperties = ReturnsNonGenericTask ? [$"Guid {RequestIdPropertyName}"] : [$"Guid {RequestIdPropertyName}", $"{ReturnTypeAsValue} {ReturnValuePropertyName}"];
 
         // Arguments for locally calling target method
         List<string> SendTargetMethodArguments = [.. RemoteParameters.Select(Parameter => $"{DeserializedArgumentsPackLocalName}.{Parameter.Name}")];
@@ -164,7 +170,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 /// Set <paramref name="{{PeerIdParameterName}}"/> to 0 to broadcast to all peers.<br/>
                 /// Set <paramref name="{{PeerIdParameterName}}"/> to 1 to send to the authority.
                 /// </summary>
-                {{AccessModifier}} async Task<{{Input.Symbol.ReturnType}}> {{RequestMethodName}}({{string.Join(", ", RequestMethodParameters)}}) {
+                {{AccessModifier}} async {{ReturnTypeAsTask}} {{RequestMethodName}}({{string.Join(", ", RequestMethodParameters)}}) {
                     // Generate request ID
                     Guid {{RequestIdLocalName}} = Guid.NewGuid();
 
@@ -187,19 +193,26 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     );
 
                     // Create result listener
-                    TaskCompletionSource<{{Input.Symbol.ReturnType}}> {{ResultAwaiterLocalName}} = new();
+                    TaskCompletionSource{{(ReturnsNonGenericTask ? "" : $"<{ReturnTypeAsValue}>")}} {{ResultAwaiterLocalName}} = new();
                     void {{ResultCallbackLocalName}}({{ResultArgumentsPackTypeName}} {{ResultPackLocalName}}) {
                         if ({{ResultPackLocalName}}.{{RequestIdPropertyName}} == {{RequestIdLocalName}}) {
-                            {{ResultAwaiterLocalName}}.TrySetResult({{ResultPackLocalName}}.{{ReturnValuePropertyName}});
+                            {{ResultAwaiterLocalName}}.TrySetResult({{(ReturnsNonGenericTask ? "" : $"{ResultPackLocalName}.{ReturnValuePropertyName}")}});
                         }
                     }
                     try {
                         // Add result listener
                         {{OnReceiveResultEventName}} += {{ResultCallbackLocalName}};
+                {{(ReturnsNonGenericTask
+                    ? $$"""
+                        // Await completion
+                        await {{ResultAwaiterLocalName}}.Task.WaitAsync(TimeSpan.FromSeconds(Timeout));
+                """
+                    : $$"""
                         // Await result
-                        {{Input.Symbol.ReturnType}} ReturnValue = await {{ResultAwaiterLocalName}}.Task.WaitAsync(TimeSpan.FromSeconds(Timeout));
+                        {{ReturnTypeAsValue}} ReturnValue = await {{ResultAwaiterLocalName}}.Task.WaitAsync(TimeSpan.FromSeconds(Timeout));
                         // Return result
                         return ReturnValue;
+                """)}}
                     }
                     finally {
                         // Remove result listener
@@ -225,14 +238,14 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         else {
             Definitions.Add($$"""
                 [EditorBrowsable(EditorBrowsableState.Never)]
-                internal void {{ReceiveMethodName}}(int {{SenderIdParameterName}}, {{nameof(RemPacket)}} {{PacketLocalName}}) {
+                internal {{(ReturnsTask ? "async " : "")}}void {{ReceiveMethodName}}(int {{SenderIdParameterName}}, {{nameof(RemPacket)}} {{PacketLocalName}}) {
                     // Message
                     if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Message)}}) {
                         // Deserialize send arguments pack
                         {{SendArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{SendArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
                     
                         // Call target method
-                        {{Input.Symbol.Name}}({{string.Join(", ", SendTargetMethodArguments)}});
+                        {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", SendTargetMethodArguments)}});
                     }
                     // Request
                     else if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Request)}}) {
@@ -240,10 +253,10 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         {{RequestArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{RequestArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
 
                         // Call target method
-                        {{Input.Symbol.ReturnType}} {{ReturnValueLocalName}} = {{Input.Symbol.Name}}({{string.Join(", ", SendTargetMethodArguments)}});
+                        {{(ReturnsNonGenericTask ? "" : $"{ReturnTypeAsValue} {ReturnValueLocalName} = ")}}{{(ReturnsTask ? "await " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", SendTargetMethodArguments)}});
 
                         // Create arguments pack
-                        {{ResultArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = new({{DeserializedArgumentsPackLocalName}}.{{RequestIdPropertyName}}, {{ReturnValueLocalName}});
+                        {{ResultArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = new({{DeserializedArgumentsPackLocalName}}.{{RequestIdPropertyName}}{{(ReturnsNonGenericTask ? "" : $", {ReturnValueLocalName}")}});
                         // Serialize arguments pack
                         byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
                     
@@ -300,10 +313,10 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 [EditorBrowsable(EditorBrowsableState.Never)]
                 internal record struct {{ResultArgumentsPackTypeName}}({{string.Join(", ", ResultArgumentsPackProperties)}}) {
                     // Formatter
-                    {{GenerateMemoryPackFormatterCode("internal", FormatterTypeName, ResultArgumentsPackTypeName, "    ", [
-                        (RequestIdPropertyName, "Guid"),
-                        (ReturnValuePropertyName, Input.Symbol.ReturnType.ToString()),
-                    ])}}
+                    {{GenerateMemoryPackFormatterCode("internal", FormatterTypeName, ResultArgumentsPackTypeName, "    ", ReturnsNonGenericTask
+                        ? [(RequestIdPropertyName, "Guid")]
+                        : [(RequestIdPropertyName, "Guid"), (ReturnValuePropertyName, ReturnTypeAsValue.ToString())]
+                    )}}
                 }
                 """);
         }
