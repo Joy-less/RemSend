@@ -13,7 +13,7 @@ namespace RemSend.Tests;
 
 partial class MyNode {
     /// <summary>
-    /// The <see cref="RemAttribute"/> defined on <see cref="WaitSomeTime()"/>.
+    /// The <see cref="RemAttribute"/> defined on <see cref="WaitSomeTime(bool, int)"/>.
     /// </summary>
     /// <remarks>
     /// Todo: use the changed values of this attribute if it's changed.
@@ -26,13 +26,13 @@ partial class MyNode {
     };
     
     /// <summary>
-    /// Remotely calls <see cref="WaitSomeTime()"/> on the given peer.<br/>
+    /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on the given peer.<br/>
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    public void SendWaitSomeTime(int PeerId) {
+    public void SendWaitSomeTime(int PeerId, bool X) {
         // Create arguments pack
-        WaitSomeTimeSendPack ArgumentsPack = new();
+        WaitSomeTimeSendPack ArgumentsPack = new(@X);
         // Serialize arguments pack
         byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
         
@@ -48,19 +48,24 @@ partial class MyNode {
             mode: RemSendService.RemModeToTransferModeEnum(WaitSomeTimeRemAttribute.Mode),
             channel: WaitSomeTimeRemAttribute.Channel
         );
+    
+        // Also call target method locally
+        if (PeerId == 0 && WaitSomeTimeRemAttribute.CallLocal) {
+            _ = WaitSomeTime(@X, 0);
+        }
     }
     
     /// <summary>
-    /// Remotely calls <see cref="WaitSomeTime()"/> on each peer.
+    /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on each peer.
     /// </summary>
-    public void SendWaitSomeTime(IEnumerable<int>? PeerIds) {
+    public void SendWaitSomeTime(IEnumerable<int>? PeerIds, bool X) {
         // Skip if no peers
         if (PeerIds is null || !PeerIds.Any()) {
             return;
         }
         
         // Create arguments pack
-        WaitSomeTimeSendPack ArgumentsPack = new();
+        WaitSomeTimeSendPack ArgumentsPack = new(@X);
         // Serialize arguments pack
         byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
         
@@ -84,16 +89,16 @@ partial class MyNode {
     internal event Action<WaitSomeTimeResultPack>? OnReceiveWaitSomeTimeResult;
     
     /// <summary>
-    /// Remotely calls <see cref="WaitSomeTime()"/> on the given peer and awaits the return value.<br/>
+    /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on the given peer and awaits the return value.<br/>
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    public async System.Threading.Tasks.Task RequestWaitSomeTime(int PeerId, double Timeout) {
+    public async System.Threading.Tasks.Task RequestWaitSomeTime(int PeerId, double Timeout, bool X) {
         // Generate request ID
         Guid RequestId = Guid.NewGuid();
     
         // Create arguments pack
-        WaitSomeTimeRequestPack ArgumentsPack = new(RequestId);
+        WaitSomeTimeRequestPack ArgumentsPack = new(RequestId, @X);
         // Serialize arguments pack
         byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
         
@@ -137,7 +142,7 @@ partial class MyNode {
             WaitSomeTimeSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeSendPack>(RemPacket.ArgumentsPack);
         
             // Call target method
-            _ = WaitSomeTime();
+            _ = WaitSomeTime(DeserializedArgumentsPack.@X, SenderId);
         }
         // Request
         else if (RemPacket.Type is RemPacketType.Request) {
@@ -145,7 +150,7 @@ partial class MyNode {
             WaitSomeTimeRequestPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeRequestPack>(RemPacket.ArgumentsPack);
     
             // Call target method
-            await WaitSomeTime();
+            await WaitSomeTime(DeserializedArgumentsPack.@X, SenderId);
     
             // Create arguments pack
             WaitSomeTimeResultPack ArgumentsPack = new(DeserializedArgumentsPack.RequestId);
@@ -176,30 +181,32 @@ partial class MyNode {
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal record struct WaitSomeTimeSendPack() {
+    internal record struct WaitSomeTimeSendPack(bool X) {
         // Formatter
         internal sealed class Formatter : MemoryPackFormatter<WaitSomeTimeSendPack> {
             public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref WaitSomeTimeSendPack Value) {
-                
+                Writer.WriteValue(Value.@X);
             }
             public override void Deserialize(ref MemoryPackReader Reader, scoped ref WaitSomeTimeSendPack Value) {
                 Value = new() {
-                    
+                    @X = Reader.ReadValue<bool>()!,
                 };
             }
         }
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal record struct WaitSomeTimeRequestPack(Guid RequestId) {
+    internal record struct WaitSomeTimeRequestPack(Guid RequestId, bool X) {
         // Formatter
         internal sealed class Formatter : MemoryPackFormatter<WaitSomeTimeRequestPack> {
             public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref WaitSomeTimeRequestPack Value) {
                 Writer.WriteValue(Value.@RequestId);
+                Writer.WriteValue(Value.@X);
             }
             public override void Deserialize(ref MemoryPackReader Reader, scoped ref WaitSomeTimeRequestPack Value) {
                 Value = new() {
                     @RequestId = Reader.ReadValue<Guid>()!,
+                    @X = Reader.ReadValue<bool>()!,
                 };
             }
         }

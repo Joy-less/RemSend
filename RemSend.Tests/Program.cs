@@ -32,7 +32,7 @@ public partial class MyNode : Godot.Node {
         return 7;
     }*/
     [Rem]
-    public async Task WaitSomeTime() {
+    public async Task WaitSomeTime(bool X, [Sender] int S) {
         await Task.Delay(10);
     }
 }

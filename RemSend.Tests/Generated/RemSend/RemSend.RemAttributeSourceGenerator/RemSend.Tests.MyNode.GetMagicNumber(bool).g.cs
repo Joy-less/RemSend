@@ -48,6 +48,11 @@ partial class MyNode {
             mode: RemSendService.RemModeToTransferModeEnum(GetMagicNumberRemAttribute.Mode),
             channel: GetMagicNumberRemAttribute.Channel
         );
+    
+        // Also call target method locally
+        if (PeerId == 0 && GetMagicNumberRemAttribute.CallLocal) {
+            GetMagicNumber(@Dummy);
+        }
     }
     
     /// <summary>
@@ -139,7 +144,7 @@ partial class MyNode {
             GetMagicNumberSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberSendPack>(RemPacket.ArgumentsPack);
         
             // Call target method
-            GetMagicNumber(DeserializedArgumentsPack.Dummy);
+            GetMagicNumber(DeserializedArgumentsPack.@Dummy);
         }
         // Request
         else if (RemPacket.Type is RemPacketType.Request) {
@@ -147,7 +152,7 @@ partial class MyNode {
             GetMagicNumberRequestPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberRequestPack>(RemPacket.ArgumentsPack);
     
             // Call target method
-            ushort ReturnValue = GetMagicNumber(DeserializedArgumentsPack.Dummy);
+            ushort ReturnValue = GetMagicNumber(DeserializedArgumentsPack.@Dummy);
     
             // Create arguments pack
             GetMagicNumberResultPack ArgumentsPack = new(DeserializedArgumentsPack.RequestId, ReturnValue);

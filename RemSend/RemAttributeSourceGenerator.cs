@@ -73,11 +73,13 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         List<string> ResultArgumentsPackProperties = ReturnsNonGenericTask ? [$"Guid {RequestIdPropertyName}"] : [$"Guid {RequestIdPropertyName}", $"{ReturnTypeAsValue} {ReturnValuePropertyName}"];
 
         // Arguments for locally calling target method
-        List<string> SendTargetMethodArguments = [.. RemoteParameters.Select(Parameter => $"{DeserializedArgumentsPackLocalName}.{Parameter.Name}")];
+        List<string> TargetMethodArguments = [.. RemoteParameters.Select(Parameter => $"{DeserializedArgumentsPackLocalName}.@{Parameter.Name}")];
+        List<string> TargetMethodCallLocalArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
         // Pass pseudo parameters
         foreach (IParameterSymbol Parameter in PseudoParameters) {
             if (Parameter.HasAttribute<SenderAttribute>()) {
-                SendTargetMethodArguments.Insert(Parameter.Ordinal, SenderIdParameterName);
+                TargetMethodArguments.Insert(Parameter.Ordinal, SenderIdParameterName);
+                TargetMethodCallLocalArguments.Insert(Parameter.Ordinal, "0");
             }
         }
 
@@ -126,6 +128,11 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     mode: {{RemSendServiceTypeName}}.{{RemModeToTransferModeEnumMethodName}}({{RemAttributePropertyName}}.{{nameof(RemAttribute.Mode)}}),
                     channel: {{RemAttributePropertyName}}.{{nameof(RemAttribute.Channel)}}
                 );
+
+                // Also call target method locally
+                if ({{PeerIdParameterName}} == 0 && {{RemAttributePropertyName}}.{{nameof(RemAttribute.CallLocal)}}) {
+                    {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
+                }
             }
             """);
         // Send Multi
@@ -232,7 +239,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     {{SendArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{SendArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
                     
                     // Call target method
-                    {{Input.Symbol.Name}}({{string.Join(", ", SendTargetMethodArguments)}});
+                    {{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
                 }
                 """);
         }
@@ -247,7 +254,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         {{SendArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{SendArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
                     
                         // Call target method
-                        {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", SendTargetMethodArguments)}});
+                        {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
                     }
                     // Request
                     else if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Request)}}) {
@@ -255,7 +262,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         {{RequestArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{RequestArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
 
                         // Call target method
-                        {{(ReturnsNonGenericTask ? "" : $"{ReturnTypeAsValue} {ReturnValueLocalName} = ")}}{{(ReturnsTask ? "await " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", SendTargetMethodArguments)}});
+                        {{(ReturnsNonGenericTask ? "" : $"{ReturnTypeAsValue} {ReturnValueLocalName} = ")}}{{(ReturnsTask ? "await " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
 
                         // Create arguments pack
                         {{ResultArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = new({{DeserializedArgumentsPackLocalName}}.{{RequestIdPropertyName}}{{(ReturnsNonGenericTask ? "" : $", {ReturnValueLocalName}")}});
