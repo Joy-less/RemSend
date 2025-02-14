@@ -125,7 +125,7 @@ public abstract class SourceGeneratorForMemberWithAttribute<TAttribute, TDeclara
             (GeneratedCode, Error) = GenerateCode();
         }
         catch (Exception Ex) {
-            (GeneratedCode, Error) = (null, new DiagnosticDetail("Internal Error", Ex.Message));
+            (GeneratedCode, Error) = (null, new DiagnosticDetail("Internal Error", Ex.ToString()));
         }
 
         if (Error is not null) {
