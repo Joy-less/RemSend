@@ -13,6 +13,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string RequestMethodName = $"Request{Input.Symbol.Name}";
         string ReceiveMethodName = $"Receive{Input.Symbol.Name}";
         string RemModeToTransferModeEnumMethodName = "RemModeToTransferModeEnum";
+        string VerifyAccessMethodName = "VerifyAccess";
         // Parameter names
         string PeerIdParameterName = "PeerId";
         string PeerIdsParameterName = "PeerIds";
@@ -130,7 +131,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 );
 
                 // Also call target method locally
-                if ({{PeerIdParameterName}} == 0 && {{RemAttributePropertyName}}.{{nameof(RemAttribute.CallLocal)}}) {
+                if ({{PeerIdParameterName}} is 0 && {{RemAttributePropertyName}}.{{nameof(RemAttribute.CallLocal)}}) {
                     {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
                 }
             }
@@ -235,11 +236,17 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             Definitions.Add($$"""
                 [EditorBrowsable(EditorBrowsableState.Never)]
                 internal void {{ReceiveMethodName}}(int {{SenderIdParameterName}}, {{nameof(RemPacket)}} {{PacketLocalName}}) {
-                    // Deserialize arguments pack
-                    {{SendArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{SendArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
-                    
-                    // Call target method
-                    {{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
+                    // Message
+                    if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Message)}}) {
+                        // Verify access
+                        {{RemSendServiceTypeName}}.{{VerifyAccessMethodName}}({{RemAttributePropertyName}}.{{nameof(RemAttribute.Access)}}, {{SenderIdParameterName}}, this.Multiplayer.GetUniqueId());
+                        
+                        // Deserialize arguments pack
+                        {{SendArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{SendArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
+                        
+                        // Call target method
+                        {{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
+                    }
                 }
                 """);
         }
@@ -250,11 +257,14 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 internal {{(ReturnsTask ? "async " : "")}}void {{ReceiveMethodName}}(int {{SenderIdParameterName}}, {{nameof(RemPacket)}} {{PacketLocalName}}) {
                     // Message
                     if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Message)}}) {
-                        // Deserialize send arguments pack
+                        // Verify access
+                        {{RemSendServiceTypeName}}.{{VerifyAccessMethodName}}({{RemAttributePropertyName}}.{{nameof(RemAttribute.Access)}}, {{SenderIdParameterName}}, this.Multiplayer.GetUniqueId());
+                        
+                        // Deserialize arguments pack
                         {{SendArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{SendArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
-                    
+                        
                         // Call target method
-                        {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
+                        {{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
                     }
                     // Request
                     else if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Request)}}) {
@@ -268,12 +278,12 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         {{ResultArgumentsPackTypeName}} {{ArgumentsPackLocalName}} = new({{DeserializedArgumentsPackLocalName}}.{{RequestIdPropertyName}}{{(ReturnsNonGenericTask ? "" : $", {ReturnValueLocalName}")}});
                         // Serialize arguments pack
                         byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
-                    
+                        
                         // Create packet
                         {{nameof(RemPacket)}} {{ResultPacketLocalName}} = new({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Result)}}, this.GetPath(), nameof({{Input.Symbol.ContainingType}}.{{Input.Symbol.Name}}), {{SerializedArgumentsPackLocalName}});
                         // Serialize packet
                         byte[] {{SerializedResultPacketLocalName}} = MemoryPackSerializer.Serialize({{ResultPacketLocalName}});
-                
+                        
                         // Send packet back to sender ID
                         ((SceneMultiplayer)this.Multiplayer).SendBytes(
                             bytes: {{SerializedResultPacketLocalName}},
@@ -353,14 +363,18 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string ReceivePacketMethodName = "ReceivePacket";
         string ReceiveMethodName = "Receive{0}";
         string RemModeToTransferModeEnumMethodName = "RemModeToTransferModeEnum";
+        string VerifyAccessMethodName = "VerifyAccess";
         // Parameter names
         string RootNodeParameterName = "Root";
         string SceneMultiplayerParameterName = "Multiplayer";
+        string AccessParameterName = "Access";
         string SenderIdParameterName = "SenderId";
+        string LocalIdParameterName = "LocalId";
         string PacketBytesParameterName = "PacketBytes";
         // Local names
         string PacketLocalName = "RemPacket";
         string NodeLocalName = "TargetNode";
+        string IsAuthorizedLocalName = "IsAuthorized";
         // Type names
         string RemSendServiceTypeName = "RemSendService";
         string RemPacketFormatterTypeName = $"{nameof(RemPacket)}Formatter";
@@ -399,6 +413,20 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         {{nameof(RemMode)}}.{{nameof(RemMode.Unreliable)}} => MultiplayerPeer.TransferModeEnum.Unreliable,
                         _ => throw new {{nameof(NotImplementedException)}}()
                     };
+                }
+            
+                [EditorBrowsable(EditorBrowsableState.Never)]
+                internal static void {{VerifyAccessMethodName}}({{nameof(RemAccess)}} {{AccessParameterName}}, int {{SenderIdParameterName}}, int {{LocalIdParameterName}}) {
+                    bool {{IsAuthorizedLocalName}} = {{AccessParameterName}} switch {
+                        {{nameof(RemAccess)}}.{{nameof(RemAccess.None)}} => false,
+                        {{nameof(RemAccess)}}.{{nameof(RemAccess.Authority)}} => {{SenderIdParameterName}} is 1 or 0,
+                        {{nameof(RemAccess)}}.{{nameof(RemAccess.PeerToAuthority)}} => {{LocalIdParameterName}} is 1,
+                        {{nameof(RemAccess)}}.{{nameof(RemAccess.Any)}} => true,
+                        _ => throw new {{nameof(NotImplementedException)}}()
+                    };
+                    if (!{{IsAuthorizedLocalName}}) {
+                        throw new {{nameof(MethodAccessException)}}("Remote method call not authorized");
+                    }
                 }
 
                 private static void {{ReceivePacketMethodName}}(SceneMultiplayer {{SceneMultiplayerParameterName}}, Node {{RootNodeParameterName}}, int {{SenderIdParameterName}}, ReadOnlySpan<byte> {{PacketBytesParameterName}}) {

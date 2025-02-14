@@ -50,7 +50,7 @@ partial class MyNode {
         );
     
         // Also call target method locally
-        if (PeerId == 0 && GetMagicNumberRemAttribute.CallLocal) {
+        if (PeerId is 0 && GetMagicNumberRemAttribute.CallLocal) {
             GetMagicNumber(@Dummy);
         }
     }
@@ -140,9 +140,12 @@ partial class MyNode {
     internal void ReceiveGetMagicNumber(int SenderId, RemPacket RemPacket) {
         // Message
         if (RemPacket.Type is RemPacketType.Message) {
-            // Deserialize send arguments pack
+            // Verify access
+            RemSendService.VerifyAccess(GetMagicNumberRemAttribute.Access, SenderId, this.Multiplayer.GetUniqueId());
+            
+            // Deserialize arguments pack
             GetMagicNumberSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberSendPack>(RemPacket.ArgumentsPack);
-        
+            
             // Call target method
             GetMagicNumber(DeserializedArgumentsPack.@Dummy);
         }
@@ -158,12 +161,12 @@ partial class MyNode {
             GetMagicNumberResultPack ArgumentsPack = new(DeserializedArgumentsPack.RequestId, ReturnValue);
             // Serialize arguments pack
             byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
-        
+            
             // Create packet
             RemPacket ResultRemPacket = new(RemPacketType.Result, this.GetPath(), nameof(RemSend.Tests.MyNode.GetMagicNumber), SerializedArgumentsPack);
             // Serialize packet
             byte[] SerializedResultRemPacket = MemoryPackSerializer.Serialize(ResultRemPacket);
-    
+            
             // Send packet back to sender ID
             ((SceneMultiplayer)this.Multiplayer).SendBytes(
                 bytes: SerializedResultRemPacket,

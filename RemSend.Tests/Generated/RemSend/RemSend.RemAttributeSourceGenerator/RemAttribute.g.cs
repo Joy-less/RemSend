@@ -28,6 +28,20 @@ public static class RemSendService {
         };
     }
 
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal static void VerifyAccess(RemAccess Access, int SenderId, int LocalId) {
+        bool IsAuthorized = Access switch {
+            RemAccess.None => false,
+            RemAccess.Authority => SenderId is 1 or 0,
+            RemAccess.PeerToAuthority => LocalId is 1,
+            RemAccess.Any => true,
+            _ => throw new NotImplementedException()
+        };
+        if (!IsAuthorized) {
+            throw new MethodAccessException("Remote method call not authorized");
+        }
+    }
+
     private static void ReceivePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> PacketBytes) {
         // Deserialize packet
         RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(PacketBytes);

@@ -50,7 +50,7 @@ partial class MyNode {
         );
     
         // Also call target method locally
-        if (PeerId == 0 && WaitSomeTimeRemAttribute.CallLocal) {
+        if (PeerId is 0 && WaitSomeTimeRemAttribute.CallLocal) {
             _ = WaitSomeTime(@X, 0);
         }
     }
@@ -138,11 +138,14 @@ partial class MyNode {
     internal async void ReceiveWaitSomeTime(int SenderId, RemPacket RemPacket) {
         // Message
         if (RemPacket.Type is RemPacketType.Message) {
-            // Deserialize send arguments pack
+            // Verify access
+            RemSendService.VerifyAccess(WaitSomeTimeRemAttribute.Access, SenderId, this.Multiplayer.GetUniqueId());
+            
+            // Deserialize arguments pack
             WaitSomeTimeSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeSendPack>(RemPacket.ArgumentsPack);
-        
+            
             // Call target method
-            _ = WaitSomeTime(DeserializedArgumentsPack.@X, SenderId);
+            WaitSomeTime(DeserializedArgumentsPack.@X, SenderId);
         }
         // Request
         else if (RemPacket.Type is RemPacketType.Request) {
@@ -156,12 +159,12 @@ partial class MyNode {
             WaitSomeTimeResultPack ArgumentsPack = new(DeserializedArgumentsPack.RequestId);
             // Serialize arguments pack
             byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
-        
+            
             // Create packet
             RemPacket ResultRemPacket = new(RemPacketType.Result, this.GetPath(), nameof(RemSend.Tests.MyNode.WaitSomeTime), SerializedArgumentsPack);
             // Serialize packet
             byte[] SerializedResultRemPacket = MemoryPackSerializer.Serialize(ResultRemPacket);
-    
+            
             // Send packet back to sender ID
             ((SceneMultiplayer)this.Multiplayer).SendBytes(
                 bytes: SerializedResultRemPacket,
