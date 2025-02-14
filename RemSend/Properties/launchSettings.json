@@ -2,7 +2,7 @@
   "profiles": {
     "SourceGeneratorTests": {
       "commandName": "DebugRoslynComponent",
-      "targetProject": "..\\RemSend.Tests\\RemSend.Tests.csproj"
+      "targetProject": "../RemSend.Tests/RemSend.Tests.csproj"
     }
   }
 }

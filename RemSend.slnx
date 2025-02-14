@@ -2,6 +2,6 @@
   <Folder Name="/Solution Items/">
     <File Path="README.md" />
   </Folder>
-  <Project Path="RemSend.Tests/RemSend.Tests.csproj" />
   <Project Path="RemSend/RemSend.csproj" />
+  <Project Path="RemSend.Tests/RemSend.Tests.csproj" />
 </Solution>
