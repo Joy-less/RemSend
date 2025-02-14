@@ -20,14 +20,14 @@ public static class RemSendService {
 
     private static void HandlePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> PacketBytes) {
         // Deserialize packet
-        RemPacket _Packet = MemoryPackSerializer.Deserialize<RemPacket>(PacketBytes);
+        RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(PacketBytes);
 
         // Find target node
-        Node _Node = Root.GetNode(Multiplayer.RootPath).GetNode(_Packet.NodePath);
-        // Find target handler method
-        if (_Node is @RemSend.Tests.MyNode @MyNode) {
-            if (_Packet.MethodName is nameof(RemSend.Tests.MyNode.GetMagicNumber)) {
-                @MyNode.ReceiveGetMagicNumber(SenderId, _Packet);
+        Node TargetNode = Root.GetNode(Multiplayer.RootPath).GetNode(RemPacket.NodePath);
+        // Find target receive method
+        if (TargetNode is @RemSend.Tests.MyNode @MyNode) {
+            if (RemPacket.MethodName is nameof(RemSend.Tests.MyNode.GetMagicNumber)) {
+                @MyNode.ReceiveGetMagicNumber(SenderId, RemPacket);
             }
         }
     }
@@ -35,21 +35,26 @@ public static class RemSendService {
     static RemSendService() {
         // Register MemoryPack formatters
         MemoryPackFormatterProvider.Register(new RemPacketFormatter());
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberPackFormatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberSendPackFormatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberRequestPackFormatter());
+MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberResultPackFormatter());
     }
 
     // Formatter for RemPacket because MemoryPack doesn't support .NET Standard 2.0
-    private sealed class RemPacketFormatter: MemoryPackFormatter<RemPacket> {
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    private sealed class RemPacketFormatter : MemoryPackFormatter<RemPacket> {
         public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref RemPacket Value) {
-            Writer.WriteValue(Value.NodePath);
-            Writer.WriteValue(Value.MethodName);
-            Writer.WriteValue(Value.ArgumentsPack);
+            Writer.WriteValue(Value.@Type);
+        Writer.WriteValue(Value.@NodePath);
+        Writer.WriteValue(Value.@MethodName);
+        Writer.WriteValue(Value.@ArgumentsPack);
         }
         public override void Deserialize(ref MemoryPackReader Reader, scoped ref RemPacket Value) {
             Value = new() {
-                NodePath = Reader.ReadValue<string>()!,
-                MethodName = Reader.ReadValue<string>()!,
-                ArgumentsPack = Reader.ReadValue<byte[]>()!,
+                @Type = Reader.ReadValue<RemPacketType>()!,
+            @NodePath = Reader.ReadValue<string>()!,
+            @MethodName = Reader.ReadValue<string>()!,
+            @ArgumentsPack = Reader.ReadValue<byte[]>()!,
             };
         }
     }
