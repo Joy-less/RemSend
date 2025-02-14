@@ -14,11 +14,21 @@ public static class RemSendService {
         Root ??= ((SceneTree)Engine.GetMainLoop()).Root;
         // Listen for packets
         Multiplayer.PeerPacket += (SenderId, PacketBytes) => {
-            HandlePacket(Multiplayer, Root, (int)SenderId, PacketBytes);
+            ReceivePacket(Multiplayer, Root, (int)SenderId, PacketBytes);
         };
     }
 
-    private static void HandlePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> PacketBytes) {
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal static MultiplayerPeer.TransferModeEnum RemModeToTransferModeEnum(RemMode Mode) {
+        return Mode switch {
+            RemMode.Reliable => MultiplayerPeer.TransferModeEnum.Reliable,
+            RemMode.UnreliableOrdered => MultiplayerPeer.TransferModeEnum.UnreliableOrdered,
+            RemMode.Unreliable => MultiplayerPeer.TransferModeEnum.Unreliable,
+            _ => throw new NotImplementedException()
+        };
+    }
+
+    private static void ReceivePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> PacketBytes) {
         // Deserialize packet
         RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(PacketBytes);
 

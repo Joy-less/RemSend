@@ -12,6 +12,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string SendMethodName = $"Send{Input.Symbol.Name}";
         string RequestMethodName = $"Request{Input.Symbol.Name}";
         string ReceiveMethodName = $"Receive{Input.Symbol.Name}";
+        string RemModeToTransferModeEnumMethodName = "RemModeToTransferModeEnum";
         // Parameter names
         string PeerIdParameterName = "PeerId";
         string PeerIdsParameterName = "PeerIds";
@@ -31,6 +32,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string ResultCallbackLocalName = EscapeLocalName("ResultCallback", Input.Symbol);
         string ResultPackLocalName = EscapeLocalName("ResultPack", Input.Symbol);
         // Type names
+        string RemSendServiceTypeName = "RemSendService";
         string SendArgumentsPackTypeName = $"{Input.Symbol.Name}SendPack";
         string RequestArgumentsPackTypeName = $"{Input.Symbol.Name}RequestPack";
         string ResultArgumentsPackTypeName = $"{Input.Symbol.Name}ResultPack";
@@ -38,7 +40,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         // Property names
         string RequestIdPropertyName = "RequestId";
         string ReturnValuePropertyName = "ReturnValue";
-        string AttributePropertyName = $"{Input.Symbol.Name}RemAttribute";
+        string RemAttributePropertyName = $"{Input.Symbol.Name}RemAttribute";
         // Event names
         string OnReceiveResultEventName = $"OnReceive{Input.Symbol.Name}Result";
 
@@ -92,7 +94,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             /// <remarks>
             /// Todo: use the changed values of this attribute if it's changed.
             /// </remarks>
-            {{AccessModifier}} {{nameof(RemAttribute)}} {{AttributePropertyName}} { get; set; } = new() {
+            {{AccessModifier}} {{nameof(RemAttribute)}} {{RemAttributePropertyName}} { get; set; } = new() {
                 {{nameof(RemAttribute.Access)}} = {{nameof(RemAccess)}}.{{RemAttribute.Access}},
                 {{nameof(RemAttribute.CallLocal)}} = {{(RemAttribute.CallLocal ? "true" : "false")}},
                 {{nameof(RemAttribute.Mode)}} = {{nameof(RemMode)}}.{{RemAttribute.Mode}},
@@ -121,8 +123,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 ((SceneMultiplayer)this.Multiplayer).SendBytes(
                     bytes: {{SerializedPacketLocalName}},
                     id: {{PeerIdParameterName}},
-                    mode: MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}},
-                    channel: {{AttributePropertyName}}.{{nameof(RemAttribute.Channel)}}
+                    mode: {{RemSendServiceTypeName}}.{{RemModeToTransferModeEnumMethodName}}({{RemAttributePropertyName}}.{{nameof(RemAttribute.Mode)}}),
+                    channel: {{RemAttributePropertyName}}.{{nameof(RemAttribute.Channel)}}
                 );
             }
             """);
@@ -152,8 +154,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     ((SceneMultiplayer)this.Multiplayer).SendBytes(
                         bytes: {{SerializedPacketLocalName}},
                         id: {{PeerIdParameterName}},
-                        mode: MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}},
-                        channel: {{AttributePropertyName}}.{{nameof(RemAttribute.Channel)}}
+                        mode: {{RemSendServiceTypeName}}.{{RemModeToTransferModeEnumMethodName}}({{RemAttributePropertyName}}.{{nameof(RemAttribute.Mode)}}),
+                        channel: {{RemAttributePropertyName}}.{{nameof(RemAttribute.Channel)}}
                     );
                 }
             }
@@ -188,8 +190,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     ((SceneMultiplayer)this.Multiplayer).SendBytes(
                         bytes: {{SerializedPacketLocalName}},
                         id: {{PeerIdParameterName}},
-                        mode: MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}},
-                        channel: {{AttributePropertyName}}.{{nameof(RemAttribute.Channel)}}
+                        mode: {{RemSendServiceTypeName}}.{{RemModeToTransferModeEnumMethodName}}({{RemAttributePropertyName}}.{{nameof(RemAttribute.Mode)}}),
+                        channel: {{RemAttributePropertyName}}.{{nameof(RemAttribute.Channel)}}
                     );
 
                     // Create result listener
@@ -269,8 +271,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         ((SceneMultiplayer)this.Multiplayer).SendBytes(
                             bytes: {{SerializedResultPacketLocalName}},
                             id: {{SenderIdParameterName}},
-                            mode: MultiplayerPeer.TransferModeEnum.{{RemAttribute.Mode}},
-                            channel: {{AttributePropertyName}}.{{nameof(RemAttribute.Channel)}}
+                            mode: {{RemSendServiceTypeName}}.{{RemModeToTransferModeEnumMethodName}}({{RemAttributePropertyName}}.{{nameof(RemAttribute.Mode)}}),
+                            channel: {{RemAttributePropertyName}}.{{nameof(RemAttribute.Channel)}}
                         );
                     }
                     // Result
@@ -341,8 +343,9 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
     protected override (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(IEnumerable<GenerateInput> Inputs) {
         // Method names
         string SetupMethodName = "Setup";
-        string HandlePacketMethodName = "HandlePacket";
+        string ReceivePacketMethodName = "ReceivePacket";
         string ReceiveMethodName = "Receive{0}";
+        string RemModeToTransferModeEnumMethodName = "RemModeToTransferModeEnum";
         // Parameter names
         string RootNodeParameterName = "Root";
         string SceneMultiplayerParameterName = "Multiplayer";
@@ -377,11 +380,21 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     {{RootNodeParameterName}} ??= ((SceneTree)Engine.GetMainLoop()).Root;
                     // Listen for packets
                     {{SceneMultiplayerParameterName}}.PeerPacket += ({{SenderIdParameterName}}, {{PacketBytesParameterName}}) => {
-                        {{HandlePacketMethodName}}({{SceneMultiplayerParameterName}}, {{RootNodeParameterName}}, (int){{SenderIdParameterName}}, {{PacketBytesParameterName}});
+                        {{ReceivePacketMethodName}}({{SceneMultiplayerParameterName}}, {{RootNodeParameterName}}, (int){{SenderIdParameterName}}, {{PacketBytesParameterName}});
                     };
                 }
 
-                private static void {{HandlePacketMethodName}}(SceneMultiplayer {{SceneMultiplayerParameterName}}, Node {{RootNodeParameterName}}, int {{SenderIdParameterName}}, ReadOnlySpan<byte> {{PacketBytesParameterName}}) {
+                [EditorBrowsable(EditorBrowsableState.Never)]
+                internal static MultiplayerPeer.TransferModeEnum {{RemModeToTransferModeEnumMethodName}}({{nameof(RemMode)}} Mode) {
+                    return Mode switch {
+                        {{nameof(RemMode)}}.{{nameof(RemMode.Reliable)}} => MultiplayerPeer.TransferModeEnum.Reliable,
+                        {{nameof(RemMode)}}.{{nameof(RemMode.UnreliableOrdered)}} => MultiplayerPeer.TransferModeEnum.UnreliableOrdered,
+                        {{nameof(RemMode)}}.{{nameof(RemMode.Unreliable)}} => MultiplayerPeer.TransferModeEnum.Unreliable,
+                        _ => throw new {{nameof(NotImplementedException)}}()
+                    };
+                }
+
+                private static void {{ReceivePacketMethodName}}(SceneMultiplayer {{SceneMultiplayerParameterName}}, Node {{RootNodeParameterName}}, int {{SenderIdParameterName}}, ReadOnlySpan<byte> {{PacketBytesParameterName}}) {
                     // Deserialize packet
                     {{nameof(RemPacket)}} {{PacketLocalName}} = MemoryPackSerializer.Deserialize<{{nameof(RemPacket)}}>({{PacketBytesParameterName}});
 

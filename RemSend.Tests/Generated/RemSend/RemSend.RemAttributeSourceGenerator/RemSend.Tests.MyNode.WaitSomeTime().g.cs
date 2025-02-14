@@ -45,7 +45,7 @@ partial class MyNode {
         ((SceneMultiplayer)this.Multiplayer).SendBytes(
             bytes: SerializedRemPacket,
             id: PeerId,
-            mode: MultiplayerPeer.TransferModeEnum.Reliable,
+            mode: RemSendService.RemModeToTransferModeEnum(WaitSomeTimeRemAttribute.Mode),
             channel: WaitSomeTimeRemAttribute.Channel
         );
     }
@@ -74,7 +74,7 @@ partial class MyNode {
             ((SceneMultiplayer)this.Multiplayer).SendBytes(
                 bytes: SerializedRemPacket,
                 id: PeerId,
-                mode: MultiplayerPeer.TransferModeEnum.Reliable,
+                mode: RemSendService.RemModeToTransferModeEnum(WaitSomeTimeRemAttribute.Mode),
                 channel: WaitSomeTimeRemAttribute.Channel
             );
         }
@@ -106,7 +106,7 @@ partial class MyNode {
         ((SceneMultiplayer)this.Multiplayer).SendBytes(
             bytes: SerializedRemPacket,
             id: PeerId,
-            mode: MultiplayerPeer.TransferModeEnum.Reliable,
+            mode: RemSendService.RemModeToTransferModeEnum(WaitSomeTimeRemAttribute.Mode),
             channel: WaitSomeTimeRemAttribute.Channel
         );
     
@@ -161,7 +161,7 @@ partial class MyNode {
             ((SceneMultiplayer)this.Multiplayer).SendBytes(
                 bytes: SerializedResultRemPacket,
                 id: SenderId,
-                mode: MultiplayerPeer.TransferModeEnum.Reliable,
+                mode: RemSendService.RemModeToTransferModeEnum(WaitSomeTimeRemAttribute.Mode),
                 channel: WaitSomeTimeRemAttribute.Channel
             );
         }
