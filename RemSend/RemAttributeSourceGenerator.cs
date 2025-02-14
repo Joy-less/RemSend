@@ -423,10 +423,10 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
 
     private static RemAttribute ReconstructRemAttribute(AttributeData AttributeData) {
         return new RemAttribute(
-            Access: GetAttributeArgument(AttributeData, nameof(RemAttribute.Access), RemAccess.None),
-            CallLocal: GetAttributeArgument(AttributeData, nameof(RemAttribute.CallLocal), false),
-            Mode: GetAttributeArgument(AttributeData, nameof(RemAttribute.Mode), RemMode.Reliable),
-            Channel: GetAttributeArgument(AttributeData, nameof(RemAttribute.Channel), 0)
+            Access: GetAttributeArgument(AttributeData, nameof(RemAttribute.Access), default(RemAccess)),
+            CallLocal: GetAttributeArgument(AttributeData, nameof(RemAttribute.CallLocal), default(bool)),
+            Mode: GetAttributeArgument(AttributeData, nameof(RemAttribute.Mode), default(RemMode)),
+            Channel: GetAttributeArgument(AttributeData, nameof(RemAttribute.Channel), default(int))
         );
     }
     private static string GenerateMemoryPackFormatterCode(string AccessModifier, string FormatterName, string TypeName, string Indent, IEnumerable<(string Name, string Type)> Properties) {
