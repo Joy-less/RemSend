@@ -78,9 +78,12 @@ public abstract class SourceGeneratorForMemberWithAttribute<TAttribute, TDeclara
         }
     }
 
-    protected abstract (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(GenerateInput Input);
-    protected abstract (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(IEnumerable<GenerateInput> Input);
-
+    protected virtual (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(GenerateInput Input) {
+        return (null, null);
+    }
+    protected virtual (string? GeneratedCode, DiagnosticDetail? Error) GenerateCode(IEnumerable<GenerateInput> Input) {
+        return (null, null);
+    }
     protected virtual string GenerateFileName(ISymbol Symbol) {
         return $"{Symbol.ToString().SanitizeFileName()}.g";
     }
