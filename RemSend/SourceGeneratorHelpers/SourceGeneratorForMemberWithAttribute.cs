@@ -69,14 +69,12 @@ public abstract class SourceGeneratorForMemberWithAttribute<TAttribute, TDeclara
                 );
             }
 
-            if (Inputs.Count > 0) {
-                GenerateAndAddSource(
-                    Context,
-                    GenerateFileName(),
-                    () => GenerateCode(Inputs),
-                    null
-                );
-            }
+            GenerateAndAddSource(
+                Context,
+                GenerateFileName(),
+                () => GenerateCode(Inputs),
+                null
+            );
         }
     }
 
