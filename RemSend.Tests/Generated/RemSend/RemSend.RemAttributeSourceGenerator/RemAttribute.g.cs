@@ -37,7 +37,7 @@ public static class RemSendService {
         MemoryPackFormatterProvider.Register(new RemPacketFormatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberSendPackFormatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberRequestPackFormatter());
-MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberResultPackFormatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberResultPackFormatter());
     }
 
     // Formatter for RemPacket because MemoryPack doesn't support .NET Standard 2.0
@@ -45,16 +45,16 @@ MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberResu
     private sealed class RemPacketFormatter : MemoryPackFormatter<RemPacket> {
         public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref RemPacket Value) {
             Writer.WriteValue(Value.@Type);
-        Writer.WriteValue(Value.@NodePath);
-        Writer.WriteValue(Value.@MethodName);
-        Writer.WriteValue(Value.@ArgumentsPack);
+            Writer.WriteValue(Value.@NodePath);
+            Writer.WriteValue(Value.@MethodName);
+            Writer.WriteValue(Value.@ArgumentsPack);
         }
         public override void Deserialize(ref MemoryPackReader Reader, scoped ref RemPacket Value) {
             Value = new() {
                 @Type = Reader.ReadValue<RemPacketType>()!,
-            @NodePath = Reader.ReadValue<string>()!,
-            @MethodName = Reader.ReadValue<string>()!,
-            @ArgumentsPack = Reader.ReadValue<byte[]>()!,
+                @NodePath = Reader.ReadValue<string>()!,
+                @MethodName = Reader.ReadValue<string>()!,
+                @ArgumentsPack = Reader.ReadValue<byte[]>()!,
             };
         }
     }

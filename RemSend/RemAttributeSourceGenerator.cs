@@ -390,10 +390,10 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     MemoryPackFormatterProvider.Register(new {{RemPacketFormatterTypeName}}());
             {{string.Join("\n", Inputs.Select(Input => $$"""
                     MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(SendArgumentsPackFormatterTypeName, Input.Symbol.Name)}}());
-                    {{(Input.Symbol.ReturnsVoid ? "" : $$"""
-                        MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(RequestArgumentsPackFormatterTypeName, Input.Symbol.Name)}}());
-                        MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(ResultArgumentsPackFormatterTypeName, Input.Symbol.Name)}}());
-                        """)}}
+            {{(Input.Symbol.ReturnsVoid ? "" : $$"""
+                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(RequestArgumentsPackFormatterTypeName, Input.Symbol.Name)}}());
+                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType }}.{{string.Format(ResultArgumentsPackFormatterTypeName, Input.Symbol.Name)}}());
+            """)}}
             """.TrimEnd()))}}
                 }
 
@@ -422,11 +422,11 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             [EditorBrowsable(EditorBrowsableState.Never)]
             {{Indent}}{{AccessModifier}} sealed class {{FormatterName}} : MemoryPackFormatter<{{TypeName}}> {
             {{Indent}}    public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref {{TypeName}} Value) {
-            {{Indent}}        {{string.Join("\n        ", Properties.Select(Property => $"Writer.WriteValue(Value.@{Property.Name});"))}}
+            {{Indent}}        {{string.Join($"\n{Indent}        ", Properties.Select(Property => $"Writer.WriteValue(Value.@{Property.Name});"))}}
             {{Indent}}    }
             {{Indent}}    public override void Deserialize(ref MemoryPackReader Reader, scoped ref {{TypeName}} Value) {
             {{Indent}}        Value = new() {
-            {{Indent}}            {{string.Join("\n            ", Properties.Select(Property => $"@{Property.Name} = Reader.ReadValue<{Property.Type}>()!,"))}}
+            {{Indent}}            {{string.Join($"\n{Indent}            ", Properties.Select(Property => $"@{Property.Name} = Reader.ReadValue<{Property.Type}>()!,"))}}
             {{Indent}}        };
             {{Indent}}    }
             {{Indent}}}
