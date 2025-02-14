@@ -9,11 +9,13 @@ public partial class Program {
 }
 
 public partial class MyNode : Godot.Node {
-    /// <summary>
-    /// Test.
-    /// </summary>
-    [Rem(RemAccess.Any, Channel: 1234, Mode = RemMode.UnreliableOrdered)]
+    /*[Rem(RemAccess.Any, Channel: 1234, Mode = RemMode.UnreliableOrdered)]
     public void DoStuff(string? Arg, [Sender] int SenderId, [NotNullWhen(true)] params List<int[]> Arg22) {
         
+    }*/
+
+    [Rem(RemAccess.Any)]
+    public int GetMagicNumber() {
+        return 7;
     }
 }

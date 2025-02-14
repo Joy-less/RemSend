@@ -26,8 +26,8 @@ public static class RemSendService {
         Node _Node = Root.GetNode(Multiplayer.RootPath).GetNode(_Packet.NodePath);
         // Find target handler method
         if (_Node is @RemSend.Tests.MyNode @MyNode) {
-            if (_Packet.MethodName is nameof(RemSend.Tests.MyNode.SendDoStuff)) {
-                @MyNode.SendDoStuffHandler(SenderId, _Packet);
+            if (_Packet.MethodName is nameof(RemSend.Tests.MyNode.GetMagicNumber)) {
+                @MyNode.ReceiveGetMagicNumber(SenderId, _Packet);
             }
         }
     }
@@ -35,7 +35,7 @@ public static class RemSendService {
     static RemSendService() {
         // Register MemoryPack formatters
         MemoryPackFormatterProvider.Register(new RemPacketFormatter());
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.SendDoStuffPackFormatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberPackFormatter());
     }
 
     // Formatter for RemPacket because MemoryPack doesn't support .NET Standard 2.0
