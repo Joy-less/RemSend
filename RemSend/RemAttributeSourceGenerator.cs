@@ -32,11 +32,9 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string ResultPackLocalName = EscapeLocalName("ResultPack", Input.Symbol);
         // Type names
         string SendArgumentsPackTypeName = $"{Input.Symbol.Name}SendPack";
-        string SendArgumentsPackFormatterTypeName = $"{SendArgumentsPackTypeName}Formatter";
         string RequestArgumentsPackTypeName = $"{Input.Symbol.Name}RequestPack";
-        string RequestArgumentsPackFormatterTypeName = $"{RequestArgumentsPackTypeName}Formatter";
         string ResultArgumentsPackTypeName = $"{Input.Symbol.Name}ResultPack";
-        string ResultArgumentsPackFormatterTypeName = $"{ResultArgumentsPackTypeName}Formatter";
+        string FormatterTypeName = "Formatter";
         // Property names
         string RequestIdPropertyName = "RequestId";
         string ReturnValuePropertyName = "ReturnValue";
@@ -276,34 +274,37 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         // Send Arguments Pack & Formatter
         Definitions.Add($$"""
             [EditorBrowsable(EditorBrowsableState.Never)]
-            internal record struct {{SendArgumentsPackTypeName}}({{string.Join(", ", SendArgumentsPackProperties)}});
-
-            {{GenerateMemoryPackFormatterCode("internal", SendArgumentsPackFormatterTypeName, SendArgumentsPackTypeName, "",
-                RemoteParameters.Select(Parameter => (Parameter.Name, Parameter.Type.ToString()))
-            )}}
+            internal record struct {{SendArgumentsPackTypeName}}({{string.Join(", ", SendArgumentsPackProperties)}}) {
+                // Formatter
+                {{GenerateMemoryPackFormatterCode("internal", FormatterTypeName, SendArgumentsPackTypeName, "    ",
+                    RemoteParameters.Select(Parameter => (Parameter.Name, Parameter.Type.ToString()))
+                )}}
+            }
             """);
         // Request Arguments Pack & Formatter
         if (!Input.Symbol.ReturnsVoid) {
             Definitions.Add($$"""
                 [EditorBrowsable(EditorBrowsableState.Never)]
-                internal record struct {{RequestArgumentsPackTypeName}}({{string.Join(", ", RequestArgumentsPackProperties)}});
-                
-                {{GenerateMemoryPackFormatterCode("internal", RequestArgumentsPackFormatterTypeName, RequestArgumentsPackTypeName, "",
-                    RemoteParameters.Select(Parameter => (Parameter.Name, Parameter.Type.ToString()))
-                        .Prepend((RequestIdPropertyName, "Guid"))
-                )}}
+                internal record struct {{RequestArgumentsPackTypeName}}({{string.Join(", ", RequestArgumentsPackProperties)}}) {
+                    // Formatter
+                    {{GenerateMemoryPackFormatterCode("internal", FormatterTypeName, RequestArgumentsPackTypeName, "    ",
+                        RemoteParameters.Select(Parameter => (Parameter.Name, Parameter.Type.ToString()))
+                            .Prepend((RequestIdPropertyName, "Guid"))
+                    )}}
+                }
                 """);
         }
         // Result Arguments Pack & Formatter
         if (!Input.Symbol.ReturnsVoid) {
             Definitions.Add($$"""
                 [EditorBrowsable(EditorBrowsableState.Never)]
-                internal record struct {{ResultArgumentsPackTypeName}}({{string.Join(", ", ResultArgumentsPackProperties)}});
-                
-                {{GenerateMemoryPackFormatterCode("internal", ResultArgumentsPackFormatterTypeName, ResultArgumentsPackTypeName, "", [
-                    (RequestIdPropertyName, "Guid"),
-                    (ReturnValuePropertyName, Input.Symbol.ReturnType.ToString()),
-                ])}}
+                internal record struct {{ResultArgumentsPackTypeName}}({{string.Join(", ", ResultArgumentsPackProperties)}}) {
+                    // Formatter
+                    {{GenerateMemoryPackFormatterCode("internal", FormatterTypeName, ResultArgumentsPackTypeName, "    ", [
+                        (RequestIdPropertyName, "Guid"),
+                        (ReturnValuePropertyName, Input.Symbol.ReturnType.ToString()),
+                    ])}}
+                }
                 """);
         }
 
@@ -341,11 +342,9 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string RemSendServiceTypeName = "RemSendService";
         string RemPacketFormatterTypeName = $"{nameof(RemPacket)}Formatter";
         string SendArgumentsPackTypeName = "{0}SendPack";
-        string SendArgumentsPackFormatterTypeName = $"{SendArgumentsPackTypeName}Formatter";
         string RequestArgumentsPackTypeName = "{0}RequestPack";
-        string RequestArgumentsPackFormatterTypeName = $"{RequestArgumentsPackTypeName}Formatter";
         string ResultArgumentsPackTypeName = "{0}ResultPack";
-        string ResultArgumentsPackFormatterTypeName = $"{ResultArgumentsPackTypeName}Formatter";
+        string FormatterTypeName = "Formatter";
 
         // Generated source
         string GeneratedSource = $$"""
@@ -389,10 +388,10 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     // Register MemoryPack formatters
                     MemoryPackFormatterProvider.Register(new {{RemPacketFormatterTypeName}}());
             {{string.Join("\n", Inputs.Select(Input => $$"""
-                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(SendArgumentsPackFormatterTypeName, Input.Symbol.Name)}}());
+                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(SendArgumentsPackTypeName, Input.Symbol.Name)}}.{{FormatterTypeName}}());
             {{(Input.Symbol.ReturnsVoid ? "" : $$"""
-                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(RequestArgumentsPackFormatterTypeName, Input.Symbol.Name)}}());
-                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType }}.{{string.Format(ResultArgumentsPackFormatterTypeName, Input.Symbol.Name)}}());
+                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(RequestArgumentsPackTypeName, Input.Symbol.Name)}}.{{FormatterTypeName}}());
+                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType }}.{{string.Format(ResultArgumentsPackTypeName, Input.Symbol.Name)}}.{{FormatterTypeName}}());
             """)}}
             """.TrimEnd()))}}
                 }
@@ -419,8 +418,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
     }
     private static string GenerateMemoryPackFormatterCode(string AccessModifier, string FormatterName, string TypeName, string Indent, IEnumerable<(string Name, string Type)> Properties) {
         return $$"""
-            [EditorBrowsable(EditorBrowsableState.Never)]
-            {{Indent}}{{AccessModifier}} sealed class {{FormatterName}} : MemoryPackFormatter<{{TypeName}}> {
+            {{AccessModifier}} sealed class {{FormatterName}} : MemoryPackFormatter<{{TypeName}}> {
             {{Indent}}    public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref {{TypeName}} Value) {
             {{Indent}}        {{string.Join($"\n{Indent}        ", Properties.Select(Property => $"Writer.WriteValue(Value.@{Property.Name});"))}}
             {{Indent}}    }

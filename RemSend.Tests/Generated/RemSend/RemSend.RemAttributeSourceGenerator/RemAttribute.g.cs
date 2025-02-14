@@ -35,13 +35,12 @@ public static class RemSendService {
     static RemSendService() {
         // Register MemoryPack formatters
         MemoryPackFormatterProvider.Register(new RemPacketFormatter());
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberSendPackFormatter());
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberRequestPackFormatter());
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberResultPackFormatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberSendPack.Formatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberRequestPack.Formatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberResultPack.Formatter());
     }
 
     // Formatter for RemPacket because MemoryPack doesn't support .NET Standard 2.0
-    [EditorBrowsable(EditorBrowsableState.Never)]
     private sealed class RemPacketFormatter : MemoryPackFormatter<RemPacket> {
         public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref RemPacket Value) {
             Writer.WriteValue(Value.@Type);

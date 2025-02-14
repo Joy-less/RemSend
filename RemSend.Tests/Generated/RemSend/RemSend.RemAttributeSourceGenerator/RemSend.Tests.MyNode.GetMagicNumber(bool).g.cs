@@ -178,51 +178,51 @@ partial class MyNode {
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal record struct GetMagicNumberSendPack(bool Dummy);
-    
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    internal sealed class GetMagicNumberSendPackFormatter : MemoryPackFormatter<GetMagicNumberSendPack> {
-        public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref GetMagicNumberSendPack Value) {
-            Writer.WriteValue(Value.@Dummy);
-        }
-        public override void Deserialize(ref MemoryPackReader Reader, scoped ref GetMagicNumberSendPack Value) {
-            Value = new() {
-                @Dummy = Reader.ReadValue<bool>()!,
-            };
-        }
-    }
-    
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    internal record struct GetMagicNumberRequestPack(Guid RequestId, bool Dummy);
-    
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    internal sealed class GetMagicNumberRequestPackFormatter : MemoryPackFormatter<GetMagicNumberRequestPack> {
-        public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref GetMagicNumberRequestPack Value) {
-            Writer.WriteValue(Value.@RequestId);
-            Writer.WriteValue(Value.@Dummy);
-        }
-        public override void Deserialize(ref MemoryPackReader Reader, scoped ref GetMagicNumberRequestPack Value) {
-            Value = new() {
-                @RequestId = Reader.ReadValue<Guid>()!,
-                @Dummy = Reader.ReadValue<bool>()!,
-            };
+    internal record struct GetMagicNumberSendPack(bool Dummy) {
+        // Formatter
+        internal sealed class Formatter : MemoryPackFormatter<GetMagicNumberSendPack> {
+            public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref GetMagicNumberSendPack Value) {
+                Writer.WriteValue(Value.@Dummy);
+            }
+            public override void Deserialize(ref MemoryPackReader Reader, scoped ref GetMagicNumberSendPack Value) {
+                Value = new() {
+                    @Dummy = Reader.ReadValue<bool>()!,
+                };
+            }
         }
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal record struct GetMagicNumberResultPack(Guid RequestId, ushort ReturnValue);
+    internal record struct GetMagicNumberRequestPack(Guid RequestId, bool Dummy) {
+        // Formatter
+        internal sealed class Formatter : MemoryPackFormatter<GetMagicNumberRequestPack> {
+            public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref GetMagicNumberRequestPack Value) {
+                Writer.WriteValue(Value.@RequestId);
+                Writer.WriteValue(Value.@Dummy);
+            }
+            public override void Deserialize(ref MemoryPackReader Reader, scoped ref GetMagicNumberRequestPack Value) {
+                Value = new() {
+                    @RequestId = Reader.ReadValue<Guid>()!,
+                    @Dummy = Reader.ReadValue<bool>()!,
+                };
+            }
+        }
+    }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal sealed class GetMagicNumberResultPackFormatter : MemoryPackFormatter<GetMagicNumberResultPack> {
-        public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref GetMagicNumberResultPack Value) {
-            Writer.WriteValue(Value.@RequestId);
-            Writer.WriteValue(Value.@ReturnValue);
-        }
-        public override void Deserialize(ref MemoryPackReader Reader, scoped ref GetMagicNumberResultPack Value) {
-            Value = new() {
-                @RequestId = Reader.ReadValue<Guid>()!,
-                @ReturnValue = Reader.ReadValue<ushort>()!,
-            };
+    internal record struct GetMagicNumberResultPack(Guid RequestId, ushort ReturnValue) {
+        // Formatter
+        internal sealed class Formatter : MemoryPackFormatter<GetMagicNumberResultPack> {
+            public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref GetMagicNumberResultPack Value) {
+                Writer.WriteValue(Value.@RequestId);
+                Writer.WriteValue(Value.@ReturnValue);
+            }
+            public override void Deserialize(ref MemoryPackReader Reader, scoped ref GetMagicNumberResultPack Value) {
+                Value = new() {
+                    @RequestId = Reader.ReadValue<Guid>()!,
+                    @ReturnValue = Reader.ReadValue<ushort>()!,
+                };
+            }
         }
     }
 }
