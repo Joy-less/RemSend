@@ -173,7 +173,7 @@ partial class MyNode {
             GetMagicNumberResultPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberResultPack>(RemPacket.ArgumentsPack);
             
             // Invoke receive event
-            OnReceiveGetMagicNumberResult?.Invoke(DeserializedArgumentsPack.ReturnValue);
+            OnReceiveGetMagicNumberResult?.Invoke(DeserializedArgumentsPack);
         }
     }
     

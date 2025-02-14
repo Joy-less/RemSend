@@ -271,7 +271,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         {{ResultArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{ResultArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
                         
                         // Invoke receive event
-                        {{OnReceiveResultEventName}}?.Invoke({{DeserializedArgumentsPackLocalName}}.{{ReturnValuePropertyName}});
+                        {{OnReceiveResultEventName}}?.Invoke({{DeserializedArgumentsPackLocalName}});
                     }
                 }
                 """);
