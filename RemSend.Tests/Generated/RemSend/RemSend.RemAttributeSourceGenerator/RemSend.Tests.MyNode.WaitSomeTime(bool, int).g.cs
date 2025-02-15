@@ -93,7 +93,7 @@ partial class MyNode {
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    public async System.Threading.Tasks.Task RequestWaitSomeTime(int PeerId, double Timeout, bool X) {
+    public async System.Threading.Tasks.Task RequestWaitSomeTime(int PeerId, TimeSpan Timeout, bool X) {
         // Generate request ID
         Guid RequestId = Guid.NewGuid();
     
@@ -126,7 +126,7 @@ partial class MyNode {
             // Add result listener
             OnReceiveWaitSomeTimeResult += ResultCallback;
             // Await completion
-            await ResultAwaiter.Task.WaitAsync(TimeSpan.FromSeconds(Timeout));
+            await ResultAwaiter.Task.WaitAsync(Timeout);
         }
         finally {
             // Remove result listener

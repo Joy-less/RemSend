@@ -93,7 +93,7 @@ partial class MyNode {
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    public async System.Threading.Tasks.Task<ushort> RequestGetMagicNumber(int PeerId, double Timeout, bool Dummy) {
+    public async System.Threading.Tasks.Task<ushort> RequestGetMagicNumber(int PeerId, TimeSpan Timeout, bool Dummy) {
         // Generate request ID
         Guid RequestId = Guid.NewGuid();
     
@@ -126,7 +126,7 @@ partial class MyNode {
             // Add result listener
             OnReceiveGetMagicNumberResult += ResultCallback;
             // Await result
-            ushort ReturnValue = await ResultAwaiter.Task.WaitAsync(TimeSpan.FromSeconds(Timeout));
+            ushort ReturnValue = await ResultAwaiter.Task.WaitAsync(Timeout);
             // Return result
             return ReturnValue;
         }

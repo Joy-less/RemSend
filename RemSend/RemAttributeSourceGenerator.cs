@@ -62,7 +62,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         List<string> SendMethodParameters = [.. RemoteParameters.Select(Parameter => Parameter.GetParameterDeclaration())];
         List<string> SendMethodOneParameters = [.. SendMethodParameters.Prepend($"int {PeerIdParameterName}")];
         List<string> SendMethodMultiParameters = [.. SendMethodParameters.Prepend($"IEnumerable<int>? {PeerIdsParameterName}")];
-        List<string> RequestMethodParameters = [.. SendMethodParameters.Prepend($"double {TimeoutParameterName}").Prepend($"int {PeerIdParameterName}")];
+        List<string> RequestMethodParameters = [.. SendMethodParameters.Prepend($"TimeSpan {TimeoutParameterName}").Prepend($"int {PeerIdParameterName}")];
 
         // Arguments
         List<string> SendArgumentsPackArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
@@ -215,11 +215,11 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 {{(ReturnsNonGenericTask
                     ? $$"""
                         // Await completion
-                        await {{ResultAwaiterLocalName}}.Task.WaitAsync(TimeSpan.FromSeconds(Timeout));
+                        await {{ResultAwaiterLocalName}}.Task.WaitAsync(Timeout);
                 """
                     : $$"""
                         // Await result
-                        {{ReturnTypeAsValue}} ReturnValue = await {{ResultAwaiterLocalName}}.Task.WaitAsync(TimeSpan.FromSeconds(Timeout));
+                        {{ReturnTypeAsValue}} ReturnValue = await {{ResultAwaiterLocalName}}.Task.WaitAsync(Timeout);
                         // Return result
                         return ReturnValue;
                 """)}}

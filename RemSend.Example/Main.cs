@@ -20,11 +20,11 @@ public partial class Main : Node {
             SendSayHello(1, 4);
             SendSayHello(1);
 
-            await RequestWaitASecond(1, Timeout: 10);
+            await RequestWaitASecond(1, TimeSpan.FromSeconds(10));
 
-            GD.Print(await RequestAreYouTheServer(1, Timeout: 10));
+            GD.Print(await RequestAreYouTheServer(1, TimeSpan.FromSeconds(10)));
 
-            GD.Print(await RequestGiveNineAfterASecond(1, Timeout: 10));
+            GD.Print(await RequestGiveNineAfterASecond(1, TimeSpan.FromSeconds(10)));
         }
     }
 
