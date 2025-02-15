@@ -1,5 +1,8 @@
 namespace RemSend;
 
+/// <summary>
+/// Access permissions for a remote method.
+/// </summary>
 public enum RemAccess {
     /// <summary>
     /// No peer can call this remote method.

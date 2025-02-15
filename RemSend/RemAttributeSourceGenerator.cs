@@ -116,7 +116,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
                 
                 // Create packet
-                {{nameof(RemPacket)}} {{PacketLocalName}} = new({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Message)}}, this.GetPath(), nameof({{Input.Symbol.ContainingType}}.{{Input.Symbol.Name}}), {{SerializedArgumentsPackLocalName}});
+                {{nameof(RemPacket)}} {{PacketLocalName}} = new({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}, this.GetPath(), nameof({{Input.Symbol.ContainingType}}.{{Input.Symbol.Name}}), {{SerializedArgumentsPackLocalName}});
                 // Serialize packet
                 byte[] {{SerializedPacketLocalName}} = MemoryPackSerializer.Serialize({{PacketLocalName}});
                 
@@ -151,7 +151,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
                 
                 // Create packet
-                {{nameof(RemPacket)}} {{PacketLocalName}} = new({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Message)}}, this.GetPath(), nameof({{Input.Symbol.ContainingType}}.{{Input.Symbol.Name}}), {{SerializedArgumentsPackLocalName}});
+                {{nameof(RemPacket)}} {{PacketLocalName}} = new({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}, this.GetPath(), nameof({{Input.Symbol.ContainingType}}.{{Input.Symbol.Name}}), {{SerializedArgumentsPackLocalName}});
                 // Serialize packet
                 byte[] {{SerializedPacketLocalName}} = MemoryPackSerializer.Serialize({{PacketLocalName}});
                 
@@ -234,8 +234,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             Definitions.Add($$"""
                 [EditorBrowsable(EditorBrowsableState.Never)]
                 internal void {{ReceiveMethodName}}(int {{SenderIdParameterName}}, {{nameof(RemPacket)}} {{PacketLocalName}}) {
-                    // Message
-                    if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Message)}}) {
+                    // Send
+                    if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}) {
                         // Verify access
                         {{RemSendServiceTypeName}}.{{VerifyAccessMethodName}}({{RemAttributePropertyName}}.{{nameof(RemAttribute.Access)}}, {{SenderIdParameterName}}, this.Multiplayer.GetUniqueId());
                         
@@ -253,8 +253,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             Definitions.Add($$"""
                 [EditorBrowsable(EditorBrowsableState.Never)]
                 internal {{(ReturnsTask ? "async " : "")}}void {{ReceiveMethodName}}(int {{SenderIdParameterName}}, {{nameof(RemPacket)}} {{PacketLocalName}}) {
-                    // Message
-                    if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Message)}}) {
+                    // Send
+                    if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}) {
                         // Verify access
                         {{RemSendServiceTypeName}}.{{VerifyAccessMethodName}}({{RemAttributePropertyName}}.{{nameof(RemAttribute.Access)}}, {{SenderIdParameterName}}, this.Multiplayer.GetUniqueId());
                         
