@@ -16,7 +16,7 @@ partial class MyNode {
     /// The <see cref="RemAttribute"/> defined on <see cref="SillyExample(string?, int, System.Collections.Generic.List{int[]})"/>.<br/>
     /// The properties of this attribute can be changed to reconfigure the remote method.
     /// </summary>
-    public RemAttribute SillyExampleRemAttribute { get; set; } = new() {
+    private RemAttribute SillyExampleRemAttribute { get; set; } = new() {
         Access = RemAccess.Any,
         CallLocal = false,
         Mode = RemMode.UnreliableOrdered,
@@ -28,7 +28,7 @@ partial class MyNode {
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    public void SendSillyExample(int PeerId, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
+    private void SendSillyExample(int PeerId, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
         // Create arguments pack
         SillyExampleSendPack ArgumentsPack = new(@Arg, @Arg22);
         // Serialize arguments pack
@@ -56,7 +56,7 @@ partial class MyNode {
     /// <summary>
     /// Remotely calls <see cref="SillyExample(string?, int, System.Collections.Generic.List{int[]})"/> on each peer.
     /// </summary>
-    public void SendSillyExample(IEnumerable<int>? PeerIds, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
+    private void SendSillyExample(IEnumerable<int>? PeerIds, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
         // Skip if no peers
         if (PeerIds is null || !PeerIds.Any()) {
             return;

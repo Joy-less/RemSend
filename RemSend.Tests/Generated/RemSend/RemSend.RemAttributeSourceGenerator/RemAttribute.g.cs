@@ -50,22 +50,22 @@ public static class RemSendService {
         Node TargetNode = Root.GetNode(Multiplayer.RootPath).GetNode(RemPacket.NodePath);
         // Find target receive method
         if (TargetNode is RemSend.Tests.MyNode) {
-            if (RemPacket.MethodName is nameof(RemSend.Tests.MyNode.GetMagicNumber)) {
+            if (RemPacket.MethodName is "GetMagicNumber") {
                 ((RemSend.Tests.MyNode)TargetNode).ReceiveGetMagicNumber(SenderId, RemPacket);
             }
         }
         if (TargetNode is RemSend.Tests.MyNode) {
-            if (RemPacket.MethodName is nameof(RemSend.Tests.MyNode.GetMagicNumberAsync)) {
+            if (RemPacket.MethodName is "GetMagicNumberAsync") {
                 ((RemSend.Tests.MyNode)TargetNode).ReceiveGetMagicNumberAsync(SenderId, RemPacket);
             }
         }
         if (TargetNode is RemSend.Tests.MyNode) {
-            if (RemPacket.MethodName is nameof(RemSend.Tests.MyNode.WaitSomeTime)) {
+            if (RemPacket.MethodName is "WaitSomeTime") {
                 ((RemSend.Tests.MyNode)TargetNode).ReceiveWaitSomeTime(SenderId, RemPacket);
             }
         }
         if (TargetNode is RemSend.Tests.MyNode) {
-            if (RemPacket.MethodName is nameof(RemSend.Tests.MyNode.SillyExample)) {
+            if (RemPacket.MethodName is "SillyExample") {
                 ((RemSend.Tests.MyNode)TargetNode).ReceiveSillyExample(SenderId, RemPacket);
             }
         }

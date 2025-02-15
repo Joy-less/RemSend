@@ -436,7 +436,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     // Find target receive method
             {{string.Join("\n", Inputs.Select(Input => $$"""
                     if ({{NodeLocalName}} is {{Input.Symbol.ContainingType}}) {
-                        if ({{PacketLocalName}}.{{nameof(RemPacket.MethodName)}} is nameof({{Input.Symbol.ContainingType}}.{{Input.Symbol.Name}})) {
+                        if ({{PacketLocalName}}.{{nameof(RemPacket.MethodName)}} is "{{Input.Symbol.Name}}") {
                             (({{Input.Symbol.ContainingType}}){{NodeLocalName}}).{{string.Format(ReceiveMethodName, Input.Symbol.Name)}}({{SenderIdParameterName}}, {{PacketLocalName}});
                         }
                     }
