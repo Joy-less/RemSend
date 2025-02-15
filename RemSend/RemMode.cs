@@ -1,7 +1,8 @@
-#nullable enable
-
 namespace RemSend;
 
+/// <summary>
+/// The transfer mode of a remote method.
+/// </summary>
 public enum RemMode {
     /// <summary>
     /// Packets will be resent until they are received. Later packets will wait for earlier packets.<br/>

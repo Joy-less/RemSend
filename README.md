@@ -2,59 +2,79 @@
 
 # Rem Send
 
-A Remote Procedure Call framework for Godot C#.
+A Remote Procedure Call framework for Godot C# using source generators.
 
 > [!NOTE]
 > RemSend is currently being remade to use source generation. More info soon!
 
 ## Features
 
-- Call RPCs with static typing.
-- Return values from RPCs.
-- Send variant-incompatible values (with MemoryPack).
+- Call source-generated RPCs with static typing and optimal performance.
+- Request and return values from RPCs.
+- Send variant-incompatible values with MemoryPack.
 - Extra access enum (peer -> authority).
 - Created for use in a real [MMORPG](https://youtu.be/4ptBKI0cGhI).
 
-## Dependencies
-- [MemoryPack](https://github.com/Cysharp/MemoryPack)
+## Setup
+
+1. Install RemSend through NuGet.
+2. Connect RemSend to your MultiplayerApi by using the following code:
+```cs
+RemSendService.Setup((SceneMultiplayer)Multiplayer, GetTree().Root);
+```
 
 ## Examples
 
+### Send Remote Method
+
 ```cs
-[Rem(RemAccess.Peer)]
-public void SayWordsRem(List<string> Words) {
+[Rem(RemAccess.Any)]
+public void SayWords(List<string> Words) {
     foreach (string Word in Words) {
         GD.Print(Word);
     }
 }
 
-Rem(1, () => SayWordsRem(["cat", "dog"])); // The method name and arguments are extracted from the expression.
+// Broadcast SayWords to all peers
+SendSayWords(0, ["cat", "dog"]);
 ```
 
+### Request Result
+
 ```cs
-[Rem(RemAccess.Peer)]
-public int GetNumberRem() {
+[Rem(RemAccess.PeerToAuthority)]
+public int GetNumber() {
     return 5;
 }
 
-int Number = await Rem(1, () => GetNumberRem());
+// Send GetNumber to authority and await result for up to 10 seconds
+int Number = await RequestGetNumber(1, TimeSpan.FromSeconds(10));
 ```
 
-## Limitations
+### Get Sender Id
 
-- Uses reflection (may be slow, incompatible with trimming, incompatible with GDScript)
-- Optional parameters must be passed explicitly (due to a current limitation with Linq Expressions)
-- Only supports 4 transfer channels (since they are implemented manually)
+```cs
+[Rem(RemAccess.Any)]
+public void RemoteHug([Sender] int SenderId) {
+    if (SenderId is 1) {
+        GD.Print("Thank you authority.");
+    }
+    else if (SenderId is 0) {
+        GD.Print("Thank you me.");
+    }
+    else {
+        GD.Print("Thank you random peer.");
+    }
+}
 
-## Setup
-
-1. Install MemoryPack through NuGet or by editing your `csproj` file:
+// Send RemoteHug to authority
+SendRemoteHug(1);
 ```
-<ItemGroup>
-  <PackageReference Include="MemoryPack" Version="1.21.3" />
-</ItemGroup>
-```
 
-2. Add the Rem Send addon to your project and build the project.
+## Notes
 
-3. Create a `RemSend` node (or create a node and attach the `RemSend.cs` script).
+- Since RemSend uses `SceneMultiplayer.SendBytes` and `SceneMultiplayer.PeerPacket`, you can't use them together with RemSend. However, you can still use RPCs.
+
+## Special Thanks
+
+- [GodotSharp.SourceGenerators](https://github.com/Cat-Lips/GodotSharp.SourceGenerators) for help with generating source for members with attributes.

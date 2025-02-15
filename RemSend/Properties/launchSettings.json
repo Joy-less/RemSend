@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "SourceGeneratorTests": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "../RemSend.Tests/RemSend.Tests.csproj"
+    }
+  }
+}
