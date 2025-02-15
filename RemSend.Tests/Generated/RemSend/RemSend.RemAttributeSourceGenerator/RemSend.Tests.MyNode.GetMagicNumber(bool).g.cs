@@ -140,15 +140,6 @@ partial class MyNode {
         }
     }
     
-    /// <summary>
-    /// Remotely calls <see cref="GetMagicNumber(bool)"/> on the given peer, awaits the return value and calls the given callback.<br/>
-    /// Set <paramref name="PeerId"/> to 1 to send to the authority.
-    /// </summary>
-    public async void RequestCallbackGetMagicNumber(int PeerId, TimeSpan Timeout, bool Dummy, Action<ushort> Callback) {
-        ushort ReturnValue = await RequestGetMagicNumber(PeerId, Timeout, @Dummy);
-        Callback(ReturnValue);
-    }
-    
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal void ReceiveGetMagicNumber(int SenderId, RemPacket RemPacket) {
         // Send

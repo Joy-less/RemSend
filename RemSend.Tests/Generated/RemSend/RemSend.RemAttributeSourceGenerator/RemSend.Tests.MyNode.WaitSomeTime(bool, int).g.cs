@@ -138,15 +138,6 @@ partial class MyNode {
         }
     }
     
-    /// <summary>
-    /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on the given peer, awaits the return value and calls the given callback.<br/>
-    /// Set <paramref name="PeerId"/> to 1 to send to the authority.
-    /// </summary>
-    public async void RequestCallbackWaitSomeTime(int PeerId, TimeSpan Timeout, bool Dummy, Action Callback) {
-        await RequestWaitSomeTime(PeerId, Timeout, @Dummy);
-        Callback();
-    }
-    
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal async void ReceiveWaitSomeTime(int SenderId, RemPacket RemPacket) {
         // Send
