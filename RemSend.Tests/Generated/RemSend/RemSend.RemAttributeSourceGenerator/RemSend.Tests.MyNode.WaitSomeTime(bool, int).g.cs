@@ -143,7 +143,7 @@ partial class MyNode {
             WaitSomeTimeSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeSendPack>(RemPacket.ArgumentsPack);
             
             // Call target method
-            WaitSomeTime(DeserializedArgumentsPack.@Dummy, SenderId);
+            await WaitSomeTime(DeserializedArgumentsPack.@Dummy, SenderId);
         }
         // Request
         else if (RemPacket.Type is RemPacketType.Request) {

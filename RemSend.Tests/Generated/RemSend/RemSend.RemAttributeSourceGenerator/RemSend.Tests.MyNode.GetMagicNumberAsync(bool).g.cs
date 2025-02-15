@@ -145,7 +145,7 @@ partial class MyNode {
             GetMagicNumberAsyncSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberAsyncSendPack>(RemPacket.ArgumentsPack);
             
             // Call target method
-            GetMagicNumberAsync(DeserializedArgumentsPack.@Dummy);
+            await GetMagicNumberAsync(DeserializedArgumentsPack.@Dummy);
         }
         // Request
         else if (RemPacket.Type is RemPacketType.Request) {

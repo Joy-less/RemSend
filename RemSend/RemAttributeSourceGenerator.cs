@@ -262,7 +262,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         {{SendArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{SendArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
                         
                         // Call target method
-                        {{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
+                        {{(ReturnsTask ? "await " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
                     }
                     // Request
                     else if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Request)}}) {
