@@ -12,19 +12,20 @@ A Remote Procedure Call framework for Godot C# using source generators.
 - Request and return values from RPCs.
 - Send variant-incompatible values with MemoryPack.
 - Extra access enum (peer -> authority).
+- Fully compatible with async / Tasks.
 - Created for use in a real [MMORPG](https://youtu.be/4ptBKI0cGhI).
 
 ## Setup
 
 1. Install RemSend through NuGet.
-2. Connect RemSend to your MultiplayerApi by using the following code:
+2. Connect RemSend to your `MultiplayerApi` by using the following code:
 ```cs
 RemSendService.Setup((SceneMultiplayer)Multiplayer, GetTree().Root);
 ```
 
 ## Examples
 
-### Send Remote Method
+Sending a method call to a remote peer:
 
 ```cs
 [Rem(RemAccess.Any)]
@@ -38,7 +39,7 @@ public void SayWords(List<string> Words) {
 SendSayWords(0, ["cat", "dog"]);
 ```
 
-### Request Result
+Requesting a result from a peer:
 
 ```cs
 [Rem(RemAccess.PeerToAuthority)]
@@ -50,7 +51,7 @@ public int GetNumber() {
 int Number = await RequestGetNumber(1, TimeSpan.FromSeconds(10));
 ```
 
-### Get Sender Id
+Getting the remote sender's peer ID:
 
 ```cs
 [Rem(RemAccess.Any)]
@@ -59,7 +60,7 @@ public void RemoteHug([Sender] int SenderId) {
         GD.Print("Thank you authority.");
     }
     else if (SenderId is 0) {
-        GD.Print("Thank you me.");
+        GD.Print("*depression*");
     }
     else {
         GD.Print("Thank you random peer.");
@@ -72,8 +73,9 @@ SendRemoteHug(1);
 
 ## Notes
 
-- Since RemSend uses `SceneMultiplayer.SendBytes` and `SceneMultiplayer.PeerPacket`, you can't use them together with RemSend. However, you can still use RPCs.
+- Since RemSend uses `SceneMultiplayer.SendBytes` and `SceneMultiplayer.PeerPacket`, using them with RemSend is not recommended. However, you can still use RPCs.
+- RemSend does not support GDScript or C++. It can only be used with C#. Other languages can use RPCs instead.
 
 ## Special Thanks
 
-- [GodotSharp.SourceGenerators](https://github.com/Cat-Lips/GodotSharp.SourceGenerators) for help with generating source for members with attributes.
+- [GodotSharp.SourceGenerators](https://github.com/Cat-Lips/GodotSharp.SourceGenerators) for help with source generation for members with attributes.
