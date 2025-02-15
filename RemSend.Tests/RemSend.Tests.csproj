@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RemSend\RemSend.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="../RemSend/RemSend.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="GodotSharp" Version="4.4.0-beta.3" />
@@ -22,7 +22,7 @@
     <RemoveDir Directories="$(CompilerGeneratedFilesOutputPath)" />
   </Target>
   <ItemGroup>
-    <Compile Remove="$(CompilerGeneratedFilesOutputPath)\**" />
-    <Content Include="$(CompilerGeneratedFilesOutputPath)\**" />
+    <Compile Remove="$(CompilerGeneratedFilesOutputPath)/**" />
+    <Content Include="$(CompilerGeneratedFilesOutputPath)/**" />
   </ItemGroup>
 </Project>

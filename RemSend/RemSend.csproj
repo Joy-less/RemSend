@@ -8,6 +8,9 @@
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
 
+    <!-- IDE0130: Namespace does not match folder structure -->
+    <NoWarn>IDE0130</NoWarn>
+
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsRoslynComponent>true</IsRoslynComponent>
 
@@ -21,19 +24,19 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
   </PropertyGroup>
-  <PropertyGroup>
-    <!-- IDE0130: Namespace does not match folder structure -->
-    <NoWarn>IDE0130</NoWarn>
-  </PropertyGroup>
   <ItemGroup>
-    <None Include="..\README.md">
+    <None Include="../README.md">
       <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
+      <PackagePath>/</PackagePath>
     </None>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
     <PackageReference Include="PolySharp" Version="1.15.0" />
     <PackageReference Include="MemoryPack" Version="1.21.4" />
+  </ItemGroup>
+  <!-- Store package in analyzer directory (https://stackoverflow.com/a/65010790) -->
+  <ItemGroup>
+    <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 </Project>
