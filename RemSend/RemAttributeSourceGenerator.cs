@@ -381,6 +381,24 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string ResultArgumentsPackTypeName = "{0}ResultPack";
         string FormatterTypeName = "Formatter";
 
+        // MemoryPack formatters
+        List<string> StructTypesToRegisterFormatters = [
+            "Vector2",
+            "Vector2I",
+            "Vector3",
+            "Vector3I",
+            "Vector4",
+            "Vector4I",
+            "Rect2",
+            "Rect2I",
+            "Aabb",
+            "Color",
+        ];
+        List<string> ClassTypesToRegisterFormatters = [
+            "StringName",
+            "NodePath",
+        ];
+
         // Generated source
         string GeneratedSource = $$"""
             #nullable enable
@@ -390,6 +408,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             using System.ComponentModel;
             using Godot;
             using MemoryPack;
+            using MemoryPack.Formatters;
 
             namespace {{nameof(RemSend)}};
 
@@ -444,24 +463,62 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 }
 
                 static {{RemSendServiceTypeName}}() {
-                    // Register MemoryPack formatters
-                    MemoryPackFormatterProvider.Register(new {{RemPacketFormatterTypeName}}());
-            {{string.Join("\n", Inputs.Select(Input => $$"""
-                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(SendArgumentsPackTypeName, Input.Symbol.Name)}}.{{FormatterTypeName}}());
-            {{(Input.Symbol.ReturnsVoid ? "" : $$"""
-                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(RequestArgumentsPackTypeName, Input.Symbol.Name)}}.{{FormatterTypeName}}());
-                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType }}.{{string.Format(ResultArgumentsPackTypeName, Input.Symbol.Name)}}.{{FormatterTypeName}}());
-            """)}}
-            """.TrimEnd()))}}
+                    RegisterMemoryPackFormatters();
                 }
 
-                // Formatter for {{nameof(RemPacket)}} because MemoryPack doesn't support .NET Standard 2.0
+                private static void RegisterMemoryPackFormatters() {
+                    // RemSend types
+                    MemoryPackFormatterProvider.Register(new {{RemPacketFormatterTypeName}}());
+
+                    // RemSend generated types
+            {{string.Join("\n", Inputs.Select(Input => $$"""
+                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(SendArgumentsPackTypeName, Input.Symbol.Name)}}.{{FormatterTypeName}}());
+            """
+            + (Input.Symbol.ReturnsVoid ? "" : $$"""
+                    
+                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(RequestArgumentsPackTypeName, Input.Symbol.Name)}}.{{FormatterTypeName}}());
+                    MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(ResultArgumentsPackTypeName, Input.Symbol.Name)}}.{{FormatterTypeName}}());
+            """)))}}
+
+                    // Godot types
+            {{string.Join("\n", StructTypesToRegisterFormatters.Select(StructType => $$"""
+                    MemoryPackFormatterProvider.Register(new UnmanagedFormatter<{{StructType}}>());
+                    MemoryPackFormatterProvider.Register(new NullableFormatter<{{StructType}}>());
+                    MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<{{StructType}}>());
+            """))}}
+            {{string.Join("\n", ClassTypesToRegisterFormatters.Select(ClassType => $$"""
+                    MemoryPackFormatterProvider.Register(new {{ClassType}}Formatter());
+                    MemoryPackFormatterProvider.Register(new ArrayFormatter<{{ClassType}}>());
+            """))}}
+                }
+
+                // Formatter for {{nameof(RemPacket)}} (since MemoryPack doesn't support .NET Standard 2.0)
                 {{GenerateMemoryPackFormatterCode("private", RemPacketFormatterTypeName, nameof(RemPacket), "    ", [
                     (nameof(RemPacket.Type), nameof(RemPacketType)),
                     (nameof(RemPacket.NodePath), "string"),
                     (nameof(RemPacket.MethodName), "string"),
                     (nameof(RemPacket.ArgumentsPack), "byte[]"),
                 ])}}
+
+                // Formatter for StringName
+                private class StringNameFormatter : MemoryPackFormatter<StringName> {
+                    public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref StringName? Value) {
+                        Writer.WriteString(Value);
+                    }
+                    public override void Deserialize(ref MemoryPackReader Reader, scoped ref StringName? Value) {
+                        Value = Reader.ReadString()!;
+                    }
+                }
+
+                // Formatter for NodePath
+                private class NodePathFormatter : MemoryPackFormatter<NodePath> {
+                    public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref NodePath? Value) {
+                        Writer.WriteString(Value);
+                    }
+                    public override void Deserialize(ref MemoryPackReader Reader, scoped ref NodePath? Value) {
+                        Value = Reader.ReadString()!;
+                    }
+                }
             }
             """;
         return (GeneratedSource, null);

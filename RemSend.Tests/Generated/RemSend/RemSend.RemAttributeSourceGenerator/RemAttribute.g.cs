@@ -5,6 +5,7 @@ using System.Text;
 using System.ComponentModel;
 using Godot;
 using MemoryPack;
+using MemoryPack.Formatters;
 
 namespace RemSend;
 
@@ -72,21 +73,63 @@ public static class RemSendService {
     }
 
     static RemSendService() {
-        // Register MemoryPack formatters
+        RegisterMemoryPackFormatters();
+    }
+
+    private static void RegisterMemoryPackFormatters() {
+        // RemSend types
         MemoryPackFormatterProvider.Register(new RemPacketFormatter());
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberSendPack.Formatter());
+
+        // RemSend generated types
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberSendPack.Formatter());        
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberRequestPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberResultPack.Formatter());
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberAsyncSendPack.Formatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberAsyncSendPack.Formatter());        
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberAsyncRequestPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberAsyncResultPack.Formatter());
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.WaitSomeTimeSendPack.Formatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.WaitSomeTimeSendPack.Formatter());        
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.WaitSomeTimeRequestPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.WaitSomeTimeResultPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.SillyExampleSendPack.Formatter());
+
+        // Godot types
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Vector2>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Vector2>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Vector2>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Vector2I>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Vector2I>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Vector2I>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Vector3>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Vector3>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Vector3>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Vector3I>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Vector3I>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Vector3I>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Vector4>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Vector4>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Vector4>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Vector4I>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Vector4I>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Vector4I>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Rect2>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Rect2>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Rect2>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Rect2I>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Rect2I>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Rect2I>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Aabb>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Aabb>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Aabb>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Color>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Color>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Color>());
+        MemoryPackFormatterProvider.Register(new StringNameFormatter());
+        MemoryPackFormatterProvider.Register(new ArrayFormatter<StringName>());
+        MemoryPackFormatterProvider.Register(new NodePathFormatter());
+        MemoryPackFormatterProvider.Register(new ArrayFormatter<NodePath>());
     }
 
-    // Formatter for RemPacket because MemoryPack doesn't support .NET Standard 2.0
+    // Formatter for RemPacket (since MemoryPack doesn't support .NET Standard 2.0)
     private sealed class RemPacketFormatter : MemoryPackFormatter<RemPacket> {
         public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref RemPacket Value) {
             Writer.WriteValue(Value.@Type);
@@ -101,6 +144,26 @@ public static class RemSendService {
                 @MethodName = Reader.ReadValue<string>()!,
                 @ArgumentsPack = Reader.ReadValue<byte[]>()!,
             };
+        }
+    }
+
+    // Formatter for StringName
+    private class StringNameFormatter : MemoryPackFormatter<StringName> {
+        public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref StringName? Value) {
+            Writer.WriteString(Value);
+        }
+        public override void Deserialize(ref MemoryPackReader Reader, scoped ref StringName? Value) {
+            Value = Reader.ReadString()!;
+        }
+    }
+
+    // Formatter for NodePath
+    private class NodePathFormatter : MemoryPackFormatter<NodePath> {
+        public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref NodePath? Value) {
+            Writer.WriteString(Value);
+        }
+        public override void Deserialize(ref MemoryPackReader Reader, scoped ref NodePath? Value) {
+            Value = Reader.ReadString()!;
         }
     }
 }

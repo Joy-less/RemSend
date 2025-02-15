@@ -1,10 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using Godot;
+using MemoryPack;
+using MemoryPack.Formatters;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 namespace RemSend.Tests;
 
 public partial class Program {
     public static void Main() {
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Color>());
+        Console.WriteLine("[" + string.Join(", ", MemoryPackSerializer.Serialize(typeof(Color), new Color("ffffff", .5f))) + "]");
+        Console.WriteLine(MemoryPackSerializer.Deserialize(typeof(Color), MemoryPackSerializer.Serialize(typeof(Color), new Color("ffffff", .5f))));
+
     }
 }
 
