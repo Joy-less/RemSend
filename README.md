@@ -2,6 +2,8 @@
 
 # Rem Send
 
+[![NuGet](https://img.shields.io/nuget/v/RemSend.svg)](https://www.nuget.org/packages/RemSend)
+
 A Remote Procedure Call framework for Godot C# using source generators.
 
 ## Features
