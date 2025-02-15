@@ -4,5 +4,4 @@
   </Folder>
   <Project Path="RemSend/RemSend.csproj" />
   <Project Path="RemSend.Tests/RemSend.Tests.csproj" />
-  <Project Path="SourceGeneratorHelpers/SourceGeneratorHelpers.csproj" />
 </Solution>

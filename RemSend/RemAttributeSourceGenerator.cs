@@ -1,5 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
-using RemSend.SourceGeneratorHelpers;
+using AttributeSourceGenerators;
 
 namespace RemSend;
 
