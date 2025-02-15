@@ -4,8 +4,6 @@ using Godot;
 using RemSend;
 
 public partial class Main : Node {
-    private SceneMultiplayer SceneMultiplayer => (SceneMultiplayer)Multiplayer;
-
     public override async void _Ready() {
         // Server
         if (OS.HasFeature("server")) {
