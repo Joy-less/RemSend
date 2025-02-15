@@ -83,12 +83,18 @@ partial class MyNode {
         }
     }
     
+    /// <summary>
+    /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on all peers.
+    /// </summary>
+    public void BroadcastWaitSomeTime(bool Dummy) {
+        SendWaitSomeTime(0, @Dummy);
+    }
+    
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal event Action<WaitSomeTimeResultPack>? OnReceiveWaitSomeTimeResult;
     
     /// <summary>
     /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on the given peer and awaits the return value.<br/>
-    /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
     public async System.Threading.Tasks.Task RequestWaitSomeTime(int PeerId, TimeSpan Timeout, bool Dummy) {
@@ -130,6 +136,15 @@ partial class MyNode {
             // Remove result listener
             OnReceiveWaitSomeTimeResult -= ResultCallback;
         }
+    }
+    
+    /// <summary>
+    /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on the given peer, awaits the return value and calls the given callback.<br/>
+    /// Set <paramref name="PeerId"/> to 1 to send to the authority.
+    /// </summary>
+    public async void RequestCallbackWaitSomeTime(int PeerId, TimeSpan Timeout, bool Dummy, Action Callback) {
+        await RequestWaitSomeTime(PeerId, Timeout, @Dummy);
+        Callback();
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]

@@ -10,7 +10,9 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
 
         // Method names
         string SendMethodName = $"Send{Input.Symbol.Name}";
+        string BroadcastMethodName = $"Broadcast{Input.Symbol.Name}";
         string RequestMethodName = $"Request{Input.Symbol.Name}";
+        string RequestCallbackMethodName = $"RequestCallback{Input.Symbol.Name}";
         string ReceiveMethodName = $"Receive{Input.Symbol.Name}";
         string RemModeToTransferModeEnumMethodName = "RemModeToTransferModeEnum";
         string VerifyAccessMethodName = "VerifyAccess";
@@ -19,6 +21,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string PeerIdsParameterName = "PeerIds";
         string SenderIdParameterName = "SenderId";
         string TimeoutParameterName = "Timeout";
+        string CallbackParameterName = "Callback";
         // Local names
         string ArgumentsPackLocalName = EscapeLocalName("ArgumentsPack", Input.Symbol);
         string SerializedArgumentsPackLocalName = EscapeLocalName("SerializedArgumentsPack", Input.Symbol);
@@ -62,11 +65,15 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         List<string> SendMethodParameters = [.. RemoteParameters.Select(Parameter => Parameter.GetParameterDeclaration())];
         List<string> SendMethodOneParameters = [.. SendMethodParameters.Prepend($"int {PeerIdParameterName}")];
         List<string> SendMethodMultiParameters = [.. SendMethodParameters.Prepend($"IEnumerable<int>? {PeerIdsParameterName}")];
+        List<string> BroadcastMethodParameters = [.. SendMethodParameters];
         List<string> RequestMethodParameters = [.. SendMethodParameters.Prepend($"TimeSpan {TimeoutParameterName}").Prepend($"int {PeerIdParameterName}")];
+        List<string> RequestCallbackMethodParameters = [.. RequestMethodParameters.Append($"Action{(ReturnsNonGenericTask ? "" : $"<{ReturnTypeAsValue}>")} {CallbackParameterName}")];
 
         // Arguments
         List<string> SendArgumentsPackArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
         List<string> RequestArgumentsPackArguments = [.. SendArgumentsPackArguments.Prepend(RequestIdLocalName)];
+        List<string> SendBroadcastArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}").Prepend("0")];
+        List<string> RequestCallbackArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}").Prepend(TimeoutParameterName).Prepend(PeerIdParameterName)];
 
         // Properties
         List<string> SendArgumentsPackProperties = [.. SendMethodParameters];
@@ -166,16 +173,26 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 }
             }
             """);
+        // Broadcast
+        Definitions.Add($$"""
+            /// <summary>
+            /// Remotely calls {{MethodSeeXml}} on all peers.
+            /// </summary>
+            {{AccessModifier}} void {{BroadcastMethodName}}({{string.Join(", ", BroadcastMethodParameters)}}) {
+                {{SendMethodName}}({{string.Join(", ", SendBroadcastArguments)}});
+            }
+            """);
         // Request
         if (!Input.Symbol.ReturnsVoid) {
+            // On Receive Result
             Definitions.Add($$"""
                 [EditorBrowsable(EditorBrowsableState.Never)]
                 internal event Action<{{ResultArgumentsPackTypeName}}>? {{OnReceiveResultEventName}};
                 """);
+            // Request
             Definitions.Add($$"""
                 /// <summary>
                 /// Remotely calls {{MethodSeeXml}} on the given peer and awaits the return value.<br/>
-                /// Set <paramref name="{{PeerIdParameterName}}"/> to 0 to broadcast to all peers.<br/>
                 /// Set <paramref name="{{PeerIdParameterName}}"/> to 1 to send to the authority.
                 /// </summary>
                 {{AccessModifier}} async {{ReturnTypeAsTask}} {{RequestMethodName}}({{string.Join(", ", RequestMethodParameters)}}) {
@@ -228,6 +245,18 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     }
                 }
                 """);
+            // Request Callback
+            Definitions.Add($$"""
+                /// <summary>
+                /// Remotely calls {{MethodSeeXml}} on the given peer, awaits the return value and calls the given callback.<br/>
+                /// Set <paramref name="{{PeerIdParameterName}}"/> to 1 to send to the authority.
+                /// </summary>
+                {{AccessModifier}} async void {{RequestCallbackMethodName}}({{string.Join(", ", RequestCallbackMethodParameters)}}) {
+                    {{(ReturnsNonGenericTask ? "" : $"{ReturnTypeAsValue} {ReturnValueLocalName} = ")}}await {{RequestMethodName}}({{string.Join(", ", RequestCallbackArguments)}});
+                    {{CallbackParameterName}}({{(ReturnsNonGenericTask ? "" : ReturnValueLocalName)}});
+                }
+                """);
+                
         }
         // Receive (returns void)
         if (Input.Symbol.ReturnsVoid) {

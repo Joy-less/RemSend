@@ -83,6 +83,13 @@ partial class MyNode {
         }
     }
     
+    /// <summary>
+    /// Remotely calls <see cref="SillyExample(string?, int, System.Collections.Generic.List{int[]})"/> on all peers.
+    /// </summary>
+    private void BroadcastSillyExample(string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
+        SendSillyExample(0, @Arg, @Arg22);
+    }
+    
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal void ReceiveSillyExample(int SenderId, RemPacket RemPacket) {
         // Send

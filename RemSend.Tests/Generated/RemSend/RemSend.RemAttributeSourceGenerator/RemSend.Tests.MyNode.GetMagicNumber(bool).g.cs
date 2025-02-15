@@ -83,12 +83,18 @@ partial class MyNode {
         }
     }
     
+    /// <summary>
+    /// Remotely calls <see cref="GetMagicNumber(bool)"/> on all peers.
+    /// </summary>
+    public void BroadcastGetMagicNumber(bool Dummy) {
+        SendGetMagicNumber(0, @Dummy);
+    }
+    
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal event Action<GetMagicNumberResultPack>? OnReceiveGetMagicNumberResult;
     
     /// <summary>
     /// Remotely calls <see cref="GetMagicNumber(bool)"/> on the given peer and awaits the return value.<br/>
-    /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
     public async System.Threading.Tasks.Task<ushort> RequestGetMagicNumber(int PeerId, TimeSpan Timeout, bool Dummy) {
@@ -132,6 +138,15 @@ partial class MyNode {
             // Remove result listener
             OnReceiveGetMagicNumberResult -= ResultCallback;
         }
+    }
+    
+    /// <summary>
+    /// Remotely calls <see cref="GetMagicNumber(bool)"/> on the given peer, awaits the return value and calls the given callback.<br/>
+    /// Set <paramref name="PeerId"/> to 1 to send to the authority.
+    /// </summary>
+    public async void RequestCallbackGetMagicNumber(int PeerId, TimeSpan Timeout, bool Dummy, Action<ushort> Callback) {
+        ushort ReturnValue = await RequestGetMagicNumber(PeerId, Timeout, @Dummy);
+        Callback(ReturnValue);
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
