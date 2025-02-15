@@ -4,9 +4,6 @@
 
 A Remote Procedure Call framework for Godot C# using source generators.
 
-> [!NOTE]
-> RemSend is currently being remade to use source generation. More info soon!
-
 ## Features
 
 - Call source-generated RPCs with static typing and optimal performance.
