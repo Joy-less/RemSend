@@ -28,9 +28,9 @@ partial class MyNode {
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    public void SendWaitSomeTime(int PeerId, bool X) {
+    public void SendWaitSomeTime(int PeerId, bool Dummy) {
         // Create arguments pack
-        WaitSomeTimeSendPack ArgumentsPack = new(@X);
+        WaitSomeTimeSendPack ArgumentsPack = new(@Dummy);
         // Serialize arguments pack
         byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
         
@@ -49,21 +49,21 @@ partial class MyNode {
     
         // Also call target method locally
         if (PeerId is 0 && WaitSomeTimeRemAttribute.CallLocal) {
-            _ = WaitSomeTime(@X, 0);
+            _ = WaitSomeTime(@Dummy, 0);
         }
     }
     
     /// <summary>
     /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on each peer.
     /// </summary>
-    public void SendWaitSomeTime(IEnumerable<int>? PeerIds, bool X) {
+    public void SendWaitSomeTime(IEnumerable<int>? PeerIds, bool Dummy) {
         // Skip if no peers
         if (PeerIds is null || !PeerIds.Any()) {
             return;
         }
         
         // Create arguments pack
-        WaitSomeTimeSendPack ArgumentsPack = new(@X);
+        WaitSomeTimeSendPack ArgumentsPack = new(@Dummy);
         // Serialize arguments pack
         byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
         
@@ -91,12 +91,12 @@ partial class MyNode {
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    public async System.Threading.Tasks.Task RequestWaitSomeTime(int PeerId, TimeSpan Timeout, bool X) {
+    public async System.Threading.Tasks.Task RequestWaitSomeTime(int PeerId, TimeSpan Timeout, bool Dummy) {
         // Generate request ID
         Guid RequestId = Guid.NewGuid();
     
         // Create arguments pack
-        WaitSomeTimeRequestPack ArgumentsPack = new(RequestId, @X);
+        WaitSomeTimeRequestPack ArgumentsPack = new(RequestId, @Dummy);
         // Serialize arguments pack
         byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
         
@@ -143,7 +143,7 @@ partial class MyNode {
             WaitSomeTimeSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeSendPack>(RemPacket.ArgumentsPack);
             
             // Call target method
-            WaitSomeTime(DeserializedArgumentsPack.@X, SenderId);
+            WaitSomeTime(DeserializedArgumentsPack.@Dummy, SenderId);
         }
         // Request
         else if (RemPacket.Type is RemPacketType.Request) {
@@ -151,7 +151,7 @@ partial class MyNode {
             WaitSomeTimeRequestPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeRequestPack>(RemPacket.ArgumentsPack);
     
             // Call target method
-            await WaitSomeTime(DeserializedArgumentsPack.@X, SenderId);
+            await WaitSomeTime(DeserializedArgumentsPack.@Dummy, SenderId);
     
             // Create arguments pack
             WaitSomeTimeResultPack ArgumentsPack = new(DeserializedArgumentsPack.RequestId);
@@ -182,32 +182,32 @@ partial class MyNode {
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal record struct WaitSomeTimeSendPack(bool X) {
+    internal record struct WaitSomeTimeSendPack(bool Dummy) {
         // Formatter
         internal sealed class Formatter : MemoryPackFormatter<WaitSomeTimeSendPack> {
             public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref WaitSomeTimeSendPack Value) {
-                Writer.WriteValue(Value.@X);
+                Writer.WriteValue(Value.@Dummy);
             }
             public override void Deserialize(ref MemoryPackReader Reader, scoped ref WaitSomeTimeSendPack Value) {
                 Value = new() {
-                    @X = Reader.ReadValue<bool>()!,
+                    @Dummy = Reader.ReadValue<bool>()!,
                 };
             }
         }
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal record struct WaitSomeTimeRequestPack(Guid RequestId, bool X) {
+    internal record struct WaitSomeTimeRequestPack(Guid RequestId, bool Dummy) {
         // Formatter
         internal sealed class Formatter : MemoryPackFormatter<WaitSomeTimeRequestPack> {
             public override void Serialize<TBufferWriter>(ref MemoryPackWriter<TBufferWriter> Writer, scoped ref WaitSomeTimeRequestPack Value) {
                 Writer.WriteValue(Value.@RequestId);
-                Writer.WriteValue(Value.@X);
+                Writer.WriteValue(Value.@Dummy);
             }
             public override void Deserialize(ref MemoryPackReader Reader, scoped ref WaitSomeTimeRequestPack Value) {
                 Value = new() {
                     @RequestId = Reader.ReadValue<Guid>()!,
-                    @X = Reader.ReadValue<bool>()!,
+                    @Dummy = Reader.ReadValue<bool>()!,
                 };
             }
         }

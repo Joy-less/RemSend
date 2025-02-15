@@ -55,8 +55,18 @@ public static class RemSendService {
             }
         }
         if (TargetNode is RemSend.Tests.MyNode) {
+            if (RemPacket.MethodName is nameof(RemSend.Tests.MyNode.GetMagicNumberAsync)) {
+                ((RemSend.Tests.MyNode)TargetNode).ReceiveGetMagicNumberAsync(SenderId, RemPacket);
+            }
+        }
+        if (TargetNode is RemSend.Tests.MyNode) {
             if (RemPacket.MethodName is nameof(RemSend.Tests.MyNode.WaitSomeTime)) {
                 ((RemSend.Tests.MyNode)TargetNode).ReceiveWaitSomeTime(SenderId, RemPacket);
+            }
+        }
+        if (TargetNode is RemSend.Tests.MyNode) {
+            if (RemPacket.MethodName is nameof(RemSend.Tests.MyNode.SillyExample)) {
+                ((RemSend.Tests.MyNode)TargetNode).ReceiveSillyExample(SenderId, RemPacket);
             }
         }
     }
@@ -67,9 +77,13 @@ public static class RemSendService {
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberSendPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberRequestPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberResultPack.Formatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberAsyncSendPack.Formatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberAsyncRequestPack.Formatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberAsyncResultPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.WaitSomeTimeSendPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.WaitSomeTimeRequestPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.WaitSomeTimeResultPack.Formatter());
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.SillyExampleSendPack.Formatter());
     }
 
     // Formatter for RemPacket because MemoryPack doesn't support .NET Standard 2.0
