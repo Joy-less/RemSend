@@ -35,8 +35,10 @@ public void SayWords(List<string> Words) {
     }
 }
 
+// Send SayWords to authority
+SendSayWords(1, ["cat", "dog"]);
 // Broadcast SayWords to all peers
-SendSayWords(0, ["cat", "dog"]);
+BroadcastSayWords(["cat", "dog"]);
 ```
 
 Requesting a result from a peer:
