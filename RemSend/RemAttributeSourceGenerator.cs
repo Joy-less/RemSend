@@ -362,6 +362,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string ReceiveMethodName = "Receive{0}";
         string RemModeToTransferModeEnumMethodName = "RemModeToTransferModeEnum";
         string VerifyAccessMethodName = "VerifyAccess";
+        string RegisterMemoryPackFormattersMethodName = "RegisterMemoryPackFormatters";
         // Parameter names
         string RootNodeParameterName = "Root";
         string SceneMultiplayerParameterName = "Multiplayer";
@@ -382,7 +383,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string FormatterTypeName = "Formatter";
 
         // MemoryPack formatters
-        List<string> StructTypesToRegisterFormatters = [
+        List<string> StructRegisterTypes = [
+            "Color",
             "Vector2",
             "Vector2I",
             "Vector3",
@@ -392,9 +394,15 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             "Rect2",
             "Rect2I",
             "Aabb",
-            "Color",
+            "Basis",
+            "Plane",
+            "Projection",
+            "Quaternion",
+            "Rid",
+            "Transform2D",
+            "Transform3D",
         ];
-        List<string> ClassTypesToRegisterFormatters = [
+        List<string> CustomRegisterTypes = [
             "StringName",
             "NodePath",
         ];
@@ -466,7 +474,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     RegisterMemoryPackFormatters();
                 }
 
-                private static void RegisterMemoryPackFormatters() {
+                private static void {{RegisterMemoryPackFormattersMethodName}}() {
                     // RemSend types
                     MemoryPackFormatterProvider.Register(new {{RemPacketFormatterTypeName}}());
 
@@ -481,12 +489,12 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             """)))}}
 
                     // Godot types
-            {{string.Join("\n", StructTypesToRegisterFormatters.Select(StructType => $$"""
+            {{string.Join("\n", StructRegisterTypes.Select(StructType => $$"""
                     MemoryPackFormatterProvider.Register(new UnmanagedFormatter<{{StructType}}>());
                     MemoryPackFormatterProvider.Register(new NullableFormatter<{{StructType}}>());
                     MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<{{StructType}}>());
             """))}}
-            {{string.Join("\n", ClassTypesToRegisterFormatters.Select(ClassType => $$"""
+            {{string.Join("\n", CustomRegisterTypes.Select(ClassType => $$"""
                     MemoryPackFormatterProvider.Register(new {{ClassType}}Formatter());
                     MemoryPackFormatterProvider.Register(new ArrayFormatter<{{ClassType}}>());
             """))}}

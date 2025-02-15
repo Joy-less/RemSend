@@ -93,6 +93,9 @@ public static class RemSendService {
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.SillyExampleSendPack.Formatter());
 
         // Godot types
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Color>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Color>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Color>());
         MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Vector2>());
         MemoryPackFormatterProvider.Register(new NullableFormatter<Vector2>());
         MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Vector2>());
@@ -120,9 +123,27 @@ public static class RemSendService {
         MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Aabb>());
         MemoryPackFormatterProvider.Register(new NullableFormatter<Aabb>());
         MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Aabb>());
-        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Color>());
-        MemoryPackFormatterProvider.Register(new NullableFormatter<Color>());
-        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Color>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Basis>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Basis>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Basis>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Plane>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Plane>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Plane>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Projection>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Projection>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Projection>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Quaternion>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Quaternion>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Quaternion>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Rid>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Rid>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Rid>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Transform2D>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Transform2D>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Transform2D>());
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Transform3D>());
+        MemoryPackFormatterProvider.Register(new NullableFormatter<Transform3D>());
+        MemoryPackFormatterProvider.Register(new UnmanagedArrayFormatter<Transform3D>());
         MemoryPackFormatterProvider.Register(new StringNameFormatter());
         MemoryPackFormatterProvider.Register(new ArrayFormatter<StringName>());
         MemoryPackFormatterProvider.Register(new NodePathFormatter());

@@ -9,10 +9,9 @@ namespace RemSend.Tests;
 
 public partial class Program {
     public static void Main() {
-        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Color>());
-        Console.WriteLine("[" + string.Join(", ", MemoryPackSerializer.Serialize(typeof(Color), new Color("ffffff", .5f))) + "]");
-        Console.WriteLine(MemoryPackSerializer.Deserialize(typeof(Color), MemoryPackSerializer.Serialize(typeof(Color), new Color("ffffff", .5f))));
-
+        MemoryPackFormatterProvider.Register(new UnmanagedFormatter<Rid>());
+        Console.WriteLine("[" + string.Join(", ", MemoryPackSerializer.Serialize(typeof(Rid), new Rid())) + "]");
+        Console.WriteLine(MemoryPackSerializer.Deserialize(typeof(Rid), MemoryPackSerializer.Serialize(typeof(Rid), new Rid())));
     }
 }
 
