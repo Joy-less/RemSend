@@ -13,11 +13,9 @@ namespace RemSend.Tests;
 
 partial class MyNode {
     /// <summary>
-    /// The <see cref="RemAttribute"/> defined on <see cref="GetMagicNumber(bool)"/>.
+    /// The <see cref="RemAttribute"/> defined on <see cref="GetMagicNumber(bool)"/>.<br/>
+    /// The properties of this attribute can be changed to reconfigure the remote method.
     /// </summary>
-    /// <remarks>
-    /// Todo: use the changed values of this attribute if it's changed.
-    /// </remarks>
     public RemAttribute GetMagicNumberRemAttribute { get; set; } = new() {
         Access = RemAccess.Any,
         CallLocal = false,

@@ -13,11 +13,9 @@ namespace RemSend.Tests;
 
 partial class MyNode {
     /// <summary>
-    /// The <see cref="RemAttribute"/> defined on <see cref="WaitSomeTime(bool, int)"/>.
+    /// The <see cref="RemAttribute"/> defined on <see cref="WaitSomeTime(bool, int)"/>.<br/>
+    /// The properties of this attribute can be changed to reconfigure the remote method.
     /// </summary>
-    /// <remarks>
-    /// Todo: use the changed values of this attribute if it's changed.
-    /// </remarks>
     public RemAttribute WaitSomeTimeRemAttribute { get; set; } = new() {
         Access = RemAccess.None,
         CallLocal = false,

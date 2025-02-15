@@ -92,11 +92,9 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         // Attribute
         Definitions.Add($$"""
             /// <summary>
-            /// The <see cref="{{nameof(RemAttribute)}}"/> defined on {{MethodSeeXml}}.
+            /// The <see cref="{{nameof(RemAttribute)}}"/> defined on {{MethodSeeXml}}.<br/>
+            /// The properties of this attribute can be changed to reconfigure the remote method.
             /// </summary>
-            /// <remarks>
-            /// Todo: use the changed values of this attribute if it's changed.
-            /// </remarks>
             {{AccessModifier}} {{nameof(RemAttribute)}} {{RemAttributePropertyName}} { get; set; } = new() {
                 {{nameof(RemAttribute.Access)}} = {{nameof(RemAccess)}}.{{RemAttribute.Access}},
                 {{nameof(RemAttribute.CallLocal)}} = {{(RemAttribute.CallLocal ? "true" : "false")}},
