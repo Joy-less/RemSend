@@ -91,17 +91,17 @@ partial class MyNode {
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal void ReceiveSillyExample(int SenderId, RemPacket RemPacket) {
+    internal void ReceiveSillyExample(int _SenderId, RemPacket RemPacket) {
         // Send
         if (RemPacket.Type is RemPacketType.Send) {
             // Verify access
-            RemSendService.VerifyAccess(SillyExampleRemAttribute.Access, SenderId, this.Multiplayer.GetUniqueId());
+            RemSendService.VerifyAccess(SillyExampleRemAttribute.Access, _SenderId, this.Multiplayer.GetUniqueId());
             
             // Deserialize arguments pack
             SillyExampleSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<SillyExampleSendPack>(RemPacket.ArgumentsPack);
             
             // Call target method
-            SillyExample(DeserializedArgumentsPack.@Arg, SenderId, DeserializedArgumentsPack.@Arg22);
+            SillyExample(DeserializedArgumentsPack.@Arg, _SenderId, DeserializedArgumentsPack.@Arg22);
         }
     }
     

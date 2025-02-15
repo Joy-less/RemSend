@@ -17,24 +17,24 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string RemModeToTransferModeEnumMethodName = "RemModeToTransferModeEnum";
         string VerifyAccessMethodName = "VerifyAccess";
         // Parameter names
-        string PeerIdParameterName = "PeerId";
-        string PeerIdsParameterName = "PeerIds";
-        string SenderIdParameterName = "SenderId";
-        string TimeoutParameterName = "Timeout";
-        string CallbackParameterName = "Callback";
+        string PeerIdParameterName = EscapeVariableName("PeerId", Input.Symbol);
+        string PeerIdsParameterName = EscapeVariableName("PeerIds", Input.Symbol);
+        string SenderIdParameterName = EscapeVariableName("SenderId", Input.Symbol);
+        string TimeoutParameterName = EscapeVariableName("Timeout", Input.Symbol);
+        string CallbackParameterName = EscapeVariableName("Callback", Input.Symbol);
         // Local names
-        string ArgumentsPackLocalName = EscapeLocalName("ArgumentsPack", Input.Symbol);
-        string SerializedArgumentsPackLocalName = EscapeLocalName("SerializedArgumentsPack", Input.Symbol);
-        string DeserializedArgumentsPackLocalName = EscapeLocalName("DeserializedArgumentsPack", Input.Symbol);
-        string PacketLocalName = EscapeLocalName("RemPacket", Input.Symbol);
-        string SerializedPacketLocalName = EscapeLocalName("SerializedRemPacket", Input.Symbol);
-        string ResultPacketLocalName = EscapeLocalName("ResultRemPacket", Input.Symbol);
-        string SerializedResultPacketLocalName = EscapeLocalName("SerializedResultRemPacket", Input.Symbol);
-        string RequestIdLocalName = EscapeLocalName("RequestId", Input.Symbol);
-        string ReturnValueLocalName = EscapeLocalName("ReturnValue", Input.Symbol);
-        string ResultAwaiterLocalName = EscapeLocalName("ResultAwaiter", Input.Symbol);
-        string ResultCallbackLocalName = EscapeLocalName("ResultCallback", Input.Symbol);
-        string ResultPackLocalName = EscapeLocalName("ResultPack", Input.Symbol);
+        string ArgumentsPackLocalName = EscapeVariableName("ArgumentsPack", Input.Symbol);
+        string SerializedArgumentsPackLocalName = EscapeVariableName("SerializedArgumentsPack", Input.Symbol);
+        string DeserializedArgumentsPackLocalName = EscapeVariableName("DeserializedArgumentsPack", Input.Symbol);
+        string PacketLocalName = EscapeVariableName("RemPacket", Input.Symbol);
+        string SerializedPacketLocalName = EscapeVariableName("SerializedRemPacket", Input.Symbol);
+        string ResultPacketLocalName = EscapeVariableName("ResultRemPacket", Input.Symbol);
+        string SerializedResultPacketLocalName = EscapeVariableName("SerializedResultRemPacket", Input.Symbol);
+        string RequestIdLocalName = EscapeVariableName("RequestId", Input.Symbol);
+        string ReturnValueLocalName = EscapeVariableName("ReturnValue", Input.Symbol);
+        string ResultAwaiterLocalName = EscapeVariableName("ResultAwaiter", Input.Symbol);
+        string ResultCallbackLocalName = EscapeVariableName("ResultCallback", Input.Symbol);
+        string ResultPackLocalName = EscapeVariableName("ResultPack", Input.Symbol);
         // Type names
         string RemSendServiceTypeName = "RemSendService";
         string SendArgumentsPackTypeName = $"{Input.Symbol.Name}SendPack";
@@ -583,13 +583,16 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             {{Indent}}}
             """;
     }
-    private static string EscapeLocalName(string LocalName, IMethodSymbol MethodSymbol) {
-        if (MethodSymbol.Parameters.Any(Parameter => Parameter.Name == LocalName)) {
-            return EscapeLocalName("_" + LocalName, MethodSymbol);
+    private static string EscapeVariableName(string VariableName, IMethodSymbol MethodSymbol) {
+        if (MethodSymbol.Name == VariableName) {
+            return EscapeVariableName("_" + VariableName, MethodSymbol);
         }
-        if (MethodSymbol.TypeParameters.Any(Parameter => Parameter.Name == LocalName)) {
-            return EscapeLocalName("_" + LocalName, MethodSymbol);
+        if (MethodSymbol.Parameters.Any(Parameter => Parameter.Name == VariableName)) {
+            return EscapeVariableName("_" + VariableName, MethodSymbol);
         }
-        return LocalName;
+        if (MethodSymbol.TypeParameters.Any(Parameter => Parameter.Name == VariableName)) {
+            return EscapeVariableName("_" + VariableName, MethodSymbol);
+        }
+        return VariableName;
     }
 }
