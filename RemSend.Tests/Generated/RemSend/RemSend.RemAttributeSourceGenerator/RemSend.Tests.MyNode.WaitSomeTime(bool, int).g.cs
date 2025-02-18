@@ -91,7 +91,7 @@ partial class MyNode {
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal event Action<WaitSomeTimeResultPack>? OnReceiveWaitSomeTimeResult;
+    internal event Action<int, WaitSomeTimeResultPack>? OnReceiveWaitSomeTimeResult;
     
     /// <summary>
     /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on the given peer and awaits the return value.<br/>
@@ -121,8 +121,8 @@ partial class MyNode {
     
         // Create result listener
         TaskCompletionSource ResultAwaiter = new();
-        void ResultCallback(WaitSomeTimeResultPack ResultPack) {
-            if (ResultPack.RequestId == RequestId) {
+        void ResultCallback(int SenderId, WaitSomeTimeResultPack ResultPack) {
+            if (SenderId == PeerId && ResultPack.RequestId == RequestId) {
                 ResultAwaiter.TrySetResult();
             }
         }
@@ -183,7 +183,7 @@ partial class MyNode {
             WaitSomeTimeResultPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeResultPack>(RemPacket.ArgumentsPack);
             
             // Invoke receive event
-            OnReceiveWaitSomeTimeResult?.Invoke(DeserializedArgumentsPack);
+            OnReceiveWaitSomeTimeResult?.Invoke(SenderId, DeserializedArgumentsPack);
         }
     }
     

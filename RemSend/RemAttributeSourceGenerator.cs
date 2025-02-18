@@ -184,7 +184,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             // On Receive Result
             Definitions.Add($$"""
                 [EditorBrowsable(EditorBrowsableState.Never)]
-                internal event Action<{{ResultArgumentsPackTypeName}}>? {{OnReceiveResultEventName}};
+                internal event Action<int, {{ResultArgumentsPackTypeName}}>? {{OnReceiveResultEventName}};
                 """);
             // Request
             Definitions.Add($$"""
@@ -216,8 +216,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
 
                     // Create result listener
                     TaskCompletionSource{{(ReturnsNonGenericTask ? "" : $"<{ReturnTypeAsValue}>")}} {{ResultAwaiterLocalName}} = new();
-                    void {{ResultCallbackLocalName}}({{ResultArgumentsPackTypeName}} {{ResultPackLocalName}}) {
-                        if ({{ResultPackLocalName}}.{{RequestIdPropertyName}} == {{RequestIdLocalName}}) {
+                    void {{ResultCallbackLocalName}}(int {{SenderIdParameterName}}, {{ResultArgumentsPackTypeName}} {{ResultPackLocalName}}) {
+                        if ({{SenderIdParameterName}} == {{PeerIdParameterName}} && {{ResultPackLocalName}}.{{RequestIdPropertyName}} == {{RequestIdLocalName}}) {
                             {{ResultAwaiterLocalName}}.TrySetResult({{(ReturnsNonGenericTask ? "" : $"{ResultPackLocalName}.{ReturnValuePropertyName}")}});
                         }
                     }
@@ -311,7 +311,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         {{ResultArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{ResultArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
                         
                         // Invoke receive event
-                        {{OnReceiveResultEventName}}?.Invoke({{DeserializedArgumentsPackLocalName}});
+                        {{OnReceiveResultEventName}}?.Invoke({{SenderIdParameterName}}, {{DeserializedArgumentsPackLocalName}});
                     }
                 }
                 """);

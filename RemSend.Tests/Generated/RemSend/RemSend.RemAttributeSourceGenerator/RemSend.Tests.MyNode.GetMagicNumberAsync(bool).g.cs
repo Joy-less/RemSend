@@ -91,7 +91,7 @@ partial class MyNode {
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal event Action<GetMagicNumberAsyncResultPack>? OnReceiveGetMagicNumberAsyncResult;
+    internal event Action<int, GetMagicNumberAsyncResultPack>? OnReceiveGetMagicNumberAsyncResult;
     
     /// <summary>
     /// Remotely calls <see cref="GetMagicNumberAsync(bool)"/> on the given peer and awaits the return value.<br/>
@@ -121,8 +121,8 @@ partial class MyNode {
     
         // Create result listener
         TaskCompletionSource<ushort> ResultAwaiter = new();
-        void ResultCallback(GetMagicNumberAsyncResultPack ResultPack) {
-            if (ResultPack.RequestId == RequestId) {
+        void ResultCallback(int SenderId, GetMagicNumberAsyncResultPack ResultPack) {
+            if (SenderId == PeerId && ResultPack.RequestId == RequestId) {
                 ResultAwaiter.TrySetResult(ResultPack.ReturnValue);
             }
         }
@@ -185,7 +185,7 @@ partial class MyNode {
             GetMagicNumberAsyncResultPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberAsyncResultPack>(RemPacket.ArgumentsPack);
             
             // Invoke receive event
-            OnReceiveGetMagicNumberAsyncResult?.Invoke(DeserializedArgumentsPack);
+            OnReceiveGetMagicNumberAsyncResult?.Invoke(SenderId, DeserializedArgumentsPack);
         }
     }
     
