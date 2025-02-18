@@ -83,6 +83,12 @@ public static class SymbolExtensions {
             return ((INamedTypeSymbol)Symbol.ReturnType).TypeArguments[0];
         }
     }
+    public static string AsIdentifier(this ISymbol? Symbol, char ReplacementChar = '_') {
+        if (Symbol is null) {
+            return ReplacementChar.ToString();
+        }
+        return Symbol.ToString().SanitizeIdentifier(ReplacementChar);
+    }
     public static string GetParameterDeclaration(this IParameterSymbol Parameter) {
         // Attributes
         string AttributesDeclaration = "";

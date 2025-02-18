@@ -476,18 +476,15 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     // Find target node
                     Node {{NodeLocalName}} = {{RootNodeParameterName}}.GetNode({{SceneMultiplayerParameterName}}.RootPath).GetNode({{PacketLocalName}}.{{nameof(RemPacket.NodePath)}});
                     // Find target receive method
-            {{string.Join("\n", Inputs.GroupBy(Input => Input.Symbol.ContainingType, SymbolEqualityComparer.Default).Select(TargetNode => {
-                string TargetNodeLocalName = TargetNode.Key!.ToString().Replace('.', '_');
-                return $$"""
-                    if ({{NodeLocalName}} is {{TargetNode.Key}} @{{TargetNodeLocalName}}) {
+            {{string.Join("\n", Inputs.GroupBy(Input => Input.Symbol.ContainingType, SymbolEqualityComparer.Default).Select(TargetNode => $$"""
+                    if ({{NodeLocalName}} is {{TargetNode.Key}} @{{TargetNode.Key.AsIdentifier()}}) {
             {{string.Join("\n", TargetNode.Select(Input => $$"""
                         if ({{PacketLocalName}}.{{nameof(RemPacket.MethodName)}} is "{{Input.Symbol.Name}}") {
-                            @{{TargetNodeLocalName}}.{{string.Format(ReceiveMethodName, Input.Symbol.Name)}}({{SenderIdParameterName}}, {{PacketLocalName}});
+                            @{{TargetNode.Key.AsIdentifier()}}.{{string.Format(ReceiveMethodName, Input.Symbol.Name)}}({{SenderIdParameterName}}, {{PacketLocalName}});
                         }
             """))}}
                     }
-            """;
-            }))}}
+            """))}}
                 }
 
                 static {{RemSendServiceTypeName}}() {
