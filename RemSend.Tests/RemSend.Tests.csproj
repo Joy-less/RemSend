@@ -6,9 +6,11 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="../RemSend/RemSend.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="GodotSharp" Version="4.4.0" />
   </ItemGroup>
