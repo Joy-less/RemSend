@@ -31,7 +31,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
     <PackageReference Include="PolySharp" Version="1.15.0" />
     <PackageReference Include="MemoryPack" Version="1.21.4" />
   </ItemGroup>

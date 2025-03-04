@@ -10,7 +10,7 @@
     <ProjectReference Include="../RemSend/RemSend.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="GodotSharp" Version="4.4.0-beta.3" />
+    <PackageReference Include="GodotSharp" Version="4.4.0" />
   </ItemGroup>
 
   <!-- Source generator debugging -->
