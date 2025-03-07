@@ -54,8 +54,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         List<IParameterSymbol> RemoteParameters = [.. Input.Symbol.Parameters.Except(PseudoParameters)];
 
         // Handle task return values
-        bool ReturnsTask = Input.Symbol.ReturnType.IsTask();
-        bool ReturnsNonGenericTask = Input.Symbol.ReturnType.IsNonGenericTask();
+        bool ReturnsTask = Input.Symbol.ReturnType.IsTaskType();
+        bool ReturnsNonGenericTask = Input.Symbol.ReturnType.IsNonGenericTaskType();
         INamedTypeSymbol ReturnTypeAsTask = Input.Symbol.GetReturnTypeAsTask(Input.Compilation);
         ITypeSymbol ReturnTypeAsValue = Input.Symbol.GetReturnTypeAsValue(Input.Compilation);
 

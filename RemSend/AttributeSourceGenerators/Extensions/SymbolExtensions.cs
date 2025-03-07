@@ -40,18 +40,19 @@ public static class SymbolExtensions {
     public static bool IsDerivedType<T>(this ITypeSymbol Symbol) {
         return Symbol.IsDerivedType(typeof(T));
     }
-    public static bool IsTask(this ITypeSymbol Symbol) {
-        return Symbol.IsDerivedType<Task>() || Symbol.IsDerivedType<ValueTask>();
+    public static bool IsTaskType(this ITypeSymbol Symbol) {
+        // Any type defining GetAwaiter() is considered a task-like type (https://github.com/dotnet/roslyn/blob/main/docs/features/task-types.md)
+        return Symbol.GetMembers().Any(Member => Member.Kind is SymbolKind.Method && Member.Name is nameof(Task.GetAwaiter));
     }
-    public static bool IsGenericTask(this ITypeSymbol Symbol) {
-        return Symbol.IsTask() && Symbol is INamedTypeSymbol { IsGenericType: true };
+    public static bool IsGenericTaskType(this ITypeSymbol Symbol) {
+        return Symbol.IsTaskType() && Symbol is INamedTypeSymbol { IsGenericType: true };
     }
-    public static bool IsNonGenericTask(this ITypeSymbol Symbol) {
-        return Symbol.IsTask() && Symbol is not INamedTypeSymbol { IsGenericType: true };
+    public static bool IsNonGenericTaskType(this ITypeSymbol Symbol) {
+        return Symbol.IsTaskType() && Symbol is not INamedTypeSymbol { IsGenericType: true };
     }
     public static INamedTypeSymbol GetReturnTypeAsTask(this IMethodSymbol Symbol, Compilation Compilation) {
         // Method returns task
-        if (Symbol.ReturnType.IsTask()) {
+        if (Symbol.ReturnType.IsTaskType()) {
             // Return task as-is
             return (INamedTypeSymbol)Symbol.ReturnType;
         }
@@ -68,12 +69,12 @@ public static class SymbolExtensions {
     }
     public static ITypeSymbol GetReturnTypeAsValue(this IMethodSymbol Symbol, Compilation Compilation) {
         // Method returns value
-        if (!Symbol.ReturnType.IsTask()) {
+        if (!Symbol.ReturnType.IsTaskType()) {
             // Return value as-is
             return Symbol.ReturnType;
         }
         // Method returns non-generic task
-        else if (Symbol.ReturnType.IsNonGenericTask()) {
+        else if (Symbol.ReturnType.IsNonGenericTaskType()) {
             // Return void
             return Compilation.GetSpecialType(SpecialType.System_Void);
         }
