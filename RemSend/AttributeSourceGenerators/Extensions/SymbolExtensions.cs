@@ -59,7 +59,7 @@ public static class SymbolExtensions {
         // Method returns void
         else if (Symbol.ReturnsVoid) {
             // Return non-generic task
-            return Compilation.GetTypeByMetadataName(typeof(Task<>).FullName)!;
+            return Compilation.GetTypeByMetadataName(typeof(Task).FullName)!;
         }
         // Method returns value
         else {
