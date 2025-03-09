@@ -56,7 +56,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         // Handle task return values
         bool ReturnsTask = Input.Symbol.ReturnType.IsTaskType();
         bool ReturnsNonGenericTask = Input.Symbol.ReturnType.IsNonGenericTaskType();
-        INamedTypeSymbol ReturnTypeAsTask = Input.Symbol.GetReturnTypeAsTask(Input.Compilation);
+        ITypeSymbol ReturnTypeAsTask = Input.Symbol.GetReturnTypeAsTask(Input.Compilation);
         ITypeSymbol ReturnTypeAsValue = Input.Symbol.GetReturnTypeAsValue(Input.Compilation);
 
         // Parameters

@@ -50,11 +50,11 @@ public static class SymbolExtensions {
     public static bool IsNonGenericTaskType(this ITypeSymbol Symbol) {
         return Symbol.IsTaskType() && Symbol is not INamedTypeSymbol { IsGenericType: true };
     }
-    public static INamedTypeSymbol GetReturnTypeAsTask(this IMethodSymbol Symbol, Compilation Compilation) {
+    public static ITypeSymbol GetReturnTypeAsTask(this IMethodSymbol Symbol, Compilation Compilation) {
         // Method returns task
         if (Symbol.ReturnType.IsTaskType()) {
             // Return task as-is
-            return (INamedTypeSymbol)Symbol.ReturnType;
+            return Symbol.ReturnType;
         }
         // Method returns void
         else if (Symbol.ReturnsVoid) {
