@@ -436,6 +436,9 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             namespace {{nameof(RemSend)}};
 
             public static class {{RemSendServiceTypeName}} {
+                /// <summary>
+                /// Connects a callback for packets received from <paramref name="{{SceneMultiplayerParameterName}}"/>.
+                /// </summary>
                 public static void {{SetupMethodName}}(SceneMultiplayer {{SceneMultiplayerParameterName}}, Node? {{RootNodeParameterName}} = null) {
                     // Default root node
                     {{RootNodeParameterName}} ??= ((SceneTree)Engine.GetMainLoop()).Root;
