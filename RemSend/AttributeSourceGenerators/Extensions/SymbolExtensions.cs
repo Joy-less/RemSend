@@ -148,7 +148,7 @@ public static class SymbolExtensions {
             Append(ContentLine + "\n");
         }
 
-        foreach (INamedTypeSymbol _ in ContainingTypes) {
+        foreach (INamedTypeSymbol ContainingType in ContainingTypes) {
             Depth--;
             Append("}");
             Append("\n");
