@@ -30,7 +30,7 @@ partial class MyNode {
     /// </summary>
     private void SendSillyExample(int PeerId, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
         // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(new SillyExampleSendPack(@Arg, @Arg22), this.GetPath(), nameof(MyNode.SillyExample), RemPacketType.Send);
+        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.SillyExample), new SillyExampleSendPack(@Arg, @Arg22));
         
         // Send packet to peer ID
         ((SceneMultiplayer)this.Multiplayer).SendBytes(
@@ -56,7 +56,7 @@ partial class MyNode {
         }
     
         // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(new SillyExampleSendPack(@Arg, @Arg22), this.GetPath(), nameof(MyNode.SillyExample), RemPacketType.Send);
+        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.SillyExample), new SillyExampleSendPack(@Arg, @Arg22));
         
         // Send packet to each peer ID
         foreach (int PeerId in PeerIds) {

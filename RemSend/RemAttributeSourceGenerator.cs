@@ -113,7 +113,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             /// </summary>
             {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodOneParameters)}}) {
                 // Create send packet
-                byte[] {{SerializedPacketLocalName}} = {{RemSendServiceTypeName}}.{{SerializePacketMethodName}}(new {{SendArgumentsPackTypeName}}({{string.Join(", ", SendArgumentsPackArguments)}}), this.GetPath(), nameof({{QualifiedMethodName}}), {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}});
+                byte[] {{SerializedPacketLocalName}} = {{RemSendServiceTypeName}}.{{SerializePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{SendArgumentsPackTypeName}}({{string.Join(", ", SendArgumentsPackArguments)}}));
                 
                 // Send packet to peer ID
                 ((SceneMultiplayer)this.Multiplayer).SendBytes(
@@ -141,7 +141,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 }
 
                 // Create send packet
-                byte[] {{SerializedPacketLocalName}} = {{RemSendServiceTypeName}}.{{SerializePacketMethodName}}(new {{SendArgumentsPackTypeName}}({{string.Join(", ", SendArgumentsPackArguments)}}), this.GetPath(), nameof({{QualifiedMethodName}}), {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}});
+                byte[] {{SerializedPacketLocalName}} = {{RemSendServiceTypeName}}.{{SerializePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{SendArgumentsPackTypeName}}({{string.Join(", ", SendArgumentsPackArguments)}}));
                 
                 // Send packet to each peer ID
                 foreach (int {{PeerIdParameterName}} in {{PeerIdsParameterName}}) {
@@ -181,7 +181,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     Guid {{RequestIdLocalName}} = Guid.NewGuid();
 
                     // Create request packet
-                    byte[] {{SerializedPacketLocalName}} = {{RemSendServiceTypeName}}.{{SerializePacketMethodName}}(new {{RequestArgumentsPackTypeName}}({{string.Join(", ", RequestArgumentsPackArguments)}}), this.GetPath(), nameof({{QualifiedMethodName}}), {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Request)}});
+                    byte[] {{SerializedPacketLocalName}} = {{RemSendServiceTypeName}}.{{SerializePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Request)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{RequestArgumentsPackTypeName}}({{string.Join(", ", RequestArgumentsPackArguments)}}));
                     
                     // Send packet to peer ID
                     ((SceneMultiplayer)this.Multiplayer).SendBytes(
@@ -265,7 +265,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         {{(ReturnsNonGenericTask ? "" : $"{ReturnTypeAsValue} {ReturnValueLocalName} = ")}}{{(ReturnsTask ? "await " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
 
                         // Serialize result packet
-                        byte[] {{SerializedPacketLocalName}} = {{RemSendServiceTypeName}}.{{SerializePacketMethodName}}(new {{ResultArgumentsPackTypeName}}({{DeserializedArgumentsPackLocalName}}.{{RequestIdPropertyName}}{{(ReturnsNonGenericTask ? "" : $", {ReturnValueLocalName}")}}), this.GetPath(), nameof({{QualifiedMethodName}}), {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Result)}});
+                        byte[] {{SerializedPacketLocalName}} = {{RemSendServiceTypeName}}.{{SerializePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Result)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{ResultArgumentsPackTypeName}}({{DeserializedArgumentsPackLocalName}}.{{RequestIdPropertyName}}{{(ReturnsNonGenericTask ? "" : $", {ReturnValueLocalName}")}}));
                         
                         // Send result packet back to sender ID
                         ((SceneMultiplayer)this.Multiplayer).SendBytes(
@@ -424,7 +424,10 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         {{ReceivePacketMethodName}}({{SceneMultiplayerParameterName}}, {{RootNodeParameterName}}, (int){{SenderIdParameterName}}, {{PacketBytesParameterName}});
                     };
                 }
-
+                
+                /// <summary>
+                /// Converts from <see cref="{{nameof(RemMode)}}"/> to <see cref="MultiplayerPeer"/>.
+                /// </summary>
                 [EditorBrowsable(EditorBrowsableState.Never)]
                 internal static MultiplayerPeer.TransferModeEnum {{RemModeToTransferModeEnumMethodName}}({{nameof(RemMode)}} Mode) {
                     return Mode switch {
@@ -435,6 +438,9 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     };
                 }
                 
+                /// <summary>
+                /// Throws if the call is unauthorized.
+                /// </summary>
                 [EditorBrowsable(EditorBrowsableState.Never)]
                 internal static void {{VerifyAccessMethodName}}({{nameof(RemAccess)}} {{AccessParameterName}}, int {{SenderIdParameterName}}, int {{LocalIdParameterName}}) {
                     bool {{IsAuthorizedLocalName}} = {{AccessParameterName}} switch {
@@ -448,9 +454,12 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         throw new {{nameof(MethodAccessException)}}("Remote method call not authorized");
                     }
                 }
-
+                
+                /// <summary>
+                /// Creates a serialized packet for the given remote method call.
+                /// </summary>
                 [EditorBrowsable(EditorBrowsableState.Never)]
-                internal static byte[] {{SerializePacketMethodName}}<T>(T {{ArgumentsPackLocalName}}, string {{NodePathParameterName}}, string {{MethodNameParameterName}}, {{nameof(RemPacketType)}} {{PacketTypeParameterName}}) {
+                internal static byte[] {{SerializePacketMethodName}}<T>(in {{nameof(RemPacketType)}} {{PacketTypeParameterName}}, string {{NodePathParameterName}}, string {{MethodNameParameterName}}, T {{ArgumentsPackLocalName}}) {
                     // Serialize arguments pack
                     byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
                     

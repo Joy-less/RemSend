@@ -30,7 +30,7 @@ partial class MyNode {
     /// </summary>
     public void SendGetMagicNumber(int PeerId, bool Dummy) {
         // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(new GetMagicNumberSendPack(@Dummy), this.GetPath(), nameof(MyNode.GetMagicNumber), RemPacketType.Send);
+        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberSendPack(@Dummy));
         
         // Send packet to peer ID
         ((SceneMultiplayer)this.Multiplayer).SendBytes(
@@ -56,7 +56,7 @@ partial class MyNode {
         }
     
         // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(new GetMagicNumberSendPack(@Dummy), this.GetPath(), nameof(MyNode.GetMagicNumber), RemPacketType.Send);
+        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberSendPack(@Dummy));
         
         // Send packet to each peer ID
         foreach (int PeerId in PeerIds) {
@@ -88,7 +88,7 @@ partial class MyNode {
         Guid RequestId = Guid.NewGuid();
     
         // Create request packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(new GetMagicNumberRequestPack(RequestId, @Dummy), this.GetPath(), nameof(MyNode.GetMagicNumber), RemPacketType.Request);
+        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Request, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberRequestPack(RequestId, @Dummy));
         
         // Send packet to peer ID
         ((SceneMultiplayer)this.Multiplayer).SendBytes(
@@ -141,7 +141,7 @@ partial class MyNode {
             ushort ReturnValue = GetMagicNumber(DeserializedArgumentsPack.@Dummy);
     
             // Serialize result packet
-            byte[] SerializedRemPacket = RemSendService.SerializePacket(new GetMagicNumberResultPack(DeserializedArgumentsPack.RequestId, ReturnValue), this.GetPath(), nameof(MyNode.GetMagicNumber), RemPacketType.Result);
+            byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Result, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberResultPack(DeserializedArgumentsPack.RequestId, ReturnValue));
             
             // Send result packet back to sender ID
             ((SceneMultiplayer)this.Multiplayer).SendBytes(

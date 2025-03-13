@@ -21,7 +21,10 @@ public static class RemSendService {
             ReceivePacket(Multiplayer, Root, (int)SenderId, PacketBytes);
         };
     }
-
+    
+    /// <summary>
+    /// Converts from <see cref="RemMode"/> to <see cref="MultiplayerPeer"/>.
+    /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal static MultiplayerPeer.TransferModeEnum RemModeToTransferModeEnum(RemMode Mode) {
         return Mode switch {
@@ -32,6 +35,9 @@ public static class RemSendService {
         };
     }
     
+    /// <summary>
+    /// Throws if the call is unauthorized.
+    /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal static void VerifyAccess(RemAccess Access, int SenderId, int LocalId) {
         bool IsAuthorized = Access switch {
@@ -45,9 +51,12 @@ public static class RemSendService {
             throw new MethodAccessException("Remote method call not authorized");
         }
     }
-
+    
+    /// <summary>
+    /// Creates a serialized packet for the given remote method call.
+    /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal static byte[] SerializePacket<T>(T ArgumentsPack, string NodePath, string MethodName, RemPacketType PacketType) {
+    internal static byte[] SerializePacket<T>(in RemPacketType PacketType, string NodePath, string MethodName, T ArgumentsPack) {
         // Serialize arguments pack
         byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
         

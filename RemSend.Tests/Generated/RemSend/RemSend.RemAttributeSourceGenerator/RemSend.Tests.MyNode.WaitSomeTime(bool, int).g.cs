@@ -30,7 +30,7 @@ partial class MyNode {
     /// </summary>
     public void SendWaitSomeTime(int PeerId, bool Dummy) {
         // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(new WaitSomeTimeSendPack(@Dummy), this.GetPath(), nameof(MyNode.WaitSomeTime), RemPacketType.Send);
+        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeSendPack(@Dummy));
         
         // Send packet to peer ID
         ((SceneMultiplayer)this.Multiplayer).SendBytes(
@@ -56,7 +56,7 @@ partial class MyNode {
         }
     
         // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(new WaitSomeTimeSendPack(@Dummy), this.GetPath(), nameof(MyNode.WaitSomeTime), RemPacketType.Send);
+        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeSendPack(@Dummy));
         
         // Send packet to each peer ID
         foreach (int PeerId in PeerIds) {
@@ -88,7 +88,7 @@ partial class MyNode {
         Guid RequestId = Guid.NewGuid();
     
         // Create request packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(new WaitSomeTimeRequestPack(RequestId, @Dummy), this.GetPath(), nameof(MyNode.WaitSomeTime), RemPacketType.Request);
+        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Request, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeRequestPack(RequestId, @Dummy));
         
         // Send packet to peer ID
         ((SceneMultiplayer)this.Multiplayer).SendBytes(
@@ -139,7 +139,7 @@ partial class MyNode {
             await WaitSomeTime(DeserializedArgumentsPack.@Dummy, SenderId);
     
             // Serialize result packet
-            byte[] SerializedRemPacket = RemSendService.SerializePacket(new WaitSomeTimeResultPack(DeserializedArgumentsPack.RequestId), this.GetPath(), nameof(MyNode.WaitSomeTime), RemPacketType.Result);
+            byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Result, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeResultPack(DeserializedArgumentsPack.RequestId));
             
             // Send result packet back to sender ID
             ((SceneMultiplayer)this.Multiplayer).SendBytes(
