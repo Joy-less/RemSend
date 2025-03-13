@@ -31,7 +31,7 @@ public static class RemSendService {
             _ => throw new NotImplementedException()
         };
     }
-
+    
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal static void VerifyAccess(RemAccess Access, int SenderId, int LocalId) {
         bool IsAuthorized = Access switch {
@@ -44,6 +44,18 @@ public static class RemSendService {
         if (!IsAuthorized) {
             throw new MethodAccessException("Remote method call not authorized");
         }
+    }
+
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal static byte[] SerializePacket<T>(T ArgumentsPack, string NodePath, string MethodName, RemPacketType PacketType) {
+        // Serialize arguments pack
+        byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
+        
+        // Create packet
+        RemPacket RemPacket = new(PacketType, NodePath, MethodName, SerializedArgumentsPack);
+        // Serialize packet
+        byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
+        return SerializedRemPacket;
     }
 
     private static void ReceivePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> PacketBytes) {

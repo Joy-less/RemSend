@@ -29,15 +29,8 @@ partial class MyNode {
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
     private void SendSillyExample(int PeerId, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
-        // Create arguments pack
-        SillyExampleSendPack ArgumentsPack = new(@Arg, @Arg22);
-        // Serialize arguments pack
-        byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
-        
-        // Create packet
-        RemPacket RemPacket = new(RemPacketType.Send, this.GetPath(), nameof(RemSend.Tests.MyNode.SillyExample), SerializedArgumentsPack);
-        // Serialize packet
-        byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
+        // Create send packet
+        byte[] SerializedRemPacket = RemSendService.SerializePacket(new SillyExampleSendPack(@Arg, @Arg22), this.GetPath(), nameof(MyNode.SillyExample), RemPacketType.Send);
         
         // Send packet to peer ID
         ((SceneMultiplayer)this.Multiplayer).SendBytes(
@@ -61,16 +54,9 @@ partial class MyNode {
         if (PeerIds is null || !PeerIds.Any()) {
             return;
         }
-        
-        // Create arguments pack
-        SillyExampleSendPack ArgumentsPack = new(@Arg, @Arg22);
-        // Serialize arguments pack
-        byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
-        
-        // Create packet
-        RemPacket RemPacket = new(RemPacketType.Send, this.GetPath(), nameof(RemSend.Tests.MyNode.SillyExample), SerializedArgumentsPack);
-        // Serialize packet
-        byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
+    
+        // Create send packet
+        byte[] SerializedRemPacket = RemSendService.SerializePacket(new SillyExampleSendPack(@Arg, @Arg22), this.GetPath(), nameof(MyNode.SillyExample), RemPacketType.Send);
         
         // Send packet to each peer ID
         foreach (int PeerId in PeerIds) {
