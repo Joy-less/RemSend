@@ -14,7 +14,6 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string BroadcastMethodName = $"Broadcast{Input.Symbol.Name}";
         string RequestMethodName = $"Request{Input.Symbol.Name}";
         string ReceiveMethodName = $"Receive{Input.Symbol.Name}";
-        string RemModeToTransferModeEnumMethodName = "RemModeToTransferModeEnum";
         string VerifyAccessMethodName = "VerifyAccess";
         string SerializePacketMethodName = "SerializePacket";
         string SendPacketMethodName = "SendPacket";
