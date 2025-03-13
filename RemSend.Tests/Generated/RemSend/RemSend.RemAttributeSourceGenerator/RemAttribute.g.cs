@@ -53,7 +53,7 @@ public static class RemSendService {
     }
     
     /// <summary>
-    /// Creates a serialized packet for the given remote method call.
+    /// Creates a serialized packet for a remote method call.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal static byte[] SerializePacket<T>(in RemPacketType PacketType, string NodePath, string MethodName, T ArgumentsPack) {
@@ -65,6 +65,19 @@ public static class RemSendService {
         // Serialize packet
         byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
         return SerializedRemPacket;
+    }
+
+    /// <summary>
+    /// Sends a serialized packet to a peer.
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal static void SendPacket(int PeerId, Node Node, RemAttribute Attribute, byte[] SerializedPacket) {
+        ((SceneMultiplayer)Node.Multiplayer).SendBytes(
+            bytes: SerializedPacket,
+            id: PeerId,
+            mode: RemModeToTransferModeEnum(Attribute.Mode),
+            channel: Attribute.Channel
+        );
     }
 
     private static void ReceivePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> PacketBytes) {

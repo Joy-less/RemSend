@@ -32,13 +32,8 @@ partial class MyNode {
         // Create send packet
         byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.GetMagicNumberAsync), new GetMagicNumberAsyncSendPack(@Dummy));
         
-        // Send packet to peer ID
-        ((SceneMultiplayer)this.Multiplayer).SendBytes(
-            bytes: SerializedRemPacket,
-            id: PeerId,
-            mode: RemSendService.RemModeToTransferModeEnum(GetMagicNumberAsyncRemAttribute.Mode),
-            channel: GetMagicNumberAsyncRemAttribute.Channel
-        );
+        // Send packet to peer
+        RemSendService.SendPacket(PeerId, this, GetMagicNumberAsyncRemAttribute, SerializedRemPacket);
     
         // Also call target method locally
         if (PeerId is 0 && GetMagicNumberAsyncRemAttribute.CallLocal) {
@@ -58,14 +53,9 @@ partial class MyNode {
         // Create send packet
         byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.GetMagicNumberAsync), new GetMagicNumberAsyncSendPack(@Dummy));
         
-        // Send packet to each peer ID
+        // Send packet to each peer
         foreach (int PeerId in PeerIds) {
-            ((SceneMultiplayer)this.Multiplayer).SendBytes(
-                bytes: SerializedRemPacket,
-                id: PeerId,
-                mode: RemSendService.RemModeToTransferModeEnum(GetMagicNumberAsyncRemAttribute.Mode),
-                channel: GetMagicNumberAsyncRemAttribute.Channel
-            );
+            RemSendService.SendPacket(PeerId, this, GetMagicNumberAsyncRemAttribute, SerializedRemPacket);
         }
     }
     
@@ -90,13 +80,8 @@ partial class MyNode {
         // Create request packet
         byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Request, this.GetPath(), nameof(MyNode.GetMagicNumberAsync), new GetMagicNumberAsyncRequestPack(RequestId, @Dummy));
         
-        // Send packet to peer ID
-        ((SceneMultiplayer)this.Multiplayer).SendBytes(
-            bytes: SerializedRemPacket,
-            id: PeerId,
-            mode: RemSendService.RemModeToTransferModeEnum(GetMagicNumberAsyncRemAttribute.Mode),
-            channel: GetMagicNumberAsyncRemAttribute.Channel
-        );
+        // Send packet to peer
+        RemSendService.SendPacket(PeerId, this, GetMagicNumberAsyncRemAttribute, SerializedRemPacket);
     
         // Create result listener
         TaskCompletionSource<ushort> ResultAwaiter = new();
@@ -143,13 +128,8 @@ partial class MyNode {
             // Serialize result packet
             byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Result, this.GetPath(), nameof(MyNode.GetMagicNumberAsync), new GetMagicNumberAsyncResultPack(DeserializedArgumentsPack.RequestId, ReturnValue));
             
-            // Send result packet back to sender ID
-            ((SceneMultiplayer)this.Multiplayer).SendBytes(
-                bytes: SerializedRemPacket,
-                id: SenderId,
-                mode: RemSendService.RemModeToTransferModeEnum(GetMagicNumberAsyncRemAttribute.Mode),
-                channel: GetMagicNumberAsyncRemAttribute.Channel
-            );
+            // Send result packet back to sender
+            RemSendService.SendPacket(SenderId, this, GetMagicNumberAsyncRemAttribute, SerializedRemPacket);
         }
         // Result
         else if (RemPacket.Type is RemPacketType.Result) {

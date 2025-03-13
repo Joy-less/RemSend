@@ -32,13 +32,8 @@ partial class MyNode {
         // Create send packet
         byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.SillyExample), new SillyExampleSendPack(@Arg, @Arg22));
         
-        // Send packet to peer ID
-        ((SceneMultiplayer)this.Multiplayer).SendBytes(
-            bytes: SerializedRemPacket,
-            id: PeerId,
-            mode: RemSendService.RemModeToTransferModeEnum(SillyExampleRemAttribute.Mode),
-            channel: SillyExampleRemAttribute.Channel
-        );
+        // Send packet to peer
+        RemSendService.SendPacket(PeerId, this, SillyExampleRemAttribute, SerializedRemPacket);
     
         // Also call target method locally
         if (PeerId is 0 && SillyExampleRemAttribute.CallLocal) {
@@ -58,14 +53,9 @@ partial class MyNode {
         // Create send packet
         byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.SillyExample), new SillyExampleSendPack(@Arg, @Arg22));
         
-        // Send packet to each peer ID
+        // Send packet to each peer
         foreach (int PeerId in PeerIds) {
-            ((SceneMultiplayer)this.Multiplayer).SendBytes(
-                bytes: SerializedRemPacket,
-                id: PeerId,
-                mode: RemSendService.RemModeToTransferModeEnum(SillyExampleRemAttribute.Mode),
-                channel: SillyExampleRemAttribute.Channel
-            );
+            RemSendService.SendPacket(PeerId, this, SillyExampleRemAttribute, SerializedRemPacket);
         }
     }
     
