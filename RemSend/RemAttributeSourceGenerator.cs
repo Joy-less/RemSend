@@ -398,6 +398,9 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
 
             namespace {{nameof(RemSend)}};
 
+            /// <summary>
+            /// Contains global methods for {{nameof(RemSend)}}.
+            /// </summary>
             public static class {{RemSendServiceTypeName}} {
                 /// <summary>
                 /// Connects a callback for packets received from <paramref name="{{SceneMultiplayerParameterName}}"/>.
@@ -455,7 +458,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     byte[] {{SerializedPacketLocalName}} = MemoryPackSerializer.Serialize({{PacketLocalName}});
                     return {{SerializedPacketLocalName}};
                 }
-            
+                
                 /// <summary>
                 /// Sends a serialized packet to a peer.
                 /// </summary>
@@ -468,7 +471,10 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         channel: {{AttributeParameterName}}.{{nameof(RemAttribute.Channel)}}
                     );
                 }
-
+                
+                /// <summary>
+                /// Finds and calls the target method for the received packet.
+                /// </summary>
                 private static void {{ReceivePacketMethodName}}(SceneMultiplayer {{SceneMultiplayerParameterName}}, Node {{RootNodeParameterName}}, int {{SenderIdParameterName}}, ReadOnlySpan<byte> {{PacketBytesParameterName}}) {
                     // Deserialize packet
                     {{nameof(RemPacket)}} {{PacketLocalName}} = MemoryPackSerializer.Deserialize<{{nameof(RemPacket)}}>({{PacketBytesParameterName}});
@@ -486,11 +492,17 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     }
             """))}}
                 }
-
+                
+                /// <summary>
+                /// Initializes {{RemSendServiceTypeName}}.
+                /// </summary>
                 static {{RemSendServiceTypeName}}() {
                     RegisterMemoryPackFormatters();
                 }
 
+                /// <summary>
+                /// Registers MemoryPack formatters for the types used in {{nameof(RemSend)}}.
+                /// </summary>
                 private static void {{RegisterMemoryPackFormattersMethodName}}() {
                     // RemSend types
                     MemoryPackFormatterProvider.Register(new {{RemPacketFormatterTypeName}}());

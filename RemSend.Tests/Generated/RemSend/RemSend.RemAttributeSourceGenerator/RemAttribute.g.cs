@@ -9,6 +9,9 @@ using MemoryPack.Formatters;
 
 namespace RemSend;
 
+/// <summary>
+/// Contains global methods for RemSend.
+/// </summary>
 public static class RemSendService {
     /// <summary>
     /// Connects a callback for packets received from <paramref name="Multiplayer"/>.
@@ -66,7 +69,7 @@ public static class RemSendService {
         byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
         return SerializedRemPacket;
     }
-
+    
     /// <summary>
     /// Sends a serialized packet to a peer.
     /// </summary>
@@ -79,7 +82,10 @@ public static class RemSendService {
             channel: Attribute.Channel
         );
     }
-
+    
+    /// <summary>
+    /// Finds and calls the target method for the received packet.
+    /// </summary>
     private static void ReceivePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> PacketBytes) {
         // Deserialize packet
         RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(PacketBytes);
@@ -102,11 +108,17 @@ public static class RemSendService {
             }
         }
     }
-
+    
+    /// <summary>
+    /// Initializes RemSendService.
+    /// </summary>
     static RemSendService() {
         RegisterMemoryPackFormatters();
     }
 
+    /// <summary>
+    /// Registers MemoryPack formatters for the types used in RemSend.
+    /// </summary>
     private static void RegisterMemoryPackFormatters() {
         // RemSend types
         MemoryPackFormatterProvider.Register(new RemPacketFormatter());
