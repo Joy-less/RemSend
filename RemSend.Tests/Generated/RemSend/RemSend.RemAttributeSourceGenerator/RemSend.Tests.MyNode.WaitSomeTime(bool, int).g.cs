@@ -56,6 +56,11 @@ partial class MyNode {
         // Send packet to each peer
         foreach (int PeerId in PeerIds) {
             RemSendService.SendPacket(PeerId, this, WaitSomeTimeRemAttribute, SerializedRemPacket);
+    
+            // Also call target method locally
+            if (PeerId is 0 && WaitSomeTimeRemAttribute.CallLocal) {
+                _ = WaitSomeTime(@Dummy, 0);
+            }
         }
     }
     

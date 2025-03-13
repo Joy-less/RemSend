@@ -142,6 +142,11 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 // Send packet to each peer
                 foreach (int {{PeerIdParameterName}} in {{PeerIdsParameterName}}) {
                     {{RemSendServiceTypeName}}.{{SendPacketMethodName}}({{PeerIdParameterName}}, this, {{RemAttributePropertyName}}, {{SerializedPacketLocalName}});
+
+                    // Also call target method locally
+                    if ({{PeerIdParameterName}} is 0 && {{RemAttributePropertyName}}.{{nameof(RemAttribute.CallLocal)}}) {
+                        {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
+                    }
                 }
             }
             """);
