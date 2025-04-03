@@ -25,20 +25,27 @@ partial class MyNode {
     
     /// <summary>
     /// Remotely calls <see cref="GetMagicNumberAsync(bool)"/> on the given peer.<br/>
-    /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
+    /// Set <paramref name="PeerId"/> to 0 to broadcast to all eligible peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
     public void SendGetMagicNumberAsync(int PeerId, bool Dummy) {
         // Create send packet
         byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.GetMagicNumberAsync), new GetMagicNumberAsyncSendPack(@Dummy));
-        
-        // Send packet to peer
-        RemSendService.SendPacket(PeerId, this, GetMagicNumberAsyncRemAttribute, SerializedRemPacket);
     
-        // Also call target method locally
-        if (PeerId is 0 && GetMagicNumberAsyncRemAttribute.CallLocal) {
+        // Send packet to local peer
+        if (PeerId is 0) {
             _ = GetMagicNumberAsync(@Dummy);
         }
+        else if (PeerId == this.Multiplayer.GetUniqueId()) {
+            if (!GetMagicNumberAsyncRemAttribute.CallLocal) {
+                throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
+            }
+            _ = GetMagicNumberAsync(@Dummy);
+            return;
+        }
+        
+        // Send packet to remote peer
+        RemSendService.SendPacket(PeerId, this, GetMagicNumberAsyncRemAttribute, SerializedRemPacket);
     }
     
     /// <summary>
@@ -55,17 +62,25 @@ partial class MyNode {
         
         // Send packet to each peer
         foreach (int PeerId in PeerIds) {
-            RemSendService.SendPacket(PeerId, this, GetMagicNumberAsyncRemAttribute, SerializedRemPacket);
-    
-            // Also call target method locally
-            if (PeerId is 0 && GetMagicNumberAsyncRemAttribute.CallLocal) {
+            // Send packet to local peer
+            if (PeerId is 0) {
                 _ = GetMagicNumberAsync(@Dummy);
             }
+            else if (PeerId == this.Multiplayer.GetUniqueId()) {
+                if (!GetMagicNumberAsyncRemAttribute.CallLocal) {
+                    throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
+                }
+                _ = GetMagicNumberAsync(@Dummy);
+                return;
+            }
+        
+            // Send packet to remote peer
+            RemSendService.SendPacket(PeerId, this, GetMagicNumberAsyncRemAttribute, SerializedRemPacket);
         }
     }
     
     /// <summary>
-    /// Remotely calls <see cref="GetMagicNumberAsync(bool)"/> on all peers.
+    /// Remotely calls <see cref="GetMagicNumberAsync(bool)"/> on all eligible peers.
     /// </summary>
     public void BroadcastGetMagicNumberAsync(bool Dummy) {
         SendGetMagicNumberAsync(0, @Dummy);

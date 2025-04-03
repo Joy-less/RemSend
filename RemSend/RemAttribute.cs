@@ -12,7 +12,7 @@ public class RemAttribute(RemAccess Access = RemAccess.None, bool CallLocal = fa
     /// </summary>
     public RemAccess Access { get; set; } = Access;
     /// <summary>
-    /// If <see langword="true"/>, the remote method is called on the local peer when calling on all peers.<br/>
+    /// If <see langword="true"/>, the remote method is eligible to be called on the local peer.<br/>
     /// Default: <see langword="false"/>
     /// </summary>
     public bool CallLocal { get; set; } = CallLocal;

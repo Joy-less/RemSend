@@ -25,20 +25,27 @@ partial class MyNode {
     
     /// <summary>
     /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on the given peer.<br/>
-    /// Set <paramref name="PeerId"/> to 0 to broadcast to all peers.<br/>
+    /// Set <paramref name="PeerId"/> to 0 to broadcast to all eligible peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
     public void SendWaitSomeTime(int PeerId, bool Dummy) {
         // Create send packet
         byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeSendPack(@Dummy));
-        
-        // Send packet to peer
-        RemSendService.SendPacket(PeerId, this, WaitSomeTimeRemAttribute, SerializedRemPacket);
     
-        // Also call target method locally
-        if (PeerId is 0 && WaitSomeTimeRemAttribute.CallLocal) {
+        // Send packet to local peer
+        if (PeerId is 0) {
             _ = WaitSomeTime(@Dummy, 0);
         }
+        else if (PeerId == this.Multiplayer.GetUniqueId()) {
+            if (!WaitSomeTimeRemAttribute.CallLocal) {
+                throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
+            }
+            _ = WaitSomeTime(@Dummy, 0);
+            return;
+        }
+        
+        // Send packet to remote peer
+        RemSendService.SendPacket(PeerId, this, WaitSomeTimeRemAttribute, SerializedRemPacket);
     }
     
     /// <summary>
@@ -55,17 +62,25 @@ partial class MyNode {
         
         // Send packet to each peer
         foreach (int PeerId in PeerIds) {
-            RemSendService.SendPacket(PeerId, this, WaitSomeTimeRemAttribute, SerializedRemPacket);
-    
-            // Also call target method locally
-            if (PeerId is 0 && WaitSomeTimeRemAttribute.CallLocal) {
+            // Send packet to local peer
+            if (PeerId is 0) {
                 _ = WaitSomeTime(@Dummy, 0);
             }
+            else if (PeerId == this.Multiplayer.GetUniqueId()) {
+                if (!WaitSomeTimeRemAttribute.CallLocal) {
+                    throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
+                }
+                _ = WaitSomeTime(@Dummy, 0);
+                return;
+            }
+        
+            // Send packet to remote peer
+            RemSendService.SendPacket(PeerId, this, WaitSomeTimeRemAttribute, SerializedRemPacket);
         }
     }
     
     /// <summary>
-    /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on all peers.
+    /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on all eligible peers.
     /// </summary>
     public void BroadcastWaitSomeTime(bool Dummy) {
         SendWaitSomeTime(0, @Dummy);

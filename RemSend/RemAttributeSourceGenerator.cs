@@ -108,20 +108,27 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         Definitions.Add($$"""
             /// <summary>
             /// Remotely calls {{MethodSeeXml}} on the given peer.<br/>
-            /// Set <paramref name="{{PeerIdParameterName}}"/> to 0 to broadcast to all peers.<br/>
+            /// Set <paramref name="{{PeerIdParameterName}}"/> to 0 to broadcast to all eligible peers.<br/>
             /// Set <paramref name="{{PeerIdParameterName}}"/> to 1 to send to the authority.
             /// </summary>
             {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodOneParameters)}}) {
                 // Create send packet
                 byte[] {{SerializedPacketLocalName}} = {{RemSendServiceTypeName}}.{{SerializePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{SendArgumentsPackTypeName}}({{string.Join(", ", SendArgumentsPackArguments)}}));
-                
-                // Send packet to peer
-                {{RemSendServiceTypeName}}.{{SendPacketMethodName}}({{PeerIdParameterName}}, this, {{RemAttributePropertyName}}, {{SerializedPacketLocalName}});
 
-                // Also call target method locally
-                if ({{PeerIdParameterName}} is 0 && {{RemAttributePropertyName}}.{{nameof(RemAttribute.CallLocal)}}) {
+                // Send packet to local peer
+                if ({{PeerIdParameterName}} is 0) {
                     {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
                 }
+                else if ({{PeerIdParameterName}} == this.Multiplayer.GetUniqueId()) {
+                    if (!{{RemAttributePropertyName}}.{{nameof(RemAttribute.CallLocal)}}) {
+                        throw new {{nameof(ArgumentException)}}("Not authorized to call on the local peer", nameof({{PeerIdParameterName}}));
+                    }
+                    {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
+                    return;
+                }
+                
+                // Send packet to remote peer
+                {{RemSendServiceTypeName}}.{{SendPacketMethodName}}({{PeerIdParameterName}}, this, {{RemAttributePropertyName}}, {{SerializedPacketLocalName}});
             }
             """);
         // Send Multi
@@ -140,19 +147,27 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 
                 // Send packet to each peer
                 foreach (int {{PeerIdParameterName}} in {{PeerIdsParameterName}}) {
-                    {{RemSendServiceTypeName}}.{{SendPacketMethodName}}({{PeerIdParameterName}}, this, {{RemAttributePropertyName}}, {{SerializedPacketLocalName}});
-
-                    // Also call target method locally
-                    if ({{PeerIdParameterName}} is 0 && {{RemAttributePropertyName}}.{{nameof(RemAttribute.CallLocal)}}) {
+                    // Send packet to local peer
+                    if ({{PeerIdParameterName}} is 0) {
                         {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
                     }
+                    else if ({{PeerIdParameterName}} == this.Multiplayer.GetUniqueId()) {
+                        if (!{{RemAttributePropertyName}}.{{nameof(RemAttribute.CallLocal)}}) {
+                            throw new {{nameof(ArgumentException)}}("Not authorized to call on the local peer", nameof({{PeerIdParameterName}}));
+                        }
+                        {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
+                        return;
+                    }
+                
+                    // Send packet to remote peer
+                    {{RemSendServiceTypeName}}.{{SendPacketMethodName}}({{PeerIdParameterName}}, this, {{RemAttributePropertyName}}, {{SerializedPacketLocalName}});
                 }
             }
             """);
         // Broadcast
         Definitions.Add($$"""
             /// <summary>
-            /// Remotely calls {{MethodSeeXml}} on all peers.
+            /// Remotely calls {{MethodSeeXml}} on all eligible peers.
             /// </summary>
             {{AccessModifier}} void {{BroadcastMethodName}}({{string.Join(", ", BroadcastMethodParameters)}}) {
                 {{SendMethodName}}({{string.Join(", ", SendBroadcastArguments)}});
