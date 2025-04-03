@@ -117,14 +117,18 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             internal void {{SendMethodName}}({{string.Join(", ", SendMethodCoreParameters)}}) {
                 // Send packet to local peer
                 if ({{PeerIdParameterName}} is 0) {
-                    {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
+                    if ({{RemAttributePropertyName}}.{{nameof(RemAttribute.CallLocal)}}) {
+                        {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
+                    }
                 }
                 else if ({{PeerIdParameterName}} == this.Multiplayer.GetUniqueId()) {
-                    if (!{{RemAttributePropertyName}}.{{nameof(RemAttribute.CallLocal)}}) {
+                    if ({{RemAttributePropertyName}}.{{nameof(RemAttribute.CallLocal)}}) {
+                        {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
+                        return;
+                    }
+                    else {
                         throw new {{nameof(ArgumentException)}}("Not authorized to call on the local peer", nameof({{PeerIdParameterName}}));
                     }
-                    {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
-                    return;
                 }
                 
                 // Send packet to remote peer

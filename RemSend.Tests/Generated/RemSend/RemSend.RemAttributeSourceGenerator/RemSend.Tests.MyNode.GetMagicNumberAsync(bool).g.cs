@@ -32,14 +32,18 @@ partial class MyNode {
     internal void SendGetMagicNumberAsync(int PeerId, byte[] SerializedRemPacket, bool Dummy) {
         // Send packet to local peer
         if (PeerId is 0) {
-            _ = GetMagicNumberAsync(@Dummy);
+            if (GetMagicNumberAsyncRemAttribute.CallLocal) {
+                _ = GetMagicNumberAsync(@Dummy);
+            }
         }
         else if (PeerId == this.Multiplayer.GetUniqueId()) {
-            if (!GetMagicNumberAsyncRemAttribute.CallLocal) {
+            if (GetMagicNumberAsyncRemAttribute.CallLocal) {
+                _ = GetMagicNumberAsync(@Dummy);
+                return;
+            }
+            else {
                 throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
             }
-            _ = GetMagicNumberAsync(@Dummy);
-            return;
         }
         
         // Send packet to remote peer

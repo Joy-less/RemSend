@@ -32,14 +32,18 @@ partial class MyNode {
     internal void SendWaitSomeTime(int PeerId, byte[] SerializedRemPacket, bool Dummy) {
         // Send packet to local peer
         if (PeerId is 0) {
-            _ = WaitSomeTime(@Dummy, 0);
+            if (WaitSomeTimeRemAttribute.CallLocal) {
+                _ = WaitSomeTime(@Dummy, 0);
+            }
         }
         else if (PeerId == this.Multiplayer.GetUniqueId()) {
-            if (!WaitSomeTimeRemAttribute.CallLocal) {
+            if (WaitSomeTimeRemAttribute.CallLocal) {
+                _ = WaitSomeTime(@Dummy, 0);
+                return;
+            }
+            else {
                 throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
             }
-            _ = WaitSomeTime(@Dummy, 0);
-            return;
         }
         
         // Send packet to remote peer

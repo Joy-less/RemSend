@@ -32,14 +32,18 @@ partial class MyNode {
     internal void SendSillyExample(int PeerId, byte[] SerializedRemPacket, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
         // Send packet to local peer
         if (PeerId is 0) {
-            SillyExample(@Arg, 0, @Arg22);
+            if (SillyExampleRemAttribute.CallLocal) {
+                SillyExample(@Arg, 0, @Arg22);
+            }
         }
         else if (PeerId == this.Multiplayer.GetUniqueId()) {
-            if (!SillyExampleRemAttribute.CallLocal) {
+            if (SillyExampleRemAttribute.CallLocal) {
+                SillyExample(@Arg, 0, @Arg22);
+                return;
+            }
+            else {
                 throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
             }
-            SillyExample(@Arg, 0, @Arg22);
-            return;
         }
         
         // Send packet to remote peer
