@@ -469,7 +469,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 /// Creates a serialized packet for a remote method call.
                 /// </summary>
                 [EditorBrowsable(EditorBrowsableState.Never)]
-                internal static byte[] {{SerializePacketMethodName}}<T>(in {{nameof(RemPacketType)}} {{PacketTypeParameterName}}, string {{NodePathParameterName}}, string {{MethodNameParameterName}}, T {{ArgumentsPackLocalName}}) {
+                internal static byte[] {{SerializePacketMethodName}}<T>({{nameof(RemPacketType)}} {{PacketTypeParameterName}}, string {{NodePathParameterName}}, string {{MethodNameParameterName}}, in T {{ArgumentsPackLocalName}}) {
                     // Serialize arguments pack
                     byte[] {{SerializedArgumentsPackLocalName}} = MemoryPackSerializer.Serialize({{ArgumentsPackLocalName}});
                     

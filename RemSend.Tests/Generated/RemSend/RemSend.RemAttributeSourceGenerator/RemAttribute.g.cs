@@ -59,7 +59,7 @@ public static class RemSendService {
     /// Creates a serialized packet for a remote method call.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal static byte[] SerializePacket<T>(in RemPacketType PacketType, string NodePath, string MethodName, T ArgumentsPack) {
+    internal static byte[] SerializePacket<T>(RemPacketType PacketType, string NodePath, string MethodName, in T ArgumentsPack) {
         // Serialize arguments pack
         byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
         
