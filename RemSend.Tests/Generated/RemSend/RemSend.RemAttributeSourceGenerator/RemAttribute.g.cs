@@ -20,8 +20,8 @@ public static class RemSendService {
         // Default root node
         Root ??= ((SceneTree)Engine.GetMainLoop()).Root;
         // Listen for packets
-        Multiplayer.PeerPacket += (SenderId, PacketBytes) => {
-            ReceivePacket(Multiplayer, Root, (int)SenderId, PacketBytes);
+        Multiplayer.PeerPacket += (SenderId, SerializedPacket) => {
+            ReceivePacket(Multiplayer, Root, (int)SenderId, SerializedPacket);
         };
     }
     
@@ -86,9 +86,9 @@ public static class RemSendService {
     /// <summary>
     /// Finds and calls the target method for the received packet.
     /// </summary>
-    private static void ReceivePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> PacketBytes) {
+    private static void ReceivePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> SerializedPacket) {
         // Deserialize packet
-        RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(PacketBytes);
+        RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(SerializedPacket);
 
         // Find target node
         Node TargetNode = Root.GetNode(Multiplayer.RootPath).GetNode(RemPacket.NodePath);

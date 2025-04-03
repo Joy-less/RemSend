@@ -24,25 +24,31 @@ partial class MyNode {
     };
     
     /// <summary>
-    /// Remotely calls <see cref="SillyExample(string?, int, System.Collections.Generic.List{int[]})"/> on the given peer, using the given packet if possible.<br/>
+    /// Remotely calls <see cref="SillyExample(string?, int, System.Collections.Generic.List{int[]})"/> on the given peer using the given packet.<br/>
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all eligible peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal void SendSillyExample(int PeerId, byte[] SerializedRemPacket, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
+    internal void SendCoreSillyExample(int PeerId, byte[] SerializedRemPacket) {
         // Send packet to local peer
-        if (PeerId is 0) {
+        if (PeerId is 0 || PeerId == this.Multiplayer.GetUniqueId()) {
             if (SillyExampleRemAttribute.CallLocal) {
-                SillyExample(@Arg, 0, @Arg22);
-            }
-        }
-        else if (PeerId == this.Multiplayer.GetUniqueId()) {
-            if (SillyExampleRemAttribute.CallLocal) {
-                SillyExample(@Arg, 0, @Arg22);
-                return;
+                // Deserialize packet
+                RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(SerializedRemPacket);
+                
+                // Call remote method locally
+                ReceiveSillyExample(0, RemPacket);
+    
+                // Don't send remotely unless broadcasting
+                if (PeerId is not 0) {
+                    return;
+                }
             }
             else {
-                throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
+                // Ensure authorized to call locally
+                if (PeerId is not 0) {
+                    throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
+                }
             }
         }
         
@@ -55,18 +61,18 @@ partial class MyNode {
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all eligible peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    private void SendSillyExample(int PeerId, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
+    private void SendCoreSillyExample(int PeerId, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
         // Create send packet
         byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.SillyExample), new SillyExampleSendPack(@Arg, @Arg22));
     
         // Send packet to peer
-        SendSillyExample(PeerId, SerializedRemPacket, @Arg, @Arg22);
+        SendCoreSillyExample(PeerId, SerializedRemPacket);
     }
     
     /// <summary>
     /// Remotely calls <see cref="SillyExample(string?, int, System.Collections.Generic.List{int[]})"/> on each peer.
     /// </summary>
-    private void SendSillyExample(IEnumerable<int>? PeerIds, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
+    private void SendCoreSillyExample(IEnumerable<int>? PeerIds, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
         // Skip if no peers
         if (PeerIds is null || !PeerIds.Any()) {
             return;
@@ -77,7 +83,7 @@ partial class MyNode {
         
         // Send packet to each peer
         foreach (int PeerId in PeerIds) {
-            SendSillyExample(PeerId, SerializedRemPacket, @Arg, @Arg22);
+            SendCoreSillyExample(PeerId, SerializedRemPacket);
         }
     }
     
@@ -85,7 +91,7 @@ partial class MyNode {
     /// Remotely calls <see cref="SillyExample(string?, int, System.Collections.Generic.List{int[]})"/> on all eligible peers.
     /// </summary>
     private void BroadcastSillyExample(string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
-        SendSillyExample(0, @Arg, @Arg22);
+        SendCoreSillyExample(0, @Arg, @Arg22);
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]

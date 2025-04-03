@@ -24,25 +24,31 @@ partial class MyNode {
     };
     
     /// <summary>
-    /// Remotely calls <see cref="GetMagicNumber(bool)"/> on the given peer, using the given packet if possible.<br/>
+    /// Remotely calls <see cref="GetMagicNumber(bool)"/> on the given peer using the given packet.<br/>
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all eligible peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal void SendGetMagicNumber(int PeerId, byte[] SerializedRemPacket, bool Dummy) {
+    internal void SendCoreGetMagicNumber(int PeerId, byte[] SerializedRemPacket) {
         // Send packet to local peer
-        if (PeerId is 0) {
+        if (PeerId is 0 || PeerId == this.Multiplayer.GetUniqueId()) {
             if (GetMagicNumberRemAttribute.CallLocal) {
-                GetMagicNumber(@Dummy);
-            }
-        }
-        else if (PeerId == this.Multiplayer.GetUniqueId()) {
-            if (GetMagicNumberRemAttribute.CallLocal) {
-                GetMagicNumber(@Dummy);
-                return;
+                // Deserialize packet
+                RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(SerializedRemPacket);
+                
+                // Call remote method locally
+                ReceiveGetMagicNumber(0, RemPacket);
+    
+                // Don't send remotely unless broadcasting
+                if (PeerId is not 0) {
+                    return;
+                }
             }
             else {
-                throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
+                // Ensure authorized to call locally
+                if (PeerId is not 0) {
+                    throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
+                }
             }
         }
         
@@ -55,18 +61,18 @@ partial class MyNode {
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all eligible peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    public void SendGetMagicNumber(int PeerId, bool Dummy) {
+    public void SendCoreGetMagicNumber(int PeerId, bool Dummy) {
         // Create send packet
         byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberSendPack(@Dummy));
     
         // Send packet to peer
-        SendGetMagicNumber(PeerId, SerializedRemPacket, @Dummy);
+        SendCoreGetMagicNumber(PeerId, SerializedRemPacket);
     }
     
     /// <summary>
     /// Remotely calls <see cref="GetMagicNumber(bool)"/> on each peer.
     /// </summary>
-    public void SendGetMagicNumber(IEnumerable<int>? PeerIds, bool Dummy) {
+    public void SendCoreGetMagicNumber(IEnumerable<int>? PeerIds, bool Dummy) {
         // Skip if no peers
         if (PeerIds is null || !PeerIds.Any()) {
             return;
@@ -77,7 +83,7 @@ partial class MyNode {
         
         // Send packet to each peer
         foreach (int PeerId in PeerIds) {
-            SendGetMagicNumber(PeerId, SerializedRemPacket, @Dummy);
+            SendCoreGetMagicNumber(PeerId, SerializedRemPacket);
         }
     }
     
@@ -85,7 +91,7 @@ partial class MyNode {
     /// Remotely calls <see cref="GetMagicNumber(bool)"/> on all eligible peers.
     /// </summary>
     public void BroadcastGetMagicNumber(bool Dummy) {
-        SendGetMagicNumber(0, @Dummy);
+        SendCoreGetMagicNumber(0, @Dummy);
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -103,7 +109,7 @@ partial class MyNode {
         byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Request, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberRequestPack(RequestId, @Dummy));
         
         // Send packet to peer
-        SendGetMagicNumber(PeerId, SerializedRemPacket, @Dummy);
+        SendCoreGetMagicNumber(PeerId, SerializedRemPacket);
     
         // Create result listener
         TaskCompletionSource<ushort> ResultAwaiter = new();
