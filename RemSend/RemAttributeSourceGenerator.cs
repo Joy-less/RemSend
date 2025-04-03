@@ -59,6 +59,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
 
         // Parameters
         List<string> SendMethodParameters = [.. RemoteParameters.Select(Parameter => Parameter.GetParameterDeclaration())];
+        List<string> SendMethodCoreParameters = [.. SendMethodParameters.Prepend($"byte[] {SerializedPacketLocalName}").Prepend($"int {PeerIdParameterName}")];
         List<string> SendMethodOneParameters = [.. SendMethodParameters.Prepend($"int {PeerIdParameterName}")];
         List<string> SendMethodMultiParameters = [.. SendMethodParameters.Prepend($"IEnumerable<int>? {PeerIdsParameterName}")];
         List<string> BroadcastMethodParameters = [.. SendMethodParameters];
@@ -67,6 +68,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         // Arguments
         List<string> SendArgumentsPackArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
         List<string> RequestArgumentsPackArguments = [.. SendArgumentsPackArguments.Prepend(RequestIdLocalName)];
+        List<string> SendCoreArguments = [PeerIdParameterName, SerializedPacketLocalName, string.Join(", ", SendArgumentsPackArguments)];
         List<string> SendBroadcastArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}").Prepend("0")];
         List<string> RequestCallbackArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}").Prepend(TimeoutParameterName).Prepend(PeerIdParameterName)];
 
@@ -104,17 +106,15 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 {{nameof(RemAttribute.Channel)}} = {{RemAttribute.Channel}},
             };
             """);
-        // Send One
+        // Send One Core
         Definitions.Add($$"""
             /// <summary>
-            /// Remotely calls {{MethodSeeXml}} on the given peer.<br/>
+            /// Remotely calls {{MethodSeeXml}} on the given peer, using the given packet if possible.<br/>
             /// Set <paramref name="{{PeerIdParameterName}}"/> to 0 to broadcast to all eligible peers.<br/>
             /// Set <paramref name="{{PeerIdParameterName}}"/> to 1 to send to the authority.
             /// </summary>
-            {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodOneParameters)}}) {
-                // Create send packet
-                byte[] {{SerializedPacketLocalName}} = {{RemSendServiceTypeName}}.{{SerializePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{SendArgumentsPackTypeName}}({{string.Join(", ", SendArgumentsPackArguments)}}));
-
+            [EditorBrowsable(EditorBrowsableState.Never)]
+            internal void {{SendMethodName}}({{string.Join(", ", SendMethodCoreParameters)}}) {
                 // Send packet to local peer
                 if ({{PeerIdParameterName}} is 0) {
                     {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
@@ -129,6 +129,21 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 
                 // Send packet to remote peer
                 {{RemSendServiceTypeName}}.{{SendPacketMethodName}}({{PeerIdParameterName}}, this, {{RemAttributePropertyName}}, {{SerializedPacketLocalName}});
+            }
+            """);
+        // Send One
+        Definitions.Add($$"""
+            /// <summary>
+            /// Remotely calls {{MethodSeeXml}} on the given peer.<br/>
+            /// Set <paramref name="{{PeerIdParameterName}}"/> to 0 to broadcast to all eligible peers.<br/>
+            /// Set <paramref name="{{PeerIdParameterName}}"/> to 1 to send to the authority.
+            /// </summary>
+            {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodOneParameters)}}) {
+                // Create send packet
+                byte[] {{SerializedPacketLocalName}} = {{RemSendServiceTypeName}}.{{SerializePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{SendArgumentsPackTypeName}}({{string.Join(", ", SendArgumentsPackArguments)}}));
+
+                // Send packet to peer
+                {{SendMethodName}}({{string.Join(", ", SendCoreArguments)}});
             }
             """);
         // Send Multi
@@ -147,20 +162,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 
                 // Send packet to each peer
                 foreach (int {{PeerIdParameterName}} in {{PeerIdsParameterName}}) {
-                    // Send packet to local peer
-                    if ({{PeerIdParameterName}} is 0) {
-                        {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
-                    }
-                    else if ({{PeerIdParameterName}} == this.Multiplayer.GetUniqueId()) {
-                        if (!{{RemAttributePropertyName}}.{{nameof(RemAttribute.CallLocal)}}) {
-                            throw new {{nameof(ArgumentException)}}("Not authorized to call on the local peer", nameof({{PeerIdParameterName}}));
-                        }
-                        {{(ReturnsTask ? "_ = " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodCallLocalArguments)}});
-                        return;
-                    }
-                
-                    // Send packet to remote peer
-                    {{RemSendServiceTypeName}}.{{SendPacketMethodName}}({{PeerIdParameterName}}, this, {{RemAttributePropertyName}}, {{SerializedPacketLocalName}});
+                    {{SendMethodName}}({{string.Join(", ", SendCoreArguments)}});
                 }
             }
             """);
@@ -194,7 +196,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     byte[] {{SerializedPacketLocalName}} = {{RemSendServiceTypeName}}.{{SerializePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Request)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{RequestArgumentsPackTypeName}}({{string.Join(", ", RequestArgumentsPackArguments)}}));
                     
                     // Send packet to peer
-                    {{RemSendServiceTypeName}}.{{SendPacketMethodName}}({{PeerIdParameterName}}, this, {{RemAttributePropertyName}}, {{SerializedPacketLocalName}});
+                    {{SendMethodName}}({{string.Join(", ", SendCoreArguments)}});
 
                     // Create result listener
                     TaskCompletionSource{{(ReturnsNonGenericTask ? "" : $"<{ReturnTypeAsValue}>")}} {{ResultAwaiterLocalName}} = new();

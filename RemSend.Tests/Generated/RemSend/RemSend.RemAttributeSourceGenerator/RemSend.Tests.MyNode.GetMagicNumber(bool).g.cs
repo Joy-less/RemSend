@@ -24,14 +24,12 @@ partial class MyNode {
     };
     
     /// <summary>
-    /// Remotely calls <see cref="GetMagicNumber(bool)"/> on the given peer.<br/>
+    /// Remotely calls <see cref="GetMagicNumber(bool)"/> on the given peer, using the given packet if possible.<br/>
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all eligible peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    public void SendGetMagicNumber(int PeerId, bool Dummy) {
-        // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberSendPack(@Dummy));
-    
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal void SendGetMagicNumber(int PeerId, byte[] SerializedRemPacket, bool Dummy) {
         // Send packet to local peer
         if (PeerId is 0) {
             GetMagicNumber(@Dummy);
@@ -49,6 +47,19 @@ partial class MyNode {
     }
     
     /// <summary>
+    /// Remotely calls <see cref="GetMagicNumber(bool)"/> on the given peer.<br/>
+    /// Set <paramref name="PeerId"/> to 0 to broadcast to all eligible peers.<br/>
+    /// Set <paramref name="PeerId"/> to 1 to send to the authority.
+    /// </summary>
+    public void SendGetMagicNumber(int PeerId, bool Dummy) {
+        // Create send packet
+        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberSendPack(@Dummy));
+    
+        // Send packet to peer
+        SendGetMagicNumber(PeerId, SerializedRemPacket, @Dummy);
+    }
+    
+    /// <summary>
     /// Remotely calls <see cref="GetMagicNumber(bool)"/> on each peer.
     /// </summary>
     public void SendGetMagicNumber(IEnumerable<int>? PeerIds, bool Dummy) {
@@ -62,20 +73,7 @@ partial class MyNode {
         
         // Send packet to each peer
         foreach (int PeerId in PeerIds) {
-            // Send packet to local peer
-            if (PeerId is 0) {
-                GetMagicNumber(@Dummy);
-            }
-            else if (PeerId == this.Multiplayer.GetUniqueId()) {
-                if (!GetMagicNumberRemAttribute.CallLocal) {
-                    throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
-                }
-                GetMagicNumber(@Dummy);
-                return;
-            }
-        
-            // Send packet to remote peer
-            RemSendService.SendPacket(PeerId, this, GetMagicNumberRemAttribute, SerializedRemPacket);
+            SendGetMagicNumber(PeerId, SerializedRemPacket, @Dummy);
         }
     }
     
@@ -101,7 +99,7 @@ partial class MyNode {
         byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Request, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberRequestPack(RequestId, @Dummy));
         
         // Send packet to peer
-        RemSendService.SendPacket(PeerId, this, GetMagicNumberRemAttribute, SerializedRemPacket);
+        SendGetMagicNumber(PeerId, SerializedRemPacket, @Dummy);
     
         // Create result listener
         TaskCompletionSource<ushort> ResultAwaiter = new();

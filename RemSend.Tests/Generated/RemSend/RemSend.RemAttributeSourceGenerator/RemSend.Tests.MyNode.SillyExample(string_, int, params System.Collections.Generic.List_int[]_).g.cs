@@ -24,14 +24,12 @@ partial class MyNode {
     };
     
     /// <summary>
-    /// Remotely calls <see cref="SillyExample(string?, int, System.Collections.Generic.List{int[]})"/> on the given peer.<br/>
+    /// Remotely calls <see cref="SillyExample(string?, int, System.Collections.Generic.List{int[]})"/> on the given peer, using the given packet if possible.<br/>
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all eligible peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    private void SendSillyExample(int PeerId, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
-        // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.SillyExample), new SillyExampleSendPack(@Arg, @Arg22));
-    
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    internal void SendSillyExample(int PeerId, byte[] SerializedRemPacket, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
         // Send packet to local peer
         if (PeerId is 0) {
             SillyExample(@Arg, 0, @Arg22);
@@ -49,6 +47,19 @@ partial class MyNode {
     }
     
     /// <summary>
+    /// Remotely calls <see cref="SillyExample(string?, int, System.Collections.Generic.List{int[]})"/> on the given peer.<br/>
+    /// Set <paramref name="PeerId"/> to 0 to broadcast to all eligible peers.<br/>
+    /// Set <paramref name="PeerId"/> to 1 to send to the authority.
+    /// </summary>
+    private void SendSillyExample(int PeerId, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
+        // Create send packet
+        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.SillyExample), new SillyExampleSendPack(@Arg, @Arg22));
+    
+        // Send packet to peer
+        SendSillyExample(PeerId, SerializedRemPacket, @Arg, @Arg22);
+    }
+    
+    /// <summary>
     /// Remotely calls <see cref="SillyExample(string?, int, System.Collections.Generic.List{int[]})"/> on each peer.
     /// </summary>
     private void SendSillyExample(IEnumerable<int>? PeerIds, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
@@ -62,20 +73,7 @@ partial class MyNode {
         
         // Send packet to each peer
         foreach (int PeerId in PeerIds) {
-            // Send packet to local peer
-            if (PeerId is 0) {
-                SillyExample(@Arg, 0, @Arg22);
-            }
-            else if (PeerId == this.Multiplayer.GetUniqueId()) {
-                if (!SillyExampleRemAttribute.CallLocal) {
-                    throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
-                }
-                SillyExample(@Arg, 0, @Arg22);
-                return;
-            }
-        
-            // Send packet to remote peer
-            RemSendService.SendPacket(PeerId, this, SillyExampleRemAttribute, SerializedRemPacket);
+            SendSillyExample(PeerId, SerializedRemPacket, @Arg, @Arg22);
         }
     }
     
