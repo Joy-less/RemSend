@@ -59,22 +59,22 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
 
         // Parameters
         List<string> SendMethodParameters = [.. RemoteParameters.Select(Parameter => Parameter.GetParameterDeclaration())];
-        List<string> SendMethodCoreParameters = [.. SendMethodParameters.Prepend($"byte[] {SerializedPacketLocalName}").Prepend($"int {PeerIdParameterName}")];
-        List<string> SendMethodOneParameters = [.. SendMethodParameters.Prepend($"int {PeerIdParameterName}")];
-        List<string> SendMethodMultiParameters = [.. SendMethodParameters.Prepend($"IEnumerable<int>? {PeerIdsParameterName}")];
+        List<string> SendMethodCoreParameters = [$"int {PeerIdParameterName}", $"byte[] {SerializedPacketLocalName}", .. SendMethodParameters];
+        List<string> SendMethodOneParameters = [$"int {PeerIdParameterName}", .. SendMethodParameters];
+        List<string> SendMethodMultiParameters = [$"IEnumerable<int>? {PeerIdsParameterName}", .. SendMethodParameters];
         List<string> BroadcastMethodParameters = [.. SendMethodParameters];
-        List<string> RequestMethodParameters = [.. SendMethodParameters.Prepend($"TimeSpan {TimeoutParameterName}").Prepend($"int {PeerIdParameterName}")];
+        List<string> RequestMethodParameters = [$"int {PeerIdParameterName}", $"TimeSpan {TimeoutParameterName}", .. SendMethodParameters];
 
         // Arguments
         List<string> SendArgumentsPackArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
-        List<string> RequestArgumentsPackArguments = [.. SendArgumentsPackArguments.Prepend(RequestIdLocalName)];
+        List<string> RequestArgumentsPackArguments = [RequestIdLocalName, .. SendArgumentsPackArguments];
         List<string> SendCoreArguments = [PeerIdParameterName, SerializedPacketLocalName, string.Join(", ", SendArgumentsPackArguments)];
-        List<string> SendBroadcastArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}").Prepend("0")];
-        List<string> RequestCallbackArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}").Prepend(TimeoutParameterName).Prepend(PeerIdParameterName)];
+        List<string> SendBroadcastArguments = ["0", .. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
+        List<string> RequestCallbackArguments = [PeerIdParameterName, TimeoutParameterName, .. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
 
         // Properties
         List<string> SendArgumentsPackProperties = [.. SendMethodParameters];
-        List<string> RequestArgumentsPackProperties = [.. SendArgumentsPackProperties.Prepend($"Guid {RequestIdPropertyName}")];
+        List<string> RequestArgumentsPackProperties = [$"Guid {RequestIdPropertyName}", .. SendArgumentsPackProperties];
         List<string> ResultArgumentsPackProperties = ReturnsNonGenericTask ? [$"Guid {RequestIdPropertyName}"] : [$"Guid {RequestIdPropertyName}", $"{ReturnTypeAsValue} {ReturnValuePropertyName}"];
 
         // Arguments for locally calling target method
@@ -304,10 +304,10 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 [EditorBrowsable(EditorBrowsableState.Never)]
                 internal record struct {{RequestArgumentsPackTypeName}}({{string.Join(", ", RequestArgumentsPackProperties)}}) {
                     // Formatter
-                    {{GenerateMemoryPackFormatterCode("internal", FormatterTypeName, RequestArgumentsPackTypeName, "    ",
-                        RemoteParameters.Select(Parameter => (Parameter.Name, Parameter.Type.ToString()))
-                            .Prepend((RequestIdPropertyName, "Guid"))
-                    )}}
+                    {{GenerateMemoryPackFormatterCode("internal", FormatterTypeName, RequestArgumentsPackTypeName, "    ", [
+                        (RequestIdPropertyName, "Guid"),
+                        .. RemoteParameters.Select(Parameter => (Parameter.Name, Parameter.Type.ToString()))
+                    ])}}
                 }
                 """);
         }
