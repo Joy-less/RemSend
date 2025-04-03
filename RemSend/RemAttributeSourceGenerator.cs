@@ -68,7 +68,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         // Arguments
         List<string> SendArgumentsPackArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
         List<string> RequestArgumentsPackArguments = [RequestIdLocalName, .. SendArgumentsPackArguments];
-        List<string> SendCoreArguments = [PeerIdParameterName, SerializedPacketLocalName, string.Join(", ", SendArgumentsPackArguments)];
+        List<string> SendCoreArguments = [PeerIdParameterName, SerializedPacketLocalName, .. SendArgumentsPackArguments];
         List<string> SendBroadcastArguments = ["0", .. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
         List<string> RequestCallbackArguments = [PeerIdParameterName, TimeoutParameterName, .. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
 
