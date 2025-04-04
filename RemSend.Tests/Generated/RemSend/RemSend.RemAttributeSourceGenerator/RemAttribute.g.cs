@@ -20,8 +20,8 @@ public static class RemSendService {
         // Default root node
         Root ??= ((SceneTree)Engine.GetMainLoop()).Root;
         // Listen for packets
-        Multiplayer.PeerPacket += (SenderId, SerializedPacket) => {
-            ReceivePacket(Multiplayer, Root, (int)SenderId, SerializedPacket);
+        Multiplayer.PeerPacket += (SenderId, SerializedRemPacket) => {
+            ReceivePacket(Multiplayer, Root, (int)SenderId, SerializedRemPacket);
         };
     }
     
@@ -71,9 +71,9 @@ public static class RemSendService {
     /// Sends a serialized packet to a peer.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal static void SendPacket(int PeerId, Node Node, RemAttribute Attribute, byte[] SerializedPacket) {
-        ((SceneMultiplayer)Node.Multiplayer).SendBytes(
-            bytes: SerializedPacket,
+    internal static void SendPacket(int PeerId, Node TargetNode, RemAttribute Attribute, byte[] SerializedRemPacket) {
+        ((SceneMultiplayer)TargetNode.Multiplayer).SendBytes(
+            bytes: SerializedRemPacket,
             id: PeerId,
             mode: RemModeToTransferModeEnum(Attribute.Mode),
             channel: Attribute.Channel
@@ -83,9 +83,9 @@ public static class RemSendService {
     /// <summary>
     /// Finds and calls the target method for the received packet.
     /// </summary>
-    private static void ReceivePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> SerializedPacket) {
+    private static void ReceivePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> SerializedRemPacket) {
         // Deserialize packet
-        RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(SerializedPacket);
+        RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(SerializedRemPacket);
 
         // Find target node
         Node TargetNode = Root.GetNode(Multiplayer.RootPath).GetNode(RemPacket.NodePath);
