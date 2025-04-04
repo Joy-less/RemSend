@@ -91,7 +91,7 @@ partial class MyNode {
     /// Remotely calls <see cref="GetMagicNumber(bool)"/> on all eligible peers.
     /// </summary>
     public void BroadcastGetMagicNumber(bool Dummy) {
-        SendCoreGetMagicNumber(0, @Dummy);
+        SendGetMagicNumber(0, @Dummy);
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]

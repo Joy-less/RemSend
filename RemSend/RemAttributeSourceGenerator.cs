@@ -183,7 +183,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             /// Remotely calls {{MethodSeeXml}} on all eligible peers.
             /// </summary>
             {{AccessModifier}} void {{BroadcastMethodName}}({{string.Join(", ", BroadcastMethodParameters)}}) {
-                {{SendCoreMethodName}}({{string.Join(", ", SendBroadcastArguments)}});
+                {{SendMethodName}}({{string.Join(", ", SendBroadcastArguments)}});
             }
             """);
         // Request

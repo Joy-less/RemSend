@@ -91,7 +91,7 @@ partial class MyNode {
     /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on all eligible peers.
     /// </summary>
     public void BroadcastWaitSomeTime(bool Dummy) {
-        SendCoreWaitSomeTime(0, @Dummy);
+        SendWaitSomeTime(0, @Dummy);
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]

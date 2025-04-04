@@ -91,7 +91,7 @@ partial class MyNode {
     /// Remotely calls <see cref="SillyExample(string?, int, System.Collections.Generic.List{int[]})"/> on all eligible peers.
     /// </summary>
     private void BroadcastSillyExample(string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
-        SendCoreSillyExample(0, @Arg, @Arg22);
+        SendSillyExample(0, @Arg, @Arg22);
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]

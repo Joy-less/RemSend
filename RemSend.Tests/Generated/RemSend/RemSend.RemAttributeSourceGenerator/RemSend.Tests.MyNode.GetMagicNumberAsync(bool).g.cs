@@ -91,7 +91,7 @@ partial class MyNode {
     /// Remotely calls <see cref="GetMagicNumberAsync(bool)"/> on all eligible peers.
     /// </summary>
     public void BroadcastGetMagicNumberAsync(bool Dummy) {
-        SendCoreGetMagicNumberAsync(0, @Dummy);
+        SendGetMagicNumberAsync(0, @Dummy);
     }
     
     [EditorBrowsable(EditorBrowsableState.Never)]
