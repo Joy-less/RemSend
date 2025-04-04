@@ -111,9 +111,6 @@ partial class MyNode {
         // Serialize request packet
         byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
     
-        // Send packet to peer
-        SendCoreWaitSomeTime(PeerId, RemPacket, SerializedRemPacket);
-    
         // Create result listener
         TaskCompletionSource ResultAwaiter = new();
         void ResultCallback(int SenderId, WaitSomeTimeResultPack ResultPack) {
@@ -124,6 +121,8 @@ partial class MyNode {
         try {
             // Add result listener
             OnReceiveWaitSomeTimeResult += ResultCallback;
+            // Send packet to peer
+            SendCoreWaitSomeTime(PeerId, RemPacket, SerializedRemPacket);
             // Await completion
             await ResultAwaiter.Task.WaitAsync(Timeout);
         }

@@ -111,9 +111,6 @@ partial class MyNode {
         // Serialize request packet
         byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
     
-        // Send packet to peer
-        SendCoreGetMagicNumberAsync(PeerId, RemPacket, SerializedRemPacket);
-    
         // Create result listener
         TaskCompletionSource<ushort> ResultAwaiter = new();
         void ResultCallback(int SenderId, GetMagicNumberAsyncResultPack ResultPack) {
@@ -124,6 +121,8 @@ partial class MyNode {
         try {
             // Add result listener
             OnReceiveGetMagicNumberAsyncResult += ResultCallback;
+            // Send packet to peer
+            SendCoreGetMagicNumberAsync(PeerId, RemPacket, SerializedRemPacket);
             // Await result
             ushort ReturnValue = await ResultAwaiter.Task.WaitAsync(Timeout);
             // Return result

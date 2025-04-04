@@ -210,9 +210,6 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     // Serialize request packet
                     byte[] {{SerializedPacketLocalName}} = MemoryPackSerializer.Serialize({{PacketLocalName}});
 
-                    // Send packet to peer
-                    {{SendCoreMethodName}}({{string.Join(", ", SendCoreArguments)}});
-
                     // Create result listener
                     TaskCompletionSource{{(ReturnsNonGenericTask ? "" : $"<{ReturnTypeAsValue}>")}} {{ResultAwaiterLocalName}} = new();
                     void {{ResultCallbackLocalName}}(int {{SenderIdLocalName}}, {{ResultArgumentsPackTypeName}} {{ResultPackLocalName}}) {
@@ -223,6 +220,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     try {
                         // Add result listener
                         {{OnReceiveResultEventName}} += {{ResultCallbackLocalName}};
+                        // Send packet to peer
+                        {{SendCoreMethodName}}({{string.Join(", ", SendCoreArguments)}});
                 {{(ReturnsNonGenericTask
                     ? $$"""
                         // Await completion
