@@ -29,13 +29,10 @@ partial class MyNode {
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal void SendCoreGetMagicNumber(int PeerId, byte[] SerializedRemPacket) {
+    internal void SendCoreGetMagicNumber(int PeerId, RemPacket RemPacket, byte[] SerializedRemPacket) {
         // Send packet to local peer
         if (PeerId is 0 || PeerId == this.Multiplayer.GetUniqueId()) {
             if (GetMagicNumberRemAttribute.CallLocal) {
-                // Deserialize packet
-                RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(SerializedRemPacket);
-                
                 // Call remote method locally
                 ReceiveGetMagicNumber(0, RemPacket);
     
@@ -47,7 +44,7 @@ partial class MyNode {
             else {
                 // Ensure authorized to call locally
                 if (PeerId is not 0) {
-                    throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
+                    throw new MethodAccessException("Not authorized to call on the local peer");
                 }
             }
         }
@@ -63,10 +60,12 @@ partial class MyNode {
     /// </summary>
     public void SendGetMagicNumber(int PeerId, bool Dummy) {
         // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberSendPack(@Dummy));
+        RemPacket RemPacket = RemSendService.CreatePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberSendPack(@Dummy));
+        // Serialize send packet
+        byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
     
         // Send packet to peer
-        SendCoreGetMagicNumber(PeerId, SerializedRemPacket);
+        SendCoreGetMagicNumber(PeerId, RemPacket, SerializedRemPacket);
     }
     
     /// <summary>
@@ -79,11 +78,13 @@ partial class MyNode {
         }
     
         // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberSendPack(@Dummy));
+        RemPacket RemPacket = RemSendService.CreatePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberSendPack(@Dummy));
+        // Serialize send packet
+        byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
         
         // Send packet to each peer
         foreach (int PeerId in PeerIds) {
-            SendCoreGetMagicNumber(PeerId, SerializedRemPacket);
+            SendCoreGetMagicNumber(PeerId, RemPacket, SerializedRemPacket);
         }
     }
     
@@ -106,10 +107,12 @@ partial class MyNode {
         Guid RequestId = Guid.NewGuid();
     
         // Create request packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Request, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberRequestPack(RequestId, @Dummy));
-        
+        RemPacket RemPacket = RemSendService.CreatePacket(RemPacketType.Request, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberRequestPack(RequestId, @Dummy));
+        // Serialize request packet
+        byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
+    
         // Send packet to peer
-        SendCoreGetMagicNumber(PeerId, SerializedRemPacket);
+        SendCoreGetMagicNumber(PeerId, RemPacket, SerializedRemPacket);
     
         // Create result listener
         TaskCompletionSource<ushort> ResultAwaiter = new();
@@ -153,11 +156,13 @@ partial class MyNode {
             // Call target method
             ushort ReturnValue = GetMagicNumber(DeserializedArgumentsPack.@Dummy);
     
+            // Create result packet
+            RemPacket ResultRemPacket = RemSendService.CreatePacket(RemPacketType.Result, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberResultPack(DeserializedArgumentsPack.RequestId, ReturnValue));
             // Serialize result packet
-            byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Result, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberResultPack(DeserializedArgumentsPack.RequestId, ReturnValue));
-            
+            byte[] SerializedResultRemPacket = MemoryPackSerializer.Serialize(ResultRemPacket);
+    
             // Send result packet back to sender
-            RemSendService.SendPacket(SenderId, this, GetMagicNumberRemAttribute, SerializedRemPacket);
+            RemSendService.SendPacket(SenderId, this, GetMagicNumberRemAttribute, SerializedResultRemPacket);
         }
         // Result
         else if (RemPacket.Type is RemPacketType.Result) {

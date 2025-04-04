@@ -29,13 +29,10 @@ partial class MyNode {
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal void SendCoreSillyExample(int PeerId, byte[] SerializedRemPacket) {
+    internal void SendCoreSillyExample(int PeerId, RemPacket RemPacket, byte[] SerializedRemPacket) {
         // Send packet to local peer
         if (PeerId is 0 || PeerId == this.Multiplayer.GetUniqueId()) {
             if (SillyExampleRemAttribute.CallLocal) {
-                // Deserialize packet
-                RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(SerializedRemPacket);
-                
                 // Call remote method locally
                 ReceiveSillyExample(0, RemPacket);
     
@@ -47,7 +44,7 @@ partial class MyNode {
             else {
                 // Ensure authorized to call locally
                 if (PeerId is not 0) {
-                    throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
+                    throw new MethodAccessException("Not authorized to call on the local peer");
                 }
             }
         }
@@ -63,10 +60,12 @@ partial class MyNode {
     /// </summary>
     private void SendSillyExample(int PeerId, string? Arg, [System.Diagnostics.CodeAnalysis.NotNullWhenAttribute(true)] params System.Collections.Generic.List<int[]> Arg22) {
         // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.SillyExample), new SillyExampleSendPack(@Arg, @Arg22));
+        RemPacket RemPacket = RemSendService.CreatePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.SillyExample), new SillyExampleSendPack(@Arg, @Arg22));
+        // Serialize send packet
+        byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
     
         // Send packet to peer
-        SendCoreSillyExample(PeerId, SerializedRemPacket);
+        SendCoreSillyExample(PeerId, RemPacket, SerializedRemPacket);
     }
     
     /// <summary>
@@ -79,11 +78,13 @@ partial class MyNode {
         }
     
         // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.SillyExample), new SillyExampleSendPack(@Arg, @Arg22));
+        RemPacket RemPacket = RemSendService.CreatePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.SillyExample), new SillyExampleSendPack(@Arg, @Arg22));
+        // Serialize send packet
+        byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
         
         // Send packet to each peer
         foreach (int PeerId in PeerIds) {
-            SendCoreSillyExample(PeerId, SerializedRemPacket);
+            SendCoreSillyExample(PeerId, RemPacket, SerializedRemPacket);
         }
     }
     

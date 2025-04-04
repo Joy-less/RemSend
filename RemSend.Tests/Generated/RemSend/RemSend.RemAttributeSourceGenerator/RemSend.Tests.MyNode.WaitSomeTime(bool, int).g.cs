@@ -29,13 +29,10 @@ partial class MyNode {
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal void SendCoreWaitSomeTime(int PeerId, byte[] SerializedRemPacket) {
+    internal void SendCoreWaitSomeTime(int PeerId, RemPacket RemPacket, byte[] SerializedRemPacket) {
         // Send packet to local peer
         if (PeerId is 0 || PeerId == this.Multiplayer.GetUniqueId()) {
             if (WaitSomeTimeRemAttribute.CallLocal) {
-                // Deserialize packet
-                RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(SerializedRemPacket);
-                
                 // Call remote method locally
                 ReceiveWaitSomeTime(0, RemPacket);
     
@@ -47,7 +44,7 @@ partial class MyNode {
             else {
                 // Ensure authorized to call locally
                 if (PeerId is not 0) {
-                    throw new ArgumentException("Not authorized to call on the local peer", nameof(PeerId));
+                    throw new MethodAccessException("Not authorized to call on the local peer");
                 }
             }
         }
@@ -63,10 +60,12 @@ partial class MyNode {
     /// </summary>
     public void SendWaitSomeTime(int PeerId, bool Dummy) {
         // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeSendPack(@Dummy));
+        RemPacket RemPacket = RemSendService.CreatePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeSendPack(@Dummy));
+        // Serialize send packet
+        byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
     
         // Send packet to peer
-        SendCoreWaitSomeTime(PeerId, SerializedRemPacket);
+        SendCoreWaitSomeTime(PeerId, RemPacket, SerializedRemPacket);
     }
     
     /// <summary>
@@ -79,11 +78,13 @@ partial class MyNode {
         }
     
         // Create send packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeSendPack(@Dummy));
+        RemPacket RemPacket = RemSendService.CreatePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeSendPack(@Dummy));
+        // Serialize send packet
+        byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
         
         // Send packet to each peer
         foreach (int PeerId in PeerIds) {
-            SendCoreWaitSomeTime(PeerId, SerializedRemPacket);
+            SendCoreWaitSomeTime(PeerId, RemPacket, SerializedRemPacket);
         }
     }
     
@@ -106,10 +107,12 @@ partial class MyNode {
         Guid RequestId = Guid.NewGuid();
     
         // Create request packet
-        byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Request, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeRequestPack(RequestId, @Dummy));
-        
+        RemPacket RemPacket = RemSendService.CreatePacket(RemPacketType.Request, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeRequestPack(RequestId, @Dummy));
+        // Serialize request packet
+        byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
+    
         // Send packet to peer
-        SendCoreWaitSomeTime(PeerId, SerializedRemPacket);
+        SendCoreWaitSomeTime(PeerId, RemPacket, SerializedRemPacket);
     
         // Create result listener
         TaskCompletionSource ResultAwaiter = new();
@@ -151,11 +154,13 @@ partial class MyNode {
             // Call target method
             await WaitSomeTime(DeserializedArgumentsPack.@Dummy, SenderId);
     
+            // Create result packet
+            RemPacket ResultRemPacket = RemSendService.CreatePacket(RemPacketType.Result, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeResultPack(DeserializedArgumentsPack.RequestId));
             // Serialize result packet
-            byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Result, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeResultPack(DeserializedArgumentsPack.RequestId));
-            
+            byte[] SerializedResultRemPacket = MemoryPackSerializer.Serialize(ResultRemPacket);
+    
             // Send result packet back to sender
-            RemSendService.SendPacket(SenderId, this, WaitSomeTimeRemAttribute, SerializedRemPacket);
+            RemSendService.SendPacket(SenderId, this, WaitSomeTimeRemAttribute, SerializedResultRemPacket);
         }
         // Result
         else if (RemPacket.Type is RemPacketType.Result) {

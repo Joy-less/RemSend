@@ -56,18 +56,15 @@ public static class RemSendService {
     }
     
     /// <summary>
-    /// Creates a serialized packet for a remote method call.
+    /// Creates a packet for a remote method call.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal static byte[] SerializePacket<T>(RemPacketType PacketType, string NodePath, string MethodName, in T ArgumentsPack) {
+    internal static RemPacket CreatePacket<T>(RemPacketType PacketType, string NodePath, string MethodName, in T ArgumentsPack) {
         // Serialize arguments pack
         byte[] SerializedArgumentsPack = MemoryPackSerializer.Serialize(ArgumentsPack);
-        
         // Create packet
         RemPacket RemPacket = new(PacketType, NodePath, MethodName, SerializedArgumentsPack);
-        // Serialize packet
-        byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
-        return SerializedRemPacket;
+        return RemPacket;
     }
     
     /// <summary>
