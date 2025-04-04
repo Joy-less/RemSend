@@ -161,7 +161,7 @@ partial class MyNode {
             byte[] SerializedResultRemPacket = MemoryPackSerializer.Serialize(ResultRemPacket);
     
             // Send result packet back to sender
-            RemSendService.SendPacket(SenderId, this, GetMagicNumberRemAttribute, SerializedResultRemPacket);
+            SendCoreGetMagicNumber(SenderId, ResultRemPacket, SerializedResultRemPacket);
         }
         // Result
         else if (RemPacket.Type is RemPacketType.Result) {

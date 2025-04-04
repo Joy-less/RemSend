@@ -25,8 +25,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string TimeoutLocalName = EscapeVariableName("Timeout", Input.Symbol);
         string PacketLocalName = EscapeVariableName("RemPacket", Input.Symbol);
         string SerializedPacketLocalName = EscapeVariableName("SerializedRemPacket", Input.Symbol);
-        string ResultPacketParameterName = EscapeVariableName("ResultRemPacket", Input.Symbol);
-        string SerializedResultPacketParameterName = EscapeVariableName("SerializedResultRemPacket", Input.Symbol);
+        string ResultPacketLocalName = EscapeVariableName("ResultRemPacket", Input.Symbol);
+        string SerializedResultPacketLocalName = EscapeVariableName("SerializedResultRemPacket", Input.Symbol);
         string DeserializedArgumentsPackLocalName = EscapeVariableName("DeserializedArgumentsPack", Input.Symbol);
         string RequestIdLocalName = EscapeVariableName("RequestId", Input.Symbol);
         string ReturnValueLocalName = EscapeVariableName("ReturnValue", Input.Symbol);
@@ -286,12 +286,16 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         {{(ReturnsNonGenericTask ? "" : $"{ReturnTypeAsValue} {ReturnValueLocalName} = ")}}{{(ReturnsTask ? "await " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
 
                         // Create result packet
-                        {{nameof(RemPacket)}} {{ResultPacketParameterName}} = {{RemSendServiceTypeName}}.{{CreatePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Result)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{ResultArgumentsPackTypeName}}({{DeserializedArgumentsPackLocalName}}.{{RequestIdPropertyName}}{{(ReturnsNonGenericTask ? "" : $", {ReturnValueLocalName}")}}));
+                        {{nameof(RemPacket)}} {{ResultPacketLocalName}} = {{RemSendServiceTypeName}}.{{CreatePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Result)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{ResultArgumentsPackTypeName}}({{DeserializedArgumentsPackLocalName}}.{{RequestIdPropertyName}}{{(ReturnsNonGenericTask ? "" : $", {ReturnValueLocalName}")}}));
                         // Serialize result packet
-                        byte[] {{SerializedResultPacketParameterName}} = MemoryPackSerializer.Serialize({{ResultPacketParameterName}});
+                        byte[] {{SerializedResultPacketLocalName}} = MemoryPackSerializer.Serialize({{ResultPacketLocalName}});
 
+                        // Get actual sender ID
+                        if ({{SenderIdLocalName}} is 0) {
+                            {{SenderIdLocalName}} = this.Multiplayer.GetUniqueId();
+                        }
                         // Send result packet back to sender
-                        {{RemSendServiceTypeName}}.{{SendPacketMethodName}}({{SenderIdLocalName}}, this, {{RemAttributePropertyName}}, {{SerializedResultPacketParameterName}});
+                        {{SendCoreMethodName}}({{SenderIdLocalName}}, {{ResultPacketLocalName}}, {{SerializedResultPacketLocalName}});
                     }
                     // Result
                     else if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Result)}}) {
