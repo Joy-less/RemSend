@@ -132,7 +132,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     else {
                         // Ensure authorized to call locally
                         if ({{PeerIdParameterName}} is not 0) {
-                            throw new {{nameof(ArgumentException)}}("Not authorized to call on the local peer", nameof({{PeerIdParameterName}}));
+                            throw new {{nameof(MethodAccessException)}}("Not authorized to call on the local peer");
                         }
                     }
                 }
