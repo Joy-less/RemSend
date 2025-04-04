@@ -121,7 +121,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 if ({{PeerIdLocalName}} is 0 || {{PeerIdLocalName}} == this.Multiplayer.GetUniqueId()) {
                     if ({{RemAttributePropertyName}}.{{nameof(RemAttribute.CallLocal)}}) {
                         // Call remote method locally
-                        {{ReceiveMethodName}}(0, {{PacketLocalName}});
+                        {{ReceiveMethodName}}(this.Multiplayer.GetUniqueId(), {{PacketLocalName}});
 
                         // Don't send remotely unless broadcasting
                         if ({{PeerIdLocalName}} is not 0) {
@@ -290,10 +290,6 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         // Serialize result packet
                         byte[] {{SerializedResultPacketLocalName}} = MemoryPackSerializer.Serialize({{ResultPacketLocalName}});
 
-                        // Get actual sender ID
-                        if ({{SenderIdLocalName}} is 0) {
-                            {{SenderIdLocalName}} = this.Multiplayer.GetUniqueId();
-                        }
                         // Send result packet back to sender
                         {{SendCoreMethodName}}({{SenderIdLocalName}}, {{ResultPacketLocalName}}, {{SerializedResultPacketLocalName}});
                     }
@@ -510,6 +506,11 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 /// Finds and calls the target method for the received packet.
                 /// </summary>
                 private static void {{ReceivePacketMethodName}}(SceneMultiplayer {{SceneMultiplayerLocalName}}, Node {{RootNodeLocalName}}, int {{SenderIdLocalName}}, ReadOnlySpan<byte> {{SerializedPacketLocalName}}) {
+                    // Get actual local sender ID
+                    if ({{SenderIdLocalName}} is 0) {
+                        {{SenderIdLocalName}} = {{SceneMultiplayerLocalName}}.GetUniqueId();
+                    }
+                    
                     // Deserialize packet
                     {{nameof(RemPacket)}} {{PacketLocalName}} = MemoryPackSerializer.Deserialize<{{nameof(RemPacket)}}>({{SerializedPacketLocalName}});
 

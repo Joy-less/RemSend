@@ -34,7 +34,7 @@ partial class MyNode {
         if (PeerId is 0 || PeerId == this.Multiplayer.GetUniqueId()) {
             if (GetMagicNumberRemAttribute.CallLocal) {
                 // Call remote method locally
-                ReceiveGetMagicNumber(0, RemPacket);
+                ReceiveGetMagicNumber(this.Multiplayer.GetUniqueId(), RemPacket);
     
                 // Don't send remotely unless broadcasting
                 if (PeerId is not 0) {

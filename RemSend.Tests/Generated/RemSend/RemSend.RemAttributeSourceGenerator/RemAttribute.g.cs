@@ -84,6 +84,11 @@ public static class RemSendService {
     /// Finds and calls the target method for the received packet.
     /// </summary>
     private static void ReceivePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> SerializedRemPacket) {
+        // Get actual local sender ID
+        if (SenderId is 0) {
+            SenderId = Multiplayer.GetUniqueId();
+        }
+        
         // Deserialize packet
         RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(SerializedRemPacket);
 
