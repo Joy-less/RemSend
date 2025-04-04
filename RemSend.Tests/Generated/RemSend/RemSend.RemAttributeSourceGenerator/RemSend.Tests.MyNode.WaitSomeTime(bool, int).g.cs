@@ -61,7 +61,7 @@ partial class MyNode {
     /// Set <paramref name="PeerId"/> to 0 to broadcast to all eligible peers.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    public void SendCoreWaitSomeTime(int PeerId, bool Dummy) {
+    public void SendWaitSomeTime(int PeerId, bool Dummy) {
         // Create send packet
         byte[] SerializedRemPacket = RemSendService.SerializePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeSendPack(@Dummy));
     
@@ -72,7 +72,7 @@ partial class MyNode {
     /// <summary>
     /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on each peer.
     /// </summary>
-    public void SendCoreWaitSomeTime(IEnumerable<int>? PeerIds, bool Dummy) {
+    public void SendWaitSomeTime(IEnumerable<int>? PeerIds, bool Dummy) {
         // Skip if no peers
         if (PeerIds is null || !PeerIds.Any()) {
             return;

@@ -149,7 +149,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             /// Set <paramref name="{{PeerIdParameterName}}"/> to 0 to broadcast to all eligible peers.<br/>
             /// Set <paramref name="{{PeerIdParameterName}}"/> to 1 to send to the authority.
             /// </summary>
-            {{AccessModifier}} void {{SendCoreMethodName}}({{string.Join(", ", SendMethodOneParameters)}}) {
+            {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodOneParameters)}}) {
                 // Create send packet
                 byte[] {{SerializedPacketParameterName}} = {{RemSendServiceTypeName}}.{{SerializePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{SendArgumentsPackTypeName}}({{string.Join(", ", SendArgumentsPackArguments)}}));
 
@@ -162,7 +162,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             /// <summary>
             /// Remotely calls {{MethodSeeXml}} on each peer.
             /// </summary>
-            {{AccessModifier}} void {{SendCoreMethodName}}({{string.Join(", ", SendMethodMultiParameters)}}) {
+            {{AccessModifier}} void {{SendMethodName}}({{string.Join(", ", SendMethodMultiParameters)}}) {
                 // Skip if no peers
                 if ({{PeerIdsParameterName}} is null || !{{PeerIdsParameterName}}.Any()) {
                     return;
