@@ -58,10 +58,10 @@ Getting the remote sender's peer ID:
 ```cs
 [Rem(RemAccess.Any)]
 public void RemoteHug([Sender] int SenderId) {
-    if (SenderId is 1) {
+    if (SenderId == 1) {
         GD.Print("Thank you authority.");
     }
-    else if (SenderId is 0) {
+    else if (SenderId == Multiplayer.GetUniqueId()) {
         GD.Print("*depression*");
     }
     else {
