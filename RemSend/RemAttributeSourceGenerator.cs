@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using AttributeSourceGenerators;
 
 namespace RemSend;
@@ -436,7 +436,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             /// </summary>
             public static class {{RemSendServiceTypeName}} {
                 /// <summary>
-                /// Connects a callback for packets received from <paramref name="{{SceneMultiplayerLocalName}}"/>.
+                /// Starts listening for packets received from <paramref name="{{SceneMultiplayerLocalName}}"/>.
                 /// </summary>
                 public static void {{SetupMethodName}}(SceneMultiplayer {{SceneMultiplayerLocalName}}, Node? {{RootNodeLocalName}} = null) {
                     // Default root node

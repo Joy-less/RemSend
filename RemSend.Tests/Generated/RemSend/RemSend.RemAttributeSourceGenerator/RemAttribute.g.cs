@@ -14,7 +14,7 @@ namespace RemSend;
 /// </summary>
 public static class RemSendService {
     /// <summary>
-    /// Connects a callback for packets received from <paramref name="Multiplayer"/>.
+    /// Starts listening for packets received from <paramref name="Multiplayer"/>.
     /// </summary>
     public static void Setup(SceneMultiplayer Multiplayer, Node? Root = null) {
         // Default root node
