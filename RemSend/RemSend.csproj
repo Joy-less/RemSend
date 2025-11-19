@@ -30,7 +30,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" PrivateAssets="all" />
+      <!-- Must support oldest .NET 8.0 version (see https://github.com/dotnet/roslyn/blob/main/docs/wiki/NuGet-packages.md#versioning) -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
+
     <PackageReference Include="PolySharp" Version="1.15.0" PrivateAssets="all" />
     <PackageReference Include="MemoryPack" Version="1.21.4" />
   </ItemGroup>
