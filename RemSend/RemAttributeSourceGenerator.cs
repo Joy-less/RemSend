@@ -13,6 +13,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string SendCoreMethodName = $"SendCore{Input.Symbol.Name}";
         string SendMethodName = $"Send{Input.Symbol.Name}";
         string BroadcastMethodName = $"Broadcast{Input.Symbol.Name}";
+        string SendToAuthorityMethodName = $"SendToAuthority{Input.Symbol.Name}";
         string RequestMethodName = $"Request{Input.Symbol.Name}";
         string ReceiveMethodName = $"Receive{Input.Symbol.Name}";
         string VerifyAccessMethodName = "VerifyAccess";
@@ -65,6 +66,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         List<string> SendMethodOneParameters = [$"int {PeerIdLocalName}", .. SendMethodParameters];
         List<string> SendMethodMultiParameters = [$"IEnumerable<int>? {PeerIdsLocalName}", .. SendMethodParameters];
         List<string> BroadcastMethodParameters = [.. SendMethodParameters];
+        List<string> SendToAuthorityMethodParameters = [.. SendMethodParameters];
         List<string> RequestMethodParameters = [$"int {PeerIdLocalName}", $"TimeSpan {TimeoutLocalName}", .. SendMethodParameters];
 
         // Arguments
@@ -72,6 +74,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         List<string> SendArgumentsPackArguments = [.. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
         List<string> RequestArgumentsPackArguments = [RequestIdLocalName, .. SendArgumentsPackArguments];
         List<string> SendBroadcastArguments = ["0", .. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
+        List<string> SendToAuthorityArguments = ["1", .. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
         List<string> RequestCallbackArguments = [PeerIdLocalName, TimeoutLocalName, .. RemoteParameters.Select(Parameter => $"@{Parameter.Name}")];
 
         // Properties
@@ -186,6 +189,15 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             /// </summary>
             {{AccessModifier}} void {{BroadcastMethodName}}({{string.Join(", ", BroadcastMethodParameters)}}) {
                 {{SendMethodName}}({{string.Join(", ", SendBroadcastArguments)}});
+            }
+            """);
+        // Send To Authority
+        Definitions.Add($$"""
+            /// <summary>
+            /// Remotely calls {{MethodSeeXml}} on the authority peer.
+            /// </summary>
+            {{AccessModifier}} void {{SendToAuthorityMethodName}}({{string.Join(", ", SendToAuthorityMethodParameters)}}) {
+                {{SendMethodName}}({{string.Join(", ", SendToAuthorityArguments)}});
             }
             """);
         // Request
