@@ -1,6 +1,6 @@
-<Project Sdk="Godot.NET.Sdk/4.4.0">
+<Project Sdk="Godot.NET.Sdk/4.5.1">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -8,6 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RemSend\RemSend.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="../RemSend/RemSend.csproj" OutputItemType="Analyzer" />
   </ItemGroup>
 </Project>
