@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel;
+using System.Threading;
 using System.Threading.Tasks;
 using Godot;
 using MemoryPack;
@@ -102,7 +103,7 @@ partial class MyNode {
     /// Remotely calls <see cref="WaitSomeTime(bool, int)"/> on the given peer and awaits the return value.<br/>
     /// Set <paramref name="PeerId"/> to 1 to send to the authority.
     /// </summary>
-    public async System.Threading.Tasks.Task RequestWaitSomeTime(int PeerId, TimeSpan Timeout, bool Dummy) {
+    public async System.Threading.Tasks.Task RequestWaitSomeTime(int PeerId, TimeSpan Timeout, bool Dummy, CancellationToken CancellationToken = default) {
         // Generate request ID
         Guid RequestId = Guid.NewGuid();
     
@@ -124,7 +125,7 @@ partial class MyNode {
             // Send packet to peer
             SendCoreWaitSomeTime(PeerId, RemPacket, SerializedRemPacket);
             // Await completion
-            await ResultAwaiter.Task.WaitAsync(Timeout);
+            await ResultAwaiter.Task.WaitAsync(Timeout, CancellationToken);
         }
         finally {
             // Remove result listener

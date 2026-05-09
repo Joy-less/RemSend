@@ -33,6 +33,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string ResultAwaiterLocalName = EscapeVariableName("ResultAwaiter", Input.Symbol);
         string ResultCallbackLocalName = EscapeVariableName("ResultCallback", Input.Symbol);
         string ResultPackLocalName = EscapeVariableName("ResultPack", Input.Symbol);
+        string CancellationTokenLocalName = EscapeVariableName("CancellationToken", Input.Symbol);
         // Type names
         string RemSendServiceTypeName = "RemSendService";
         string SendArgumentsPackTypeName = $"{Input.Symbol.Name}SendPack";
@@ -65,7 +66,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         List<string> SendMethodOneParameters = [$"int {PeerIdLocalName}", .. SendMethodParameters];
         List<string> SendMethodMultiParameters = [$"IEnumerable<int>? {PeerIdsLocalName}", .. SendMethodParameters];
         List<string> BroadcastMethodParameters = [.. SendMethodParameters];
-        List<string> RequestMethodParameters = [$"int {PeerIdLocalName}", $"TimeSpan {TimeoutLocalName}", .. SendMethodParameters];
+        List<string> RequestMethodParameters = [$"int {PeerIdLocalName}", $"TimeSpan {TimeoutLocalName}", .. SendMethodParameters, $"CancellationToken {CancellationTokenLocalName} = default"];
 
         // Arguments
         List<string> SendCoreArguments = [PeerIdLocalName, PacketLocalName, SerializedPacketLocalName];
@@ -225,11 +226,11 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 {{(ReturnsNonGenericTask
                     ? $$"""
                         // Await completion
-                        await {{ResultAwaiterLocalName}}.Task.WaitAsync(Timeout);
+                        await {{ResultAwaiterLocalName}}.Task.WaitAsync({{TimeoutLocalName}}, {{CancellationTokenLocalName}});
                 """
                     : $$"""
                         // Await result
-                        {{ReturnTypeAsValue}} ReturnValue = await {{ResultAwaiterLocalName}}.Task.WaitAsync(Timeout);
+                        {{ReturnTypeAsValue}} ReturnValue = await {{ResultAwaiterLocalName}}.Task.WaitAsync({{TimeoutLocalName}}, {{CancellationTokenLocalName}});
                         // Return result
                         return ReturnValue;
                 """)}}
@@ -349,6 +350,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             using System.Collections.Generic;
             using System.Linq;
             using System.ComponentModel;
+            using System.Threading;
             using System.Threading.Tasks;
             using Godot;
             using MemoryPack;
