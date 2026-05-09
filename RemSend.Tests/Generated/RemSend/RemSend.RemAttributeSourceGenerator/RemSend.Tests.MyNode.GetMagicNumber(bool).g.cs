@@ -137,40 +137,48 @@ partial class MyNode {
     
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal void ReceiveGetMagicNumber(int SenderId, RemPacket RemPacket) {
-        // Send
-        if (RemPacket.Type is RemPacketType.Send) {
-            // Verify access
-            RemSendService.VerifyAccess(GetMagicNumberRemAttribute.Access, SenderId, this.Multiplayer.GetUniqueId());
-            
-            // Deserialize arguments pack
-            GetMagicNumberSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberSendPack>(RemPacket.ArgumentsPack);
-            
-            // Call target method
-            GetMagicNumber(DeserializedArgumentsPack.@Dummy);
-        }
-        // Request
-        else if (RemPacket.Type is RemPacketType.Request) {
-            // Deserialize arguments pack
-            GetMagicNumberRequestPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberRequestPack>(RemPacket.ArgumentsPack);
+        switch (RemPacket.Type) {
+            // Send
+            case RemPacketType.Send: {
+                // Verify access
+                RemSendService.VerifyAccess(GetMagicNumberRemAttribute.Access, SenderId, this.Multiplayer.GetUniqueId());
     
-            // Call target method
-            ushort ReturnValue = GetMagicNumber(DeserializedArgumentsPack.@Dummy);
+                // Deserialize arguments pack
+                GetMagicNumberSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberSendPack>(RemPacket.ArgumentsPack);
     
-            // Create result packet
-            RemPacket ResultRemPacket = RemSendService.CreatePacket(RemPacketType.Result, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberResultPack(DeserializedArgumentsPack.RequestId, ReturnValue));
-            // Serialize result packet
-            byte[] SerializedResultRemPacket = MemoryPackSerializer.Serialize(ResultRemPacket);
+                // Call target method
+                GetMagicNumber(DeserializedArgumentsPack.@Dummy);
     
-            // Send result packet back to sender
-            SendCoreGetMagicNumber(SenderId, ResultRemPacket, SerializedResultRemPacket);
-        }
-        // Result
-        else if (RemPacket.Type is RemPacketType.Result) {
-            // Deserialize result arguments pack
-            GetMagicNumberResultPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberResultPack>(RemPacket.ArgumentsPack);
-            
-            // Invoke receive event
-            OnReceiveGetMagicNumberResult?.Invoke(SenderId, DeserializedArgumentsPack);
+                break;
+            }
+            // Request
+            case RemPacketType.Request: {
+                // Deserialize arguments pack
+                GetMagicNumberRequestPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberRequestPack>(RemPacket.ArgumentsPack);
+    
+                // Call target method
+                ushort ReturnValue = GetMagicNumber(DeserializedArgumentsPack.@Dummy);
+    
+                // Create result packet
+                RemPacket ResultRemPacket = RemSendService.CreatePacket(RemPacketType.Result, this.GetPath(), nameof(MyNode.GetMagicNumber), new GetMagicNumberResultPack(DeserializedArgumentsPack.RequestId, ReturnValue));
+                // Serialize result packet
+                byte[] SerializedResultRemPacket = MemoryPackSerializer.Serialize(ResultRemPacket);
+    
+                // Send result packet back to sender
+                SendCoreGetMagicNumber(SenderId, ResultRemPacket, SerializedResultRemPacket);
+    
+                break;
+            }
+            // Result
+            case RemPacketType.Result: {
+                // Deserialize result arguments pack
+                GetMagicNumberResultPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberResultPack>(RemPacket.ArgumentsPack);
+    
+                // Invoke receive event
+                OnReceiveGetMagicNumberResult?.Invoke(SenderId, DeserializedArgumentsPack);
+    
+                break;
+            }
         }
     }
     

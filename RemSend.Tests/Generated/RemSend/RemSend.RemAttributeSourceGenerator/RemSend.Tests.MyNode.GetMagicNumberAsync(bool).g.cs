@@ -137,40 +137,48 @@ partial class MyNode {
     
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal async void ReceiveGetMagicNumberAsync(int SenderId, RemPacket RemPacket) {
-        // Send
-        if (RemPacket.Type is RemPacketType.Send) {
-            // Verify access
-            RemSendService.VerifyAccess(GetMagicNumberAsyncRemAttribute.Access, SenderId, this.Multiplayer.GetUniqueId());
-            
-            // Deserialize arguments pack
-            GetMagicNumberAsyncSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberAsyncSendPack>(RemPacket.ArgumentsPack);
-            
-            // Call target method
-            await GetMagicNumberAsync(DeserializedArgumentsPack.@Dummy);
-        }
-        // Request
-        else if (RemPacket.Type is RemPacketType.Request) {
-            // Deserialize arguments pack
-            GetMagicNumberAsyncRequestPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberAsyncRequestPack>(RemPacket.ArgumentsPack);
+        switch (RemPacket.Type) {
+            // Send
+            case RemPacketType.Send: {
+                // Verify access
+                RemSendService.VerifyAccess(GetMagicNumberAsyncRemAttribute.Access, SenderId, this.Multiplayer.GetUniqueId());
     
-            // Call target method
-            ushort ReturnValue = await GetMagicNumberAsync(DeserializedArgumentsPack.@Dummy);
+                // Deserialize arguments pack
+                GetMagicNumberAsyncSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberAsyncSendPack>(RemPacket.ArgumentsPack);
     
-            // Create result packet
-            RemPacket ResultRemPacket = RemSendService.CreatePacket(RemPacketType.Result, this.GetPath(), nameof(MyNode.GetMagicNumberAsync), new GetMagicNumberAsyncResultPack(DeserializedArgumentsPack.RequestId, ReturnValue));
-            // Serialize result packet
-            byte[] SerializedResultRemPacket = MemoryPackSerializer.Serialize(ResultRemPacket);
+                // Call target method
+                await GetMagicNumberAsync(DeserializedArgumentsPack.@Dummy);
     
-            // Send result packet back to sender
-            SendCoreGetMagicNumberAsync(SenderId, ResultRemPacket, SerializedResultRemPacket);
-        }
-        // Result
-        else if (RemPacket.Type is RemPacketType.Result) {
-            // Deserialize result arguments pack
-            GetMagicNumberAsyncResultPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberAsyncResultPack>(RemPacket.ArgumentsPack);
-            
-            // Invoke receive event
-            OnReceiveGetMagicNumberAsyncResult?.Invoke(SenderId, DeserializedArgumentsPack);
+                break;
+            }
+            // Request
+            case RemPacketType.Request: {
+                // Deserialize arguments pack
+                GetMagicNumberAsyncRequestPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberAsyncRequestPack>(RemPacket.ArgumentsPack);
+    
+                // Call target method
+                ushort ReturnValue = await GetMagicNumberAsync(DeserializedArgumentsPack.@Dummy);
+    
+                // Create result packet
+                RemPacket ResultRemPacket = RemSendService.CreatePacket(RemPacketType.Result, this.GetPath(), nameof(MyNode.GetMagicNumberAsync), new GetMagicNumberAsyncResultPack(DeserializedArgumentsPack.RequestId, ReturnValue));
+                // Serialize result packet
+                byte[] SerializedResultRemPacket = MemoryPackSerializer.Serialize(ResultRemPacket);
+    
+                // Send result packet back to sender
+                SendCoreGetMagicNumberAsync(SenderId, ResultRemPacket, SerializedResultRemPacket);
+    
+                break;
+            }
+            // Result
+            case RemPacketType.Result: {
+                // Deserialize result arguments pack
+                GetMagicNumberAsyncResultPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<GetMagicNumberAsyncResultPack>(RemPacket.ArgumentsPack);
+    
+                // Invoke receive event
+                OnReceiveGetMagicNumberAsyncResult?.Invoke(SenderId, DeserializedArgumentsPack);
+    
+                break;
+            }
         }
     }
     

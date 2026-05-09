@@ -135,40 +135,48 @@ partial class MyNode {
     
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal async void ReceiveWaitSomeTime(int SenderId, RemPacket RemPacket) {
-        // Send
-        if (RemPacket.Type is RemPacketType.Send) {
-            // Verify access
-            RemSendService.VerifyAccess(WaitSomeTimeRemAttribute.Access, SenderId, this.Multiplayer.GetUniqueId());
-            
-            // Deserialize arguments pack
-            WaitSomeTimeSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeSendPack>(RemPacket.ArgumentsPack);
-            
-            // Call target method
-            await WaitSomeTime(DeserializedArgumentsPack.@Dummy, SenderId);
-        }
-        // Request
-        else if (RemPacket.Type is RemPacketType.Request) {
-            // Deserialize arguments pack
-            WaitSomeTimeRequestPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeRequestPack>(RemPacket.ArgumentsPack);
+        switch (RemPacket.Type) {
+            // Send
+            case RemPacketType.Send: {
+                // Verify access
+                RemSendService.VerifyAccess(WaitSomeTimeRemAttribute.Access, SenderId, this.Multiplayer.GetUniqueId());
     
-            // Call target method
-            await WaitSomeTime(DeserializedArgumentsPack.@Dummy, SenderId);
+                // Deserialize arguments pack
+                WaitSomeTimeSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeSendPack>(RemPacket.ArgumentsPack);
     
-            // Create result packet
-            RemPacket ResultRemPacket = RemSendService.CreatePacket(RemPacketType.Result, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeResultPack(DeserializedArgumentsPack.RequestId));
-            // Serialize result packet
-            byte[] SerializedResultRemPacket = MemoryPackSerializer.Serialize(ResultRemPacket);
+                // Call target method
+                await WaitSomeTime(DeserializedArgumentsPack.@Dummy, SenderId);
     
-            // Send result packet back to sender
-            SendCoreWaitSomeTime(SenderId, ResultRemPacket, SerializedResultRemPacket);
-        }
-        // Result
-        else if (RemPacket.Type is RemPacketType.Result) {
-            // Deserialize result arguments pack
-            WaitSomeTimeResultPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeResultPack>(RemPacket.ArgumentsPack);
-            
-            // Invoke receive event
-            OnReceiveWaitSomeTimeResult?.Invoke(SenderId, DeserializedArgumentsPack);
+                break;
+            }
+            // Request
+            case RemPacketType.Request: {
+                // Deserialize arguments pack
+                WaitSomeTimeRequestPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeRequestPack>(RemPacket.ArgumentsPack);
+    
+                // Call target method
+                await WaitSomeTime(DeserializedArgumentsPack.@Dummy, SenderId);
+    
+                // Create result packet
+                RemPacket ResultRemPacket = RemSendService.CreatePacket(RemPacketType.Result, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeResultPack(DeserializedArgumentsPack.RequestId));
+                // Serialize result packet
+                byte[] SerializedResultRemPacket = MemoryPackSerializer.Serialize(ResultRemPacket);
+    
+                // Send result packet back to sender
+                SendCoreWaitSomeTime(SenderId, ResultRemPacket, SerializedResultRemPacket);
+    
+                break;
+            }
+            // Result
+            case RemPacketType.Result: {
+                // Deserialize result arguments pack
+                WaitSomeTimeResultPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<WaitSomeTimeResultPack>(RemPacket.ArgumentsPack);
+    
+                // Invoke receive event
+                OnReceiveWaitSomeTimeResult?.Invoke(SenderId, DeserializedArgumentsPack);
+    
+                break;
+            }
         }
     }
     
