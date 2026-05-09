@@ -33,6 +33,8 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
         string ResultAwaiterLocalName = EscapeVariableName("ResultAwaiter", Input.Symbol);
         string ResultCallbackLocalName = EscapeVariableName("ResultCallback", Input.Symbol);
         string ResultPackLocalName = EscapeVariableName("ResultPack", Input.Symbol);
+        // Arguments
+        string CancellationTokenArgument = EscapeVariableName("CancellationToken", Input.Symbol);
         // Type names
         string RemSendServiceTypeName = "RemSendService";
         string SendArgumentsPackTypeName = $"{Input.Symbol.Name}SendPack";
@@ -201,7 +203,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 /// Remotely calls {{MethodSeeXml}} on the given peer and awaits the return value.<br/>
                 /// Set <paramref name="{{PeerIdLocalName}}"/> to 1 to send to the authority.
                 /// </summary>
-                {{AccessModifier}} async {{ReturnTypeAsTask}} {{RequestMethodName}}({{string.Join(", ", RequestMethodParameters)}}) {
+                {{AccessModifier}} async {{ReturnTypeAsTask}} {{RequestMethodName}}({{string.Join(", ", RequestMethodParameters)}}, CancellationToken {{CancellationTokenArgument}} = default) {
                     // Generate request ID
                     Guid {{RequestIdLocalName}} = Guid.NewGuid();
 
@@ -225,11 +227,11 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 {{(ReturnsNonGenericTask
                     ? $$"""
                         // Await completion
-                        await {{ResultAwaiterLocalName}}.Task.WaitAsync(Timeout);
+                        await {{ResultAwaiterLocalName}}.Task.WaitAsync(Timeout, cancellationToken: {{CancellationTokenArgument}});
                 """
                     : $$"""
                         // Await result
-                        {{ReturnTypeAsValue}} ReturnValue = await {{ResultAwaiterLocalName}}.Task.WaitAsync(Timeout);
+                        {{ReturnTypeAsValue}} ReturnValue = await {{ResultAwaiterLocalName}}.Task.WaitAsync(Timeout, cancellationToken: {{CancellationTokenArgument}});
                         // Return result
                         return ReturnValue;
                 """)}}
@@ -349,6 +351,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             using System.Collections.Generic;
             using System.Linq;
             using System.ComponentModel;
+            using System.Threading;
             using System.Threading.Tasks;
             using Godot;
             using MemoryPack;
