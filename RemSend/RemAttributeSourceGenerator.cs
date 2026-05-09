@@ -266,40 +266,48 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
             Definitions.Add($$"""
                 [EditorBrowsable(EditorBrowsableState.Never)]
                 internal {{(ReturnsTask ? "async " : "")}}void {{ReceiveMethodName}}(int {{SenderIdLocalName}}, {{nameof(RemPacket)}} {{PacketLocalName}}) {
-                    // Send
-                    if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}) {
-                        // Verify access
-                        {{RemSendServiceTypeName}}.{{VerifyAccessMethodName}}({{RemAttributePropertyName}}.{{nameof(RemAttribute.Access)}}, {{SenderIdLocalName}}, this.Multiplayer.GetUniqueId());
-                        
-                        // Deserialize arguments pack
-                        {{SendArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{SendArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
-                        
-                        // Call target method
-                        {{(ReturnsTask ? "await " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
-                    }
-                    // Request
-                    else if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Request)}}) {
-                        // Deserialize arguments pack
-                        {{RequestArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{RequestArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
+                    switch ({{PacketLocalName}}.{{nameof(RemPacket.Type)}}) {
+                        // Send
+                        case {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}: {
+                            // Verify access
+                            {{RemSendServiceTypeName}}.{{VerifyAccessMethodName}}({{RemAttributePropertyName}}.{{nameof(RemAttribute.Access)}}, {{SenderIdLocalName}}, this.Multiplayer.GetUniqueId());
 
-                        // Call target method
-                        {{(ReturnsNonGenericTask ? "" : $"{ReturnTypeAsValue} {ReturnValueLocalName} = ")}}{{(ReturnsTask ? "await " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
+                            // Deserialize arguments pack
+                            {{SendArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{SendArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
 
-                        // Create result packet
-                        {{nameof(RemPacket)}} {{ResultPacketLocalName}} = {{RemSendServiceTypeName}}.{{CreatePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Result)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{ResultArgumentsPackTypeName}}({{DeserializedArgumentsPackLocalName}}.{{RequestIdPropertyName}}{{(ReturnsNonGenericTask ? "" : $", {ReturnValueLocalName}")}}));
-                        // Serialize result packet
-                        byte[] {{SerializedResultPacketLocalName}} = MemoryPackSerializer.Serialize({{ResultPacketLocalName}});
+                            // Call target method
+                            {{(ReturnsTask ? "await " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
 
-                        // Send result packet back to sender
-                        {{SendCoreMethodName}}({{SenderIdLocalName}}, {{ResultPacketLocalName}}, {{SerializedResultPacketLocalName}});
-                    }
-                    // Result
-                    else if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Result)}}) {
-                        // Deserialize result arguments pack
-                        {{ResultArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{ResultArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
-                        
-                        // Invoke receive event
-                        {{OnReceiveResultEventName}}?.Invoke({{SenderIdLocalName}}, {{DeserializedArgumentsPackLocalName}});
+                            break;
+                        }
+                        // Request
+                        case {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Request)}}: {
+                            // Deserialize arguments pack
+                            {{RequestArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{RequestArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
+
+                            // Call target method
+                            {{(ReturnsNonGenericTask ? "" : $"{ReturnTypeAsValue} {ReturnValueLocalName} = ")}}{{(ReturnsTask ? "await " : "")}}{{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
+
+                            // Create result packet
+                            {{nameof(RemPacket)}} {{ResultPacketLocalName}} = {{RemSendServiceTypeName}}.{{CreatePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Result)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{ResultArgumentsPackTypeName}}({{DeserializedArgumentsPackLocalName}}.{{RequestIdPropertyName}}{{(ReturnsNonGenericTask ? "" : $", {ReturnValueLocalName}")}}));
+                            // Serialize result packet
+                            byte[] {{SerializedResultPacketLocalName}} = MemoryPackSerializer.Serialize({{ResultPacketLocalName}});
+
+                            // Send result packet back to sender
+                            {{SendCoreMethodName}}({{SenderIdLocalName}}, {{ResultPacketLocalName}}, {{SerializedResultPacketLocalName}});
+
+                            break;
+                        }
+                        // Result
+                        case {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Result)}}: {
+                            // Deserialize result arguments pack
+                            {{ResultArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{ResultArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
+
+                            // Invoke receive event
+                            {{OnReceiveResultEventName}}?.Invoke({{SenderIdLocalName}}, {{DeserializedArgumentsPackLocalName}});
+
+                            break;
+                        }
                     }
                 }
                 """);
