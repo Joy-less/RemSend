@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Godot;
 using RemSend;
@@ -18,7 +19,7 @@ public partial class Main : Node {
             SendSayHello(1, 4);
             SendSayHello(1);
 
-            await RequestWaitASecond(1, TimeSpan.FromSeconds(10));
+            await RequestWaitASecond(1, TimeSpan.FromSeconds(10), CancellationToken.None);
 
             GD.Print(await RequestAreYouTheServer(1, TimeSpan.FromSeconds(10)));
 
