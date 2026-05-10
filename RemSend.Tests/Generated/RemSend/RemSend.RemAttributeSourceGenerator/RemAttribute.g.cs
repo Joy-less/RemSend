@@ -71,7 +71,7 @@ public static class RemSendService {
     /// Sends a serialized packet to a peer.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal static void SendPacket(int PeerId, Node TargetNode, RemAttribute Attribute, byte[] SerializedRemPacket) {
+    internal static void SendPacket(int PeerId, Node TargetNode, RemAttribute Attribute, scoped ReadOnlySpan<byte> SerializedRemPacket) {
         ((SceneMultiplayer)TargetNode.Multiplayer).SendBytes(
             bytes: SerializedRemPacket,
             id: PeerId,
@@ -83,7 +83,7 @@ public static class RemSendService {
     /// <summary>
     /// Finds and calls the target method for the received packet.
     /// </summary>
-    private static void ReceivePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, ReadOnlySpan<byte> SerializedRemPacket) {
+    private static void ReceivePacket(SceneMultiplayer Multiplayer, Node Root, int SenderId, scoped ReadOnlySpan<byte> SerializedRemPacket) {
         // Get actual local sender ID
         if (SenderId is 0) {
             SenderId = Multiplayer.GetUniqueId();

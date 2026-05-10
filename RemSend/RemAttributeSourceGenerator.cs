@@ -503,7 +503,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 /// Sends a serialized packet to a peer.
                 /// </summary>
                 [EditorBrowsable(EditorBrowsableState.Never)]
-                internal static void {{SendPacketMethodName}}(int {{PeerIdLocalName}}, Node {{TargetNodeLocalName}}, {{nameof(RemAttribute)}} {{AttributeLocalName}}, byte[] {{SerializedPacketLocalName}}) {
+                internal static void {{SendPacketMethodName}}(int {{PeerIdLocalName}}, Node {{TargetNodeLocalName}}, {{nameof(RemAttribute)}} {{AttributeLocalName}}, scoped ReadOnlySpan<byte> {{SerializedPacketLocalName}}) {
                     ((SceneMultiplayer){{TargetNodeLocalName}}.Multiplayer).SendBytes(
                         bytes: {{SerializedPacketLocalName}},
                         id: {{PeerIdLocalName}},
@@ -515,7 +515,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 /// <summary>
                 /// Finds and calls the target method for the received packet.
                 /// </summary>
-                private static void {{ReceivePacketMethodName}}(SceneMultiplayer {{SceneMultiplayerLocalName}}, Node {{RootNodeLocalName}}, int {{SenderIdLocalName}}, ReadOnlySpan<byte> {{SerializedPacketLocalName}}) {
+                private static void {{ReceivePacketMethodName}}(SceneMultiplayer {{SceneMultiplayerLocalName}}, Node {{RootNodeLocalName}}, int {{SenderIdLocalName}}, scoped ReadOnlySpan<byte> {{SerializedPacketLocalName}}) {
                     // Get actual local sender ID
                     if ({{SenderIdLocalName}} is 0) {
                         {{SenderIdLocalName}} = {{SceneMultiplayerLocalName}}.GetUniqueId();
