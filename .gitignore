@@ -397,3 +397,5 @@ FodyWeavers.xsd
 # JetBrains IDEs
 **/.idea
 *.sln.iml
+
+**/Generated
