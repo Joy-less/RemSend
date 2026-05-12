@@ -136,7 +136,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         }
                     }
                 }
-                
+
                 // Send packet to remote peer
                 {{RemSendServiceTypeName}}.{{SendPacketMethodName}}({{PeerIdLocalName}}, this, {{RemAttributePropertyName}}, {{SerializedPacketLocalName}});
             }
@@ -173,7 +173,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                 {{nameof(RemPacket)}} {{PacketLocalName}} = {{RemSendServiceTypeName}}.{{CreatePacketMethodName}}({{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}, this.GetPath(), nameof({{QualifiedMethodName}}), new {{SendArgumentsPackTypeName}}({{string.Join(", ", SendArgumentsPackArguments)}}));
                 // Serialize send packet
                 byte[] {{SerializedPacketLocalName}} = MemoryPackSerializer.Serialize({{PacketLocalName}});
-                
+
                 // Send packet to each peer
                 foreach (int {{PeerIdLocalName}} in {{PeerIdsLocalName}}) {
                     {{SendCoreMethodName}}({{string.Join(", ", SendCoreArguments)}});
@@ -241,7 +241,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     }
                 }
                 """);
-                
+
         }
         // Receive (returns void)
         if (Input.Symbol.ReturnsVoid) {
@@ -252,10 +252,10 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     if ({{PacketLocalName}}.{{nameof(RemPacket.Type)}} is {{nameof(RemPacketType)}}.{{nameof(RemPacketType.Send)}}) {
                         // Verify access
                         {{RemSendServiceTypeName}}.{{VerifyAccessMethodName}}({{RemAttributePropertyName}}.{{nameof(RemAttribute.Access)}}, {{SenderIdLocalName}}, this.Multiplayer.GetUniqueId());
-                        
+
                         // Deserialize arguments pack
                         {{SendArgumentsPackTypeName}} {{DeserializedArgumentsPackLocalName}} = MemoryPackSerializer.Deserialize<{{SendArgumentsPackTypeName}}>({{PacketLocalName}}.{{nameof(RemPacket.ArgumentsPack)}});
-                        
+
                         // Call target method
                         {{Input.Symbol.Name}}({{string.Join(", ", TargetMethodArguments)}});
                     }
@@ -456,7 +456,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         {{ReceivePacketMethodName}}({{SceneMultiplayerLocalName}}, {{RootNodeLocalName}}, (int){{SenderIdLocalName}}, {{SerializedPacketLocalName}});
                     };
                 }
-                
+
                 /// <summary>
                 /// Converts from <see cref="{{nameof(RemMode)}}"/> to <see cref="MultiplayerPeer"/>.
                 /// </summary>
@@ -469,7 +469,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         _ => throw new {{nameof(NotImplementedException)}}()
                     };
                 }
-                
+
                 /// <summary>
                 /// Throws if the call is unauthorized.
                 /// </summary>
@@ -486,7 +486,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         throw new {{nameof(MethodAccessException)}}("Remote method call not authorized");
                     }
                 }
-                
+
                 /// <summary>
                 /// Creates a packet for a remote method call.
                 /// </summary>
@@ -498,7 +498,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     {{nameof(RemPacket)}} {{PacketLocalName}} = new({{PacketTypeLocalName}}, {{NodePathLocalName}}, {{MethodNameLocalName}}, {{SerializedArgumentsPackLocalName}});
                     return {{PacketLocalName}};
                 }
-                
+
                 /// <summary>
                 /// Sends a serialized packet to a peer.
                 /// </summary>
@@ -511,7 +511,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                         channel: {{AttributeLocalName}}.{{nameof(RemAttribute.Channel)}}
                     );
                 }
-                
+
                 /// <summary>
                 /// Finds and calls the target method for the received packet.
                 /// </summary>
@@ -520,7 +520,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     if ({{SenderIdLocalName}} is 0) {
                         {{SenderIdLocalName}} = {{SceneMultiplayerLocalName}}.GetUniqueId();
                     }
-                    
+
                     // Deserialize packet
                     {{nameof(RemPacket)}} {{PacketLocalName}} = MemoryPackSerializer.Deserialize<{{nameof(RemPacket)}}>({{SerializedPacketLocalName}});
 
@@ -541,7 +541,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     }
             """))}}
                 }
-                
+
                 /// <summary>
                 /// Initializes {{RemSendServiceTypeName}}.
                 /// </summary>
@@ -561,7 +561,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(SendArgumentsPackTypeName, Input.Symbol.Name)}}.{{FormatterTypeName}}());
             """
             + (Input.Symbol.ReturnsVoid ? "" : $$"""
-                    
+
                     MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(RequestArgumentsPackTypeName, Input.Symbol.Name)}}.{{FormatterTypeName}}());
                     MemoryPackFormatterProvider.Register(new {{Input.Symbol.ContainingType}}.{{string.Format(ResultArgumentsPackTypeName, Input.Symbol.Name)}}.{{FormatterTypeName}}());
             """)))}}

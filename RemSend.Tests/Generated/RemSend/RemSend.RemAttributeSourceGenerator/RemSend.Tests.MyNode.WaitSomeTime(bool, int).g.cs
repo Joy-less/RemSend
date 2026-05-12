@@ -49,7 +49,7 @@ partial class MyNode {
                 }
             }
         }
-        
+    
         // Send packet to remote peer
         RemSendService.SendPacket(PeerId, this, WaitSomeTimeRemAttribute, SerializedRemPacket);
     }
@@ -82,7 +82,7 @@ partial class MyNode {
         RemPacket RemPacket = RemSendService.CreatePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.WaitSomeTime), new WaitSomeTimeSendPack(@Dummy));
         // Serialize send packet
         byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
-        
+    
         // Send packet to each peer
         foreach (int PeerId in PeerIds) {
             SendCoreWaitSomeTime(PeerId, RemPacket, SerializedRemPacket);

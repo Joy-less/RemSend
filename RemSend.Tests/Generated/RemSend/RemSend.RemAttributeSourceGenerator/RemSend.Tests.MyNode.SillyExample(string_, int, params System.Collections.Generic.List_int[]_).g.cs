@@ -49,7 +49,7 @@ partial class MyNode {
                 }
             }
         }
-        
+    
         // Send packet to remote peer
         RemSendService.SendPacket(PeerId, this, SillyExampleRemAttribute, SerializedRemPacket);
     }
@@ -82,7 +82,7 @@ partial class MyNode {
         RemPacket RemPacket = RemSendService.CreatePacket(RemPacketType.Send, this.GetPath(), nameof(MyNode.SillyExample), new SillyExampleSendPack(@Arg, @Arg22));
         // Serialize send packet
         byte[] SerializedRemPacket = MemoryPackSerializer.Serialize(RemPacket);
-        
+    
         // Send packet to each peer
         foreach (int PeerId in PeerIds) {
             SendCoreSillyExample(PeerId, RemPacket, SerializedRemPacket);
@@ -102,10 +102,10 @@ partial class MyNode {
         if (RemPacket.Type is RemPacketType.Send) {
             // Verify access
             RemSendService.VerifyAccess(SillyExampleRemAttribute.Access, _SenderId, this.Multiplayer.GetUniqueId());
-            
+    
             // Deserialize arguments pack
             SillyExampleSendPack DeserializedArgumentsPack = MemoryPackSerializer.Deserialize<SillyExampleSendPack>(RemPacket.ArgumentsPack);
-            
+    
             // Call target method
             SillyExample(DeserializedArgumentsPack.@Arg, _SenderId, DeserializedArgumentsPack.@Arg22);
         }

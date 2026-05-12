@@ -24,7 +24,7 @@ public static class RemSendService {
             ReceivePacket(Multiplayer, Root, (int)SenderId, SerializedRemPacket);
         };
     }
-    
+
     /// <summary>
     /// Converts from <see cref="RemMode"/> to <see cref="MultiplayerPeer"/>.
     /// </summary>
@@ -37,7 +37,7 @@ public static class RemSendService {
             _ => throw new NotImplementedException()
         };
     }
-    
+
     /// <summary>
     /// Throws if the call is unauthorized.
     /// </summary>
@@ -54,7 +54,7 @@ public static class RemSendService {
             throw new MethodAccessException("Remote method call not authorized");
         }
     }
-    
+
     /// <summary>
     /// Creates a packet for a remote method call.
     /// </summary>
@@ -66,7 +66,7 @@ public static class RemSendService {
         RemPacket RemPacket = new(PacketType, NodePath, MethodName, SerializedArgumentsPack);
         return RemPacket;
     }
-    
+
     /// <summary>
     /// Sends a serialized packet to a peer.
     /// </summary>
@@ -79,7 +79,7 @@ public static class RemSendService {
             channel: Attribute.Channel
         );
     }
-    
+
     /// <summary>
     /// Finds and calls the target method for the received packet.
     /// </summary>
@@ -88,7 +88,7 @@ public static class RemSendService {
         if (SenderId is 0) {
             SenderId = Multiplayer.GetUniqueId();
         }
-        
+
         // Deserialize packet
         RemPacket RemPacket = MemoryPackSerializer.Deserialize<RemPacket>(SerializedRemPacket);
 
@@ -114,7 +114,7 @@ public static class RemSendService {
                 break;
         }
     }
-    
+
     /// <summary>
     /// Initializes RemSendService.
     /// </summary>
@@ -130,13 +130,13 @@ public static class RemSendService {
         MemoryPackFormatterProvider.Register(new RemPacketFormatter());
 
         // RemSend generated types
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberSendPack.Formatter());        
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberSendPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberRequestPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberResultPack.Formatter());
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberAsyncSendPack.Formatter());        
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberAsyncSendPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberAsyncRequestPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.GetMagicNumberAsyncResultPack.Formatter());
-        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.WaitSomeTimeSendPack.Formatter());        
+        MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.WaitSomeTimeSendPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.WaitSomeTimeRequestPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.WaitSomeTimeResultPack.Formatter());
         MemoryPackFormatterProvider.Register(new RemSend.Tests.MyNode.SillyExampleSendPack.Formatter());
