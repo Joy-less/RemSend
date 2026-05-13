@@ -527,7 +527,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                     // Find target node
                     Node {{TargetNodeLocalName}} = {{RootNodeLocalName}}.GetNode({{SceneMultiplayerLocalName}}.RootPath).GetNode({{PacketLocalName}}.{{nameof(RemPacket.NodePath)}});
                     // Find target receive method
-                    #pragma warning disable CS1522
+                    {{(!Inputs.Any() ? "" : $$"""
                     switch ({{TargetNodeLocalName}}) {
             {{string.Join("\n", Inputs.GroupBy(Input => Input.Symbol.ContainingType, SymbolEqualityComparer.Default).Select(TargetNode => $$$"""
                         case {{{TargetNode.Key}}} @{{{TargetNode.Key.AsIdentifier()}}}:
@@ -541,7 +541,7 @@ internal class RemAttributeSourceGenerator : SourceGeneratorForMethodWithAttribu
                             break;
             """))}}
                     }
-                    #pragma warning restore CS1522
+            """)}}
                 }
 
                 /// <summary>
