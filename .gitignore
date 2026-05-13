@@ -394,5 +394,8 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
-# JetBrains Rider
+# JetBrains IDEs
+**/.idea
 *.sln.iml
+
+**/Generated

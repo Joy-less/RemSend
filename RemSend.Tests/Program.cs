@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿// Uncomment this to test building without
+// any method being annotated with Rem
+// #define EMPTY_PROJECT
+
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
@@ -10,6 +14,7 @@ public partial class Program {
 }
 
 public partial class MyNode : Godot.Node {
+#if !EMPTY_PROJECT
     [Rem(RemAccess.Any)]
     public ushort GetMagicNumber(bool Dummy) {
         return 7;
@@ -30,4 +35,5 @@ public partial class MyNode : Godot.Node {
     private void SillyExample(string? Arg, [Sender] int SenderId, [NotNullWhen(true)] params List<int[]> Arg22) {
 
     }
+#endif
 }
