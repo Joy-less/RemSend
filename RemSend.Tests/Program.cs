@@ -1,6 +1,4 @@
-﻿// Uncomment this to test building without
-// any method being annotated with Rem
-// #define EMPTY_PROJECT
+﻿//#define EMPTY_PROJECT // Uncomment to remove all methods annotated with RemAttribute
 
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
