@@ -17,8 +17,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Title>RemSend</Title>
     <Description>A Remote Procedure Call framework for Godot C#.</Description>
     <PackageProjectUrl>https://github.com/Joy-less/RemSend</PackageProjectUrl>
@@ -26,7 +26,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>Godot; RPC; multiplayer; MemoryPack</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
