@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Godot;
 using RemSend;
 
-public partial class Main : Node {
+public partial class Main : MainBase {
     public override async void _Ready() {
         // Server
         if (OS.HasFeature("server")) {
@@ -24,6 +24,8 @@ public partial class Main : Node {
             GD.Print(await RequestAreYouTheServer(1, TimeSpan.FromSeconds(10)));
 
             GD.Print(await RequestGiveNineAfterASecond(1, TimeSpan.FromSeconds(10)));
+
+            SendSayInherited(1);
         }
     }
 
